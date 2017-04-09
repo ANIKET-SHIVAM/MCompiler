@@ -62,13 +62,16 @@ public:
 class LoopInfo : public Extractor {
 	SgNode *astNode;
 	SgForStatement *loop;
-	string func_name;	
+	string func_name;
+	SgScopeStatement *loop_scope;
+	set<string> scope_vars_vec;
 public:
 	LoopInfo( SgNode *astNode, SgForStatement *loop, string func_name )
 		: astNode(astNode), loop(loop), func_name(func_name) {}
 	string getFuncName() { return func_name; }
 	bool operator < ( const LoopInfo &other ) const { return loop < other.loop; }
 	void printLoopFunc( ofstream &loop_file_buf );
+	void getVarsInScope();
 	void addLoopFuncAsExtern();	// In Base file
 	void addLoopFuncCall();		// In Base file
 };

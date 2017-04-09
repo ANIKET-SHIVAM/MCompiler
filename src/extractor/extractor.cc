@@ -80,14 +80,44 @@ void Extractor::printGlobalsAsExtern( SgNode *const &astNode ){
 
 }
 
+void LoopInfo::getVarsInScope(){
+	SgSymbolTable *symbols      = loop_scope->get_symbol_table();
+	std::set<SgNode*> sym_table = symbols->get_symbols();
+	set<SgNode*>::iterator iter;
+	for( iter = sym_table.begin(); iter != sym_table.end(); iter++ ){
+		SgVariableSymbol *var = dynamic_cast<SgVariableSymbol *>(*iter);
+		string var_type_str = (var->get_type())->unparseToString();
+		scope_vars_vec.insert( var_type_str + " *" + var->get_name().getString() );
+		cerr << "Symbol Table : " << var_type_str + " " + var->get_name().getString() << endl;
+	}
+}
+
+/* 
+ * Take cares of print complete loop function and adding func calls
+ * and extern loop func to the base file.
+ * Manages SCoP pragmas.
+ * Manages variables that are needed for extracting the loop.
+ */
 void LoopInfo::printLoopFunc( ofstream &loop_file_buf ){
+
+	loop_scope = loop->get_scope();
+	getVarsInScope();	
 	
-	// Function defination 
-	loop_file_buf << endl << "void " << getFuncName() << "(" << "){" << endl;
+	// Function definition 
+	loop_file_buf << endl << "void " << getFuncName() << "( ";
+	set<string>::iterator iter = scope_vars_vec.begin();
+	loop_file_buf << *iter;
+	iter++;
+	for( ; iter != scope_vars_vec.end(); iter++ )
+		loop_file_buf << ", " << *iter;
+	loop_file_buf<< " ){" << endl;
+	
+	// TODO: Add SCoP pragma based on tool option 
+	loop_file_buf << "#pragma scop" << endl;
 	
 	// Entire Loop Body
-	loop_file_buf << "#pragma scop" << endl;
 	loop_file_buf << loop->unparseToCompleteString() << endl;	
+	
 	loop_file_buf << "#pragma endscop" << endl;
 	loop_file_buf << "}" << endl;
 }
@@ -106,11 +136,15 @@ void Extractor::extractLoops( SgNode *astNode ){
 	printGlobalsAsExtern(astNode);
 	
 	cerr << "Adding loop to file: " << curr_loop.getFuncName() << endl;
+	/* 
+	 * Take cares of print complete loop function and adding func calls
+	 * and extern loop func to the base file.
+	 */
 	curr_loop.printLoopFunc(loop_file_buf);	
 
 	loop_file_buf.close();
 
-	/* Call astyleFormatter here in future */
+	/* TODO: Call astyleFormatter here in distant future */
 }
 
 /* Required for Top Down parsing */
@@ -123,10 +157,13 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 			cerr << "Error: incorrect loop node type" << endl;
 			break;
 		}  
-		cerr << "Found a " << loop->class_name() << " with depth: " << inh_attr.loop_nest_depth_ << endl;
 		++inh_attr.loop_nest_depth_;
-		cout << "Extracting loop now" << endl;
-		extractLoops( astNode );
+		cerr << "Found a " << loop->class_name() << " with depth: " << inh_attr.loop_nest_depth_ << endl;
+		// TODO: Upto what loop depth to extract as tool option
+		if( inh_attr.loop_nest_depth_ < 2 ){
+			cout << "Extracting loop now" << endl;
+			extractLoops( astNode );
+		}
 		break;
 	}
 	default: {
