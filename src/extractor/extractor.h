@@ -35,11 +35,22 @@ public:
   SynthesizedAttribute() {}
 };
 
-class LoopExtractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
+class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	set<string> header_set;
-
+	set<string> global_vars;
+	ofstream loop_file_buf;
 public:
-	LoopExtractor() { }
+	Extractor() {}
+	string getFilePath( const string &fileNameWithPath );
+	string getFileName( const string &fileNameWithPath );
+	string getFileExtn( const string &fileNameWithPath );
+	int getAstNodeLineNum( SgNode *const &astNode );
+	string getExtractionFileName( SgNode *astNode );
+	void printHeaders( SgNode *const &astNode );
+	void printGlobalsAsExtern( SgNode *const &astNode );
+
+	/* Important functions */ 
+	void extractLoops( SgNode *astNode );
 	virtual InheritedAttribute evaluateInheritedAttribute( SgNode *astNode, 
 														   InheritedAttribute inh_attr );
 	virtual int evaluateSynthesizedAttribute( SgNode *astNode, InheritedAttribute inh_attr,
@@ -47,16 +58,19 @@ public:
 
 };
 
-class LoopInfo {
+/* Must contain all info regarding the current loop */
+class LoopInfo : public Extractor {
+	SgNode *astNode;
+	SgForStatement *loop;
+	string func_name;	
 public:
-  SgForStatement *loop_;
-  int loop_depth_;
-  bool has_math_lib_call_;
-
-  LoopInfo(SgForStatement *loop, int depth, bool hasCall)
-      : loop_(loop), loop_depth_(depth), has_math_lib_call_(hasCall) {}
-
-  bool operator<(const LoopInfo &other) const { return loop_ < other.loop_; }
+	LoopInfo( SgNode *astNode, SgForStatement *loop, string func_name )
+		: astNode(astNode), loop(loop), func_name(func_name) {}
+	string getFuncName() { return func_name; }
+	bool operator < ( const LoopInfo &other ) const { return loop < other.loop; }
+	void printLoopFunc( ofstream &loop_file_buf );
+	void addLoopFuncAsExtern();	// In Base file
+	void addLoopFuncCall();		// In Base file
 };
 
 

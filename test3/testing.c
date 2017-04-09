@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <math.h>
-#define X 55
+int X=55;
 int glob=99;
 
 int main(){
