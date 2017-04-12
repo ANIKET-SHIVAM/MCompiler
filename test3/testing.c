@@ -2,6 +2,7 @@
 #include <math.h>
 int X=55;
 int glob=99;
+extern void external();
 
 int main(){
 	int i,j,k,sum1=0,sum2=0;

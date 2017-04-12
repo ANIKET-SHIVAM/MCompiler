@@ -7,6 +7,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <regex>
 
 //#include "defs.h"
 #include "rose.h"
@@ -16,6 +17,12 @@ using namespace std;
 
 #define SUCCESS true
 #define FAIL    false
+
+typedef enum src_lang_enum{
+	src_lang_C       = 0,
+	src_lang_CPP     = 1,
+	src_lang_FORTRAN = 2,
+}src_lang;
 
 class InheritedAttribute {
 public:
@@ -36,11 +43,17 @@ public:
 };
 
 class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
+	set<SgNode*> astNodesCollector; //Required to not add loop functions on Ast Post Processing
 	set<string> header_set;
 	set<string> global_vars;
+	SgGlobal *global_node; // Needed to add the extern calls
+	src_lang src_type;
+public:	
 	ofstream loop_file_buf;
 public:
-	Extractor() {}
+	//Extractor() {}
+	src_lang getSrcType() { return src_type; }
+	SgGlobal* getGlobalNode() { return global_node; }
 	string getFilePath( const string &fileNameWithPath );
 	string getFileName( const string &fileNameWithPath );
 	string getFileExtn( const string &fileNameWithPath );
@@ -59,21 +72,24 @@ public:
 };
 
 /* Must contain all info regarding the current loop */
-class LoopInfo : public Extractor {
+class LoopInfo {
+	Extractor& extr;
 	SgNode *astNode;
 	SgForStatement *loop;
 	string func_name;
 	SgScopeStatement *loop_scope;
-	set<string> scope_vars_vec;
+	set<string> scope_vars_str_vec;
+	set<SgVariableSymbol*> scope_vars_symbol_vec;
+	set<SgInitializedName*> scope_vars_initName_vec;
 public:
-	LoopInfo( SgNode *astNode, SgForStatement *loop, string func_name )
-		: astNode(astNode), loop(loop), func_name(func_name) {}
+	LoopInfo( SgNode *astNode, SgForStatement *loop, string func_name, Extractor& e)
+		: extr(e) ,astNode(astNode), loop(loop), func_name(func_name){ 
+}
 	string getFuncName() { return func_name; }
-	bool operator < ( const LoopInfo &other ) const { return loop < other.loop; }
-	void printLoopFunc( ofstream &loop_file_buf );
+	void printLoopFunc();
 	void getVarsInScope();
 	void addLoopFuncAsExtern();	// In Base file
-	void addLoopFuncCall();		// In Base file
+	void addLoopFuncCall();	// In Base file
 };
 
 
