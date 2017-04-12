@@ -207,13 +207,21 @@ void LoopInfo::addLoopFuncCall(){
 	set<SgVariableSymbol*>::iterator iter;
 	vector<SgExpression*> expr_list;
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++){
-		expr_list.push_back( new SgVarRefExp(*iter) );
+			if( extr.getSrcType() == src_lang_C ){
+				// 'Address Of' for C
+				expr_list.push_back( SageBuilder::buildAddressOfOp
+										( SageBuilder::buildVarRefExp( (*iter) ) ) );
+			} else if( extr.getSrcType() == src_lang_CPP ){
+				// Reference for C++
+				expr_list.push_back( SageBuilder::buildVarRefExp( (*iter) ) );
+			}
 	}	
 	SgName func_name = getFuncName();
 	SgFunctionCallExp* call_expr = SageBuilder::buildFunctionCallExp
 		( func_name, SageBuilder::buildVoidType(), SageBuilder::buildExprListExp( expr_list ),loop_scope );
-	//SageInterface::replaceStatement( loop, SageBuilder::buildExprStatement( call_expr ), true);
-	loop->replace_statement_from_basicBlock( loop, SageBuilder::buildExprStatement( call_expr ));
+	SageInterface::replaceStatement( loop, SageBuilder::buildExprStatement( call_expr ), true);
+	//SageInterface::appendStatement( SageBuilder::buildExprStatement( call_expr ), loop_scope);
+	//loop->replace_statement_from_basicBlock( loop, SageBuilder::buildExprStatement( call_expr ));
 }
 	
 void Extractor::extractLoops( SgNode *astNode ){

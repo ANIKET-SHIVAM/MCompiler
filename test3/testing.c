@@ -15,7 +15,7 @@ int main(){
 		sum2+=j;
 		foo(sum2);
 	}
-	bar(sum1,sum2);
+	bar(&sum1,sum2);
 	return 0;
 }
 
