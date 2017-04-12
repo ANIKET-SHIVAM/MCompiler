@@ -87,6 +87,8 @@ public:
 }
 	string getFuncName() { return func_name; }
 	void printLoopFunc();
+	void pushPointersToLocalVars();
+	void popLocalVarsToPointers();
 	void getVarsInScope();
 	void addLoopFuncAsExtern();	// In Base file
 	void addLoopFuncCall();	// In Base file

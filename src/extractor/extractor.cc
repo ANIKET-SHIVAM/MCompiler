@@ -107,12 +107,50 @@ void LoopInfo::getVarsInScope(){
 			int first_square_brac = var_type_str.find_first_of("[");
 			var_type_str =  var_type_str.substr(0,first_square_brac-1);
 		}
-		if( extr.getSrcType() == src_lang_C )
-			scope_vars_str_vec.insert( var_type_str + "* " + var->get_name().getString() );
-		else if( extr.getSrcType() == src_lang_CPP )
+		if( extr.getSrcType() == src_lang_C ){
+			/* 
+			 * Add '_primitive' after primitive parameter name,
+			 * so that actual name can be used inside the body 
+			 */
+			if( (var->get_type())->variantT() != V_SgArrayType )
+				scope_vars_str_vec.insert( var_type_str + "* " + var->get_name().getString()
+					+ "_primitive" );
+			else
+				scope_vars_str_vec.insert( var_type_str + "* " + var->get_name().getString() );
+		} else if( extr.getSrcType() == src_lang_CPP )
 			scope_vars_str_vec.insert( var_type_str + "& " + var->get_name().getString() );
 			
 		cerr << "Symbol Table : " << *(scope_vars_str_vec.rbegin()) << endl;
+	}
+}
+
+/* Only called if C */
+void LoopInfo::pushPointersToLocalVars(){
+	ofstream& loop_file_buf = extr.loop_file_buf;
+	
+	set<SgVariableSymbol*>::iterator iter;
+	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++ ){
+		string var_type_str = ((*iter)->get_type())->unparseToString();
+		string var_name_str = ((*iter)->get_name()).getString();
+		if( ((*iter)->get_type())->variantT() != V_SgArrayType ){
+			loop_file_buf << var_type_str <<" "<< var_name_str <<" = "<<"*"
+				<< var_name_str <<"_primitive" <<";"<< endl; 		
+		}
+	}
+}
+
+/* Only called if C */
+void LoopInfo::popLocalVarsToPointers(){
+	ofstream& loop_file_buf = extr.loop_file_buf;
+	
+	set<SgVariableSymbol*>::iterator iter;
+	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++ ){
+		string var_type_str = ((*iter)->get_type())->unparseToString();
+		string var_name_str = ((*iter)->get_name()).getString();
+		if( ((*iter)->get_type())->variantT() != V_SgArrayType ){
+			loop_file_buf <<"*"<< var_name_str <<"_primitive"<<" = "
+				<< var_name_str <<";"<< endl; 		
+		}
 	}
 }
 
@@ -151,6 +189,10 @@ void LoopInfo::printLoopFunc(){
 	// Add OMP Timer difference print
 	loop_file_buf << " printf_s("start = %.16g\nend = %.16g\ndiff = %.16g\n", end - start);" << endl;
 	*/
+
+	//Required only for C, since C++ is passed through reference(&) 
+	if( extr.getSrcType() == src_lang_C )
+		pushPointersToLocalVars();
 	
 	// TODO: Add SCoP pragma based on tool option 
 	loop_file_buf << "#pragma scop" << endl;
@@ -164,6 +206,10 @@ void LoopInfo::printLoopFunc(){
 	}
 
 	loop_file_buf << "#pragma endscop" << endl;
+	
+	//Required only for C, since C++ is passed through reference(&) 
+	if( extr.getSrcType() == src_lang_C )
+		popLocalVarsToPointers();
 	
 	loop_file_buf << "}" << endl; // Function End
 }
@@ -220,8 +266,6 @@ void LoopInfo::addLoopFuncCall(){
 	SgFunctionCallExp* call_expr = SageBuilder::buildFunctionCallExp
 		( func_name, SageBuilder::buildVoidType(), SageBuilder::buildExprListExp( expr_list ),loop_scope );
 	SageInterface::replaceStatement( loop, SageBuilder::buildExprStatement( call_expr ), true);
-	//SageInterface::appendStatement( SageBuilder::buildExprStatement( call_expr ), loop_scope);
-	//loop->replace_statement_from_basicBlock( loop, SageBuilder::buildExprStatement( call_expr ));
 }
 	
 void Extractor::extractLoops( SgNode *astNode ){
