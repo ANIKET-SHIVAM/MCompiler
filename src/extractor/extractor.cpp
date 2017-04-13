@@ -1,5 +1,8 @@
-/* Loop Extractor:
- * Move loops into new file as function with calls to that function in the original.
+/* 
+ * Written by: Aniket Shivam
+ * Loop Extractor and Function Extractor too (in future)
+ * Move loops into new file as function with calls to that 
+ * function in the base file.
  */
 #include "extractor.h"
 
@@ -120,7 +123,7 @@ void LoopInfo::getVarsInScope(){
 		} else if( extr.getSrcType() == src_lang_CPP )
 			scope_vars_str_vec.insert( var_type_str + "& " + var->get_name().getString() );
 			
-		cerr << "Symbol Table : " << *(scope_vars_str_vec.rbegin()) << endl;
+		//cerr << "Symbol Table : " << *(scope_vars_str_vec.rbegin()) << endl;
 	}
 }
 
@@ -281,7 +284,7 @@ void Extractor::extractLoops( SgNode *astNode ){
 	printHeaders(astNode);
 	printGlobalsAsExtern(astNode);
 	
-	cerr << "Adding loop to file: " << curr_loop.getFuncName() << endl;
+	//cerr << "Adding loop to file: " << curr_loop.getFuncName() << endl;
 	/* 
 	 * Take cares of print complete loop function and adding func calls
 	 * and extern loop func to the base file.
@@ -308,10 +311,10 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 					break;
 				}  
 				++inh_attr.loop_nest_depth_;
-				cerr << "Found a " << loop->class_name() << " with depth: " << inh_attr.loop_nest_depth_ << endl;
+				//cerr << "Found a " << loop->class_name() << " with depth: " << inh_attr.loop_nest_depth_ << endl;
 				// TODO: Upto what loop depth to extract as tool option
 				if( inh_attr.loop_nest_depth_ < 2 ){
-					cout << "Extracting loop now" << endl;
+					//cerr << "Extracting loop now" << endl;
 					extractLoops( astNode );
 				}
 				break;
@@ -320,7 +323,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 				global_node = isSgGlobal(astNode);
 			}
 			default: { 
-					cerr << "Found a " << astNode->class_name() << endl;	
+					//cerr << "Found a " << astNode->class_name() << endl;	
 			}
 		}
 
@@ -336,12 +339,12 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 					if (directiveTypeName == "CpreprocessorIncludeDeclaration" &&
 						header_set.find(headerName) == header_set.end()) {
 						header_set.insert(headerName);
-						cerr << "Header: " << headerName << endl;	
+						//cerr << "Header: " << headerName << endl;	
 					}	
 					if (directiveTypeName == "CpreprocessorDefineDeclaration" &&
 						header_set.find(headerName) == header_set.end()) {
 						header_set.insert(headerName);
-						cerr << "Header: " << headerName << endl;	
+						//cerr << "Header: " << headerName << endl;	
 					}	
 				}
 			}
@@ -363,14 +366,14 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 					// Now check if this is a global variable or an static class member
 					SgScopeStatement* scope = variableDeclaration->get_scope();
 					if (isSgGlobal(scope) != NULL){
-						cerr << "Found a global var: " << var_type_str + " " + initializedName->get_name().getString() << endl;	
+						//cerr << "Found a global var: " << var_type_str + " " + initializedName->get_name().getString() << endl;	
 						global_vars.insert( var_type_str + " " + initializedName->get_name().getString() );
 					}
 					if (isSgClassDefinition(scope) != NULL)
 					{
 						// Now check if it is a static data member
 						if (variableDeclaration->get_declarationModifier().get_storageModifier().isStatic() == true){
-							cerr << "Found a static global var: " << var_type_str + " " + initializedName->get_name().getString() << endl;	
+							//cerr << "Found a static global var: " << var_type_str + " " + initializedName->get_name().getString() << endl;	
 							global_vars.insert( var_type_str + " " + initializedName->get_name().getString() );
 						}
 					}
@@ -388,24 +391,17 @@ int Extractor::evaluateSynthesizedAttribute( SgNode *astNode, InheritedAttribute
 	return 0;
 }
 
-void runExtraction( SgProject *ast ){
+/* Extractor constructor, for initiating via driver */
+Extractor::Extractor( const vector<string> &argv ){
+	SgProject *ast = NULL;
+	/* Create AST and pass to the extraction functions */
+	ast = frontend( argv );
 	ROSE_ASSERT( ast != NULL );
 	InheritedAttribute inhr_attr;
-	Extractor fileExtractor;
 	/* Traverse all files and their ASTs in Top Down fashion (Inherited Attr) and extract loops */
-	fileExtractor.traverseInputFiles( ast, inhr_attr );
-}
-	
-
-int main( int argc, char *argv[] ){
-	vector<string> argvList(argv + 1, argv + argc);
-	SgProject *project = NULL;
-
-	/* Create AST and pass to the extraction functions */
-	project = frontend(argc, argv);
-    runExtraction(project);
-	AstTests::runAllTests(project);
-	backend(project);
-	delete project;
-	return 0;
+	this->traverseInputFiles( ast, inhr_attr );
+	AstTests::runAllTests(ast);
+	/* Generate rose_<orig file name> file for the transformed AST */
+	ast->unparse();
+	delete ast;	
 }

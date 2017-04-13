@@ -9,14 +9,10 @@
 #include <vector>
 #include <regex>
 
-//#include "defs.h"
 #include "rose.h"
 #include "ASTtools.hh"
 
 using namespace std;
-
-#define SUCCESS true
-#define FAIL    false
 
 typedef enum src_lang_enum{
 	src_lang_C       = 0,
@@ -51,7 +47,8 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 public:	
 	ofstream loop_file_buf;
 public:
-	//Extractor() {}
+	Extractor() {};
+	Extractor( const vector<string> &argv );
 	src_lang getSrcType() { return src_type; }
 	SgGlobal* getGlobalNode() { return global_node; }
 	string getFilePath( const string &fileNameWithPath );
@@ -93,6 +90,5 @@ public:
 	void addLoopFuncAsExtern();	// In Base file
 	void addLoopFuncCall();	// In Base file
 };
-
 
 #endif
