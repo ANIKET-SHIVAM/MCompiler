@@ -7,6 +7,8 @@ void Driver::initiateExtractor( string file_name ){
 	filename_vec.push_back(file_name);
 	filename_vec.push_back(file_name);
 	extr = new Extractor( filename_vec );
+	executeCommand( "mv rose_"+ extr->getFileName() + "." + extr->getFileExtn() +
+		 " " + extr->getDataFolderPath() );
 }
 
 string Driver::executeCommand( string cmd_str ) {
@@ -29,10 +31,16 @@ string Driver::executeCommand( string cmd_str ) {
 }
 
 int main( int argc, char* argv[] ){
+	if( argc < 2 ){
+		print_usage_options();
+		exit(EXIT_FAILURE);
+	}
+	string *files_and_flags = set_mCompiler_options( argc, argv );
 	Driver driver;
-	string file_for_extraction = "examples/test3/testing.c";
-	driver.initiateExtractor( file_for_extraction );
-	string temp(argv[1]);
-	string cmd_out = driver.executeCommand( temp );
+	driver.setInputFile( files_and_flags[0] );
+	driver.setOutputBinary( files_and_flags[1] );
+	driver.setCompilerFlags( files_and_flags[2] );
+	if( mCompiler_enabled_options[option_extract] == true )
+		driver.initiateExtractor( driver.getInputFile() );
 	return 0;
 }

@@ -39,18 +39,32 @@ public:
 };
 
 class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
+	string mCompiler_data_folder = "mCompiler_data"; 
+	string mCompiler_file_path; 
+	string mCompiler_file_name; 
+	string mCompiler_file_extn; 
 	set<SgNode*> astNodesCollector; //Required to not add loop functions on Ast Post Processing
 	set<string> header_set;
 	set<string> global_vars;
 	SgGlobal *global_node; // Needed to add the extern calls
 	src_lang src_type;
+	vector<string> loop_files_addr;
 public:	
 	ofstream loop_file_buf;
 public:
 	Extractor() {};
 	Extractor( const vector<string> &argv );
+
 	src_lang getSrcType() { return src_type; }
 	SgGlobal* getGlobalNode() { return global_node; }
+	vector<string> getLoopFilesAddr() { return loop_files_addr; }
+
+	string getDataFolder() { return mCompiler_data_folder; };
+	string getDataFolderPath() 
+		{ return mCompiler_file_path+"/"+ mCompiler_data_folder; };
+	string getFilePath() { return mCompiler_file_path; };
+	string getFileName() { return mCompiler_file_name; };
+	string getFileExtn() { return mCompiler_file_extn; };
 	string getFilePath( const string &fileNameWithPath );
 	string getFileName( const string &fileNameWithPath );
 	string getFileExtn( const string &fileNameWithPath );
@@ -83,10 +97,11 @@ public:
 		: extr(e) ,astNode(astNode), loop(loop), func_name(func_name){ 
 }
 	string getFuncName() { return func_name; }
+	void getVarsInScope();
+
 	void printLoopFunc();
 	void pushPointersToLocalVars();
 	void popLocalVarsToPointers();
-	void getVarsInScope();
 	void addLoopFuncAsExtern();	// In Base file
 	void addLoopFuncCall();	// In Base file
 };

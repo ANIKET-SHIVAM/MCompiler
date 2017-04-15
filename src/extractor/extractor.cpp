@@ -18,13 +18,15 @@ bool isDirExist( const string &path ) {
 
 string Extractor::getFilePath( const string &fileNameWithPath ) {
 	int lastSlashPos = fileNameWithPath.find_last_of('/');
-	return fileNameWithPath.substr(0, lastSlashPos);
+	mCompiler_file_path = fileNameWithPath.substr(0, lastSlashPos);
+	return mCompiler_file_path;
 }
 
 string Extractor::getFileName( const string &fileNameWithPath ) {
 	int lastSlashPos = fileNameWithPath.find_last_of('/');
 	int lastDotPos   = fileNameWithPath.find_last_of('.');
-	return fileNameWithPath.substr(lastSlashPos + 1, lastDotPos-lastSlashPos-1);
+	mCompiler_file_name = fileNameWithPath.substr(lastSlashPos + 1, lastDotPos-lastSlashPos-1);
+	return mCompiler_file_name;
 }
 
 string Extractor::getFileExtn( const string &fileNameWithPath ) {
@@ -40,8 +42,9 @@ string Extractor::getFileExtn( const string &fileNameWithPath ) {
 		src_type = src_lang_FORTRAN;
 	else 
 		ROSE_ASSERT(true);
-	return extn;
-		
+
+	mCompiler_file_extn = extn;
+	return mCompiler_file_extn;
 }
 
 int Extractor::getAstNodeLineNum( SgNode *const &astNode ) {
@@ -57,7 +60,7 @@ string Extractor::getExtractionFileName( SgNode *astNode ) {
 	string fileExtn = getFileExtn(fileNameWithPath);
 	int lineNumber = getAstNodeLineNum(astNode);
 
-	string outputPath = filePath + "/mCompiler_extractions/";
+	string outputPath = filePath + "/" + mCompiler_data_folder + "/";
 
 	fileName += "_line" + to_string(lineNumber);
 
@@ -274,11 +277,12 @@ void LoopInfo::addLoopFuncCall(){
 void Extractor::extractLoops( SgNode *astNode ){
 	SgForStatement *loop = dynamic_cast<SgForStatement *>(astNode);
 	string loop_file_name = getExtractionFileName(astNode);
+	loop_files_addr.push_back( loop_file_name );
 	loop_file_buf.open(loop_file_name.c_str(), ofstream::out);
 	
 	// Create loop object
 	LoopInfo curr_loop( astNode, loop, 
-		getFileName( (astNode->get_file_info())->get_filenameString() ) + "_" + 
+		getFileName( (astNode->get_file_info())->get_filenameString() ) + "_line" + 
 			to_string( getAstNodeLineNum(astNode) ), *this); 
 
 	printHeaders(astNode);

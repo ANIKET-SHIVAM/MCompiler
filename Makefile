@@ -41,8 +41,9 @@ OBJ_DRIVER = $(OBJS)/driver.o
 SRC_DRIVER = $(DRIVER_PATH)/driver.cpp 
 
 driver: $(OBJ_DRIVER) $(OBJ_EXTRACTOR)
-	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(DRIVER_LD_FLAGS) -o $(BIN)/$@
+	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
 $(OBJ_DRIVER): $(SRC_DRIVER)
+	rm -f $(OBJ_DRIVER)
 	$(CC) $(FLAGS) $(DRIVER_COMPILE_FLAGS) $(SRC_DRIVER) -c -o $@
 
 clean:
