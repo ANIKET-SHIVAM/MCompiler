@@ -2,11 +2,18 @@
 
 /* file_name is the relative path to the file to be extracted */
 void Driver::initiateExtractor( string file_name ){
+    if (FILE *file = fopen(file_name.c_str(), "r")) {
+        fclose(file);
+    } else {
+		cerr << "The input file doesn't exist: " << file_name << endl;
+		exit(EXIT_FAILURE);
+    }   
 	vector<string> filename_vec;
 	string dummy_arg_for_extractor_frontend = "Rose, please let me run the extractor!";
 	filename_vec.push_back(file_name);
 	filename_vec.push_back(file_name);
 	extr = new Extractor( filename_vec );
+	// Move base file to the mCompiler data folder
 	executeCommand( "mv rose_"+ extr->getFileName() + "." + extr->getFileExtn() +
 		 " " + extr->getDataFolderPath() );
 }

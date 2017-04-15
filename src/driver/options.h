@@ -52,7 +52,10 @@ string* set_mCompiler_options( int argc, char* argv[] ){
 			mCompiler_enabled_options[option_test]     = true;
 		else if( *iter == "-report" )
 			mCompiler_enabled_options[option_report]   = true;
-		else if( *iter == "-o" ){
+		else if( *iter == "-help" || *iter == "--help" ) {
+			print_usage_options();	
+			exit(EXIT_FAILURE);
+		} else if( *iter == "-o" ){
 			iter++;
 			driver_return_str[1] = *iter;
 		} else
