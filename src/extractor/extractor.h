@@ -1,14 +1,7 @@
 #ifndef EXTRACTOR_H_
 #define EXTRACTOR_H_
 
-#include <fstream>
-#include <map>
-#include <set>
-#include <string>
-#include <utility>
-#include <vector>
-#include <regex>
-
+#include "driver/common.h"
 #include "rose.h"
 #include "ASTtools.hh"
 

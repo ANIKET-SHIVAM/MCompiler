@@ -15,26 +15,25 @@ void Driver::initiateExtractor( string file_name ){
 	extr = new Extractor( filename_vec );
 	// Move base file to the mCompiler data folder
 	executeCommand( "mv rose_"+ extr->getFileName() + "." + extr->getFileExtn() +
-		 " " + extr->getDataFolderPath() );
+		" " + extr->getDataFolderPath() + "/" + extr->getFileName() + "_base" +
+		"." + extr->getFileExtn() );
+	// Keep record of all the mCompiler data folders to profile, combine, etc.
+	addDataFolderPath( extr->getDataFolderPath() );	
 }
 
-string Driver::executeCommand( string cmd_str ) {
-	const char *cmd_char_ptr = cmd_str.c_str();
-	array<char, 128> buffer;
-    string result;
+void Driver::initiateProfiler( string data_folder_path ){
+	src_lang src_type = extr->getSrcType();
+	if( src_type == src_lang_C ){
+		prof = new ProfilerC( data_folder_path );
+	}else if( src_type == src_lang_C ){
+		//ProfilerCPP( string data_folder_path );
+	} else if( src_type == src_lang_FORTRAN ){
+		//ProfilerFortran( string data_folder_path );
+	} else {
+		cerr << "Unknown source extention" << endl;
+		exit(EXIT_FAILURE);
+	}
 
-	cerr << "Executing command:" << endl << cmd_str << endl;
-    shared_ptr<FILE> pipe(popen(cmd_char_ptr, "r"), pclose);
-
-    if (!pipe) throw runtime_error("popen() while executing command failed!");
-
-    while (!feof(pipe.get())) {
-        if (fgets(buffer.data(), 128, pipe.get()) != NULL)
-            result += buffer.data();
-    }
-	cerr << "Result of the previous command:" << endl << result << endl;
-	
-    return result;
 }
 
 int main( int argc, char* argv[] ){
@@ -49,5 +48,12 @@ int main( int argc, char* argv[] ){
 	driver.setCompilerFlags( files_and_flags[2] );
 	if( mCompiler_enabled_options[option_extract] == true )
 		driver.initiateExtractor( driver.getInputFile() );
+	if( mCompiler_enabled_options[option_profile] == true ){
+		if( ( ( driver.getLastDataFolderPath() ).empty() ) ){
+			cerr << "Couldn't find the folder to profile hotspots" << endl;	
+			exit(EXIT_FAILURE);
+		}	
+		driver.initiateProfiler( driver.getLastDataFolderPath() );
+	}
 	return 0;
 }

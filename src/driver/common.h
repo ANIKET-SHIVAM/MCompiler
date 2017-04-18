@@ -1,0 +1,30 @@
+#ifndef COMMON_H_
+#define COMMON_H_
+
+#include <cstdio>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
+#include <regex>
+
+using namespace std;
+
+typedef enum{
+	compiler_ICC   = 0,
+	compiler_GCC   = 1,
+	compiler_LLVM  = 2,
+	compiler_PGI   = 3,
+	compiler_Pluto = 4,
+	compiler_Polly = 5
+}compiler_type; 
+
+extern map< compiler_type, bool > compiler_candidate;
+
+string executeCommand( string cmd_str );
+
+#endif
