@@ -60,7 +60,7 @@ string Extractor::getExtractionFileName( SgNode *astNode ) {
 	string fileExtn = getFileExtn(fileNameWithPath);
 	int lineNumber = getAstNodeLineNum(astNode);
 
-	string outputPath = filePath + "/" + mCompiler_data_folder + "/";
+	string outputPath = filePath + forward_slash_str + mCompiler_data_folder + forward_slash_str;
 
 	fileName += "_line" + to_string(lineNumber);
 
@@ -78,16 +78,26 @@ string Extractor::getExtractionFileName( SgNode *astNode ) {
 
 void Extractor::printHeaders( SgNode *const &astNode ){
 	set<string>::iterator iter;
-	bool hasTimer = false;
+	bool hasOMP = false;
+	bool hasIO = false;
 	for( iter = header_set.begin(); iter != header_set.end(); iter++ ){
 		string header_str = *iter;
 		loop_file_buf << header_str;  //header_set has space at the end already
-		if( header_str.find("#include <omp.h>") != string::npos )
-				hasTimer = true;
+		if( header_str.find("omp.h") != string::npos )
+				hasOMP = true;
+		if( src_type == src_lang_C && header_str.find("stdio.h") != string::npos )
+				hasIO = true;
+		if( src_type == src_lang_CPP && header_str.find("iostream") != string::npos )
+				hasIO = true;
 	}
 	// TODO: if it is a fortran code
-	if( !hasTimer && ( src_type == src_lang_C || src_type == src_lang_CPP ) )
+	if( !hasOMP && ( src_type == src_lang_C || src_type == src_lang_CPP ) )
 		loop_file_buf << "#include <omp.h>" << endl;
+	if( src_type == src_lang_C && !hasIO )
+		loop_file_buf << "#include <stdio.h>" << endl;
+	if( src_type == src_lang_CPP && !hasIO )
+		loop_file_buf << "#include <iostream>" << endl;
+
 }
 
 void Extractor::printGlobalsAsExtern( SgNode *const &astNode ){
@@ -183,23 +193,13 @@ void LoopInfo::printLoopFunc(){
 		loop_file_buf << ", " << *iter;
 	loop_file_buf<< " ){" << endl; // Function Start
 
-	/* 
-	 * TODO: How to store profile info here/ Find a tool to profile/ Use counters ?
-	 * bcoz no need for IO in final version of the application.	
-	 */
-	/*
-	// Add OMP Timer start
-	loop_file_buf << "double loop_timer_start = omp_get_wtime( );" << endl;
-	// Add OMP Timer start
-	loop_file_buf << "double loop_timer_end = omp_get_wtime( );" << endl;	
-	// Add OMP Timer difference print
-	loop_file_buf << " printf_s("start = %.16g\nend = %.16g\ndiff = %.16g\n", end - start);" << endl;
-	*/
-
 	//Required only for C, since C++ is passed through reference(&) 
 	if( extr.getSrcType() == src_lang_C )
 		pushPointersToLocalVars();
 	
+	// Add OMP Timer start
+	loop_file_buf << "double loop_timer_start = omp_get_wtime( );" << endl;
+
 	// TODO: Add SCoP pragma based on tool option 
 	loop_file_buf << "#pragma scop" << endl;
 	
@@ -212,6 +212,17 @@ void LoopInfo::printLoopFunc(){
 	}
 
 	loop_file_buf << "#pragma endscop" << endl;
+	
+	// Add OMP Timer end
+	loop_file_buf << "double loop_timer_end = omp_get_wtime( );" << endl;	
+
+	/* Very important for profiler to run and collect running time of each loop/hotspot */
+	// Add OMP Timer difference print
+	if( extr.getSrcType() == src_lang_C ){
+		loop_file_buf << "printf(\"" << getFuncName() << ": \%.9f\\n\", loop_timer_end - loop_timer_start );" << endl;
+	} else if( extr.getSrcType() == src_lang_CPP ){
+		loop_file_buf << "std::cout << \"" << getFuncName() << ": \" << std::setprecision(9) << (loop_timer_end - loop_timer_start) << std::endl;" << endl;
+	}
 	
 	//Required only for C, since C++ is passed through reference(&) 
 	if( extr.getSrcType() == src_lang_C )

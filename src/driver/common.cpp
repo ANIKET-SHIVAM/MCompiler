@@ -2,6 +2,7 @@
 
 map< compiler_type, bool > compiler_candidate;
 map< compiler_type, vector<string> > optimization_flags;
+map< compiler_type, vector<string> > linker_flags;
 
 string space_str         = " ";
 string forward_slash_str = "/";
@@ -31,13 +32,25 @@ string executeCommand( string cmd_str ) {
     return result;
 }
 
+// TODO: Add flags given to driver to following flag list (without or with mapping)
 void addOptimizationFlags(){
 	/* ICC */
 	vector<string> flag_vec;
 	flag_vec.push_back("icc");
 	flag_vec.push_back("-Ofast");
 	flag_vec.push_back("-xhost");
+	flag_vec.push_back("-qopenmp");
 	flag_vec.push_back("-w");
 	optimization_flags[compiler_ICC] = flag_vec;	
+
+}
+
+void addLinkerFlags(){
+	/* ICC */
+	vector<string> flag_vec;
+	flag_vec.push_back("icc");
+	flag_vec.push_back("-qopenmp");
+	flag_vec.push_back("-w");
+	linker_flags[compiler_ICC] = flag_vec;	
 
 }

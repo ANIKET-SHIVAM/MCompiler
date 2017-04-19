@@ -33,7 +33,9 @@ extern string dot_o_str;
 extern map< compiler_type, bool > compiler_candidate;
 extern map< compiler_type, vector<string> > optimization_flags;
 /* vector format: [ CC, -O?, ... ] */
+extern map< compiler_type, vector<string> > linker_flags;
 
 string executeCommand( string cmd_str );
 void addOptimizationFlags();
+void addLinkerFlags();
 #endif

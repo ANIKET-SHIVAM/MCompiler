@@ -15,7 +15,7 @@ void Driver::initiateExtractor( string file_name ){
 	extr = new Extractor( filename_vec );
 	// Move base file to the mCompiler data folder
 	executeCommand( "mv rose_"+ extr->getFileName() + "." + extr->getFileExtn() +
-		" " + extr->getDataFolderPath() + "/" + extr->getFileName() + "_base" +
+		" " + extr->getDataFolderPath() + forward_slash_str + extr->getFileName() + "_base" +
 		"." + extr->getFileExtn() );
 	// Keep record of all the mCompiler data folders to profile, combine, etc.
 	addDataFolderPath( extr->getDataFolderPath() );	
