@@ -2,11 +2,11 @@
 #define DRIVER_H_
 
 #include "common.h"
+#include "options.h"
 #include "extractor/extractor.h"
 #include "profiler/profilerC.h"
 //#include "profiler/profilerCPP.h"
 //#include "profiler/profilerFortan.h"
-#include "options.h"
 
 using namespace std;
 
@@ -33,7 +33,7 @@ public:
 	string getCompilerFlags() { return compiler_flags; };
 	
 	void initiateExtractor( string file_name );
-	void initiateProfiler( string data_folder_path );
+	void initiateProfiler( string data_folder_path, bool parallel );
 
 };
 

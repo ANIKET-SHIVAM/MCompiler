@@ -21,10 +21,10 @@ void Driver::initiateExtractor( string file_name ){
 	addDataFolderPath( extr->getDataFolderPath() );	
 }
 
-void Driver::initiateProfiler( string data_folder_path ){
+void Driver::initiateProfiler( string data_folder_path, bool parallel){
 	src_lang src_type = extr->getSrcType();
 	if( src_type == src_lang_C ){
-		prof = new ProfilerC( data_folder_path );
+		prof = new ProfilerC( data_folder_path, parallel );
 	}else if( src_type == src_lang_C ){
 		//ProfilerCPP( string data_folder_path );
 	} else if( src_type == src_lang_FORTRAN ){
@@ -42,18 +42,20 @@ int main( int argc, char* argv[] ){
 		exit(EXIT_FAILURE);
 	}
 	string *files_and_flags = set_mCompiler_options( argc, argv );
-	Driver driver;
-	driver.setInputFile( files_and_flags[0] );
-	driver.setOutputBinary( files_and_flags[1] );
-	driver.setCompilerFlags( files_and_flags[2] );
+	Driver *driver = new Driver();
+	driver->setInputFile( files_and_flags[0] );
+	driver->setOutputBinary( files_and_flags[1] );
+	driver->setCompilerFlags( files_and_flags[2] );
 	if( mCompiler_enabled_options[option_extract] == true )
-		driver.initiateExtractor( driver.getInputFile() );
+		driver->initiateExtractor( driver->getInputFile() );
 	if( mCompiler_enabled_options[option_profile] == true ){
-		if( ( ( driver.getLastDataFolderPath() ).empty() ) ){
+		if( ( ( driver->getLastDataFolderPath() ).empty() ) ){
 			cerr << "Couldn't find the folder to profile hotspots" << endl;	
 			exit(EXIT_FAILURE);
 		}	
-		driver.initiateProfiler( driver.getLastDataFolderPath() );
+		driver->initiateProfiler( driver->getLastDataFolderPath(), 
+			mCompiler_enabled_options[option_parallel] );
 	}
+	delete driver;
 	return 0;
 }

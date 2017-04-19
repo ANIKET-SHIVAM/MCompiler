@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 #include <regex>
+#include <dirent.h>
 
 using namespace std;
 
@@ -23,8 +24,16 @@ typedef enum{
 	compiler_Polly = 5
 }compiler_type; 
 
+extern string space_str;
+extern string forward_slash_str;
+extern string minus_c_str;
+extern string minus_o_str;
+extern string dot_o_str;
+
 extern map< compiler_type, bool > compiler_candidate;
+extern map< compiler_type, vector<string> > optimization_flags;
+/* vector format: [ CC, -O?, ... ] */
 
 string executeCommand( string cmd_str );
-
+void addOptimizationFlags();
 #endif
