@@ -4,13 +4,13 @@
 #include <map>
 
 typedef enum {
-	option_extract  = 0,
-	option_profile  = 1,
-	option_combiner = 2,
-	option_test     = 3,
-	option_report   = 4,
-	option_parallel = 5,
-	option_none     = 6
+	option_extract    = 0,
+	option_profile    = 1,
+	option_synthesize = 2,
+	option_test       = 3,
+	option_report     = 4,
+	option_parallel   = 5,
+	option_none       = 6
 }mCompiler_options;
 
 map< mCompiler_options, bool > mCompiler_enabled_options;
@@ -20,7 +20,7 @@ void print_usage_options(){
     fprintf(stdout, "\nOptions:\n");
     fprintf(stdout, "	-[no]extract       Extract hotspots\n");
     fprintf(stdout, "	-[no]profile       Profile extracted hotspots\n");
-    fprintf(stdout, "	-[no]combine       Combine best performing hotspots to create the final executable\n");
+    fprintf(stdout, "	-[no]synthesize    Combine best performing hotspots to create the final executable\n");
     fprintf(stdout, "	-test              Test performance compared to single compiler optimized code\n");
     fprintf(stdout, "	-report            Generate mCompiler performance report\n");
     fprintf(stdout, "	-[no]parallel      Auto-parallelize the hotspots, -noparallel for serial code generation (with vectorization)\n");
@@ -32,7 +32,7 @@ string* set_mCompiler_options( int argc, char* argv[] ){
 	mCompiler_enabled_options = {
 		{ option_extract,  true  },
 		{ option_profile,  true  },
-		{ option_combiner, true  },
+		{ option_synthesize, true  },
 		{ option_test,     false },
 		{ option_report,   false },
 		{ option_parallel, true  },
@@ -49,8 +49,8 @@ string* set_mCompiler_options( int argc, char* argv[] ){
 			mCompiler_enabled_options[option_extract]  = false;
 		else if( *iter == "-noprofile" )
 			mCompiler_enabled_options[option_profile]  = false;
-		else if( *iter == "-nocombine" )
-			mCompiler_enabled_options[option_combiner] = false;
+		else if( *iter == "-nosynthesize" )
+			mCompiler_enabled_options[option_synthesize] = false;
 		else if( *iter == "-test" )
 			mCompiler_enabled_options[option_test]     = true;
 		else if( *iter == "-report" )

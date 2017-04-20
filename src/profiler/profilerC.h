@@ -40,7 +40,7 @@ public:
 	void Profile();
 	void getObjectFiles();
 	void linkFiles();
-
+	void gatherProfilingData( const string& binary_file );
 	
 };
 

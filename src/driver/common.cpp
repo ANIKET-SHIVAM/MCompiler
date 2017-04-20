@@ -9,6 +9,13 @@ string forward_slash_str = "/";
 string minus_c_str = "-c";
 string minus_o_str = "-o";
 string dot_o_str   = ".o";
+string base_str    = "_base";
+string icc_str     = "_icc";
+string gcc_str     = "_gcc";
+string llvm_str    = "_llvm";
+string pgi_str     = "_pgi";
+string pluto_str   = "_pluto";
+string polly_str   = "_polly";
 
 string executeCommand( string cmd_str ) {
 	// Since, pipe doesn't capture stderr, redirect it to stdout

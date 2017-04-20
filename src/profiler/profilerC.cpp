@@ -172,6 +172,10 @@ void ProfilerC::getObjectFiles(){
 	}
 }
 
+void ProfilerC::gatherProfilingData( const string& binary_file ){
+	string result = executeCommand( binary_file );
+}
+
 void ProfilerC::iccProfile(){
 	vector<string> CL_flags = linker_flags[compiler_ICC];
 	vector<string>::iterator iterv;
@@ -191,6 +195,8 @@ void ProfilerC::iccProfile(){
 	}
 	executeCommand( CL + object_files + space_str + minus_o_str + space_str + out_file );
 
+	/* Send binary for profiling and storing profiling data */	
+	gatherProfilingData( out_file );
 }
 
 void ProfilerC::gccProfile(){

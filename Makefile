@@ -1,17 +1,17 @@
 CC = g++
 FLAGS = -std=c++11 -g
 
-EXTRACTOR_PATH = src/extractor
-PROFILER_PATH  = src/profiler
-COMBINER_PATH  = src/combiner
-TESTER_PATH    = src/tester
-DRIVER_PATH    = src/driver
+EXTRACTOR_PATH    = src/extractor
+PROFILER_PATH     = src/profiler
+SYNTHESIZER_PATH  = src/synthesizer
+TESTER_PATH       = src/tester
+DRIVER_PATH       = src/driver
 
 OBJS = objs
 BIN  = bin
 OBJ_COMMON = $(OBJS)/common.o
 
-all: extractor profiler driver #combiner tester
+all: extractor profiler synthesizer driver #tester
 
 $(OBJ_COMMON): src/driver/common.cpp
 	$(CC) $(FLAGS) src/driver/common.cpp -c -o $@
@@ -54,7 +54,26 @@ $(OBJ_PROFILER): $(SRC_PROFILER) $(OBJ_COMMON)
 just_profiler: $(SRC_PROFILER) $(OBJ_COMMON)
 	rm -f $(OBJ_PROFILER)
 	$(CC) $(FLAGS) $(PROFILER_COMPILE_FLAGS) $(SRC_PROFILER) -c -o $(OBJ_PROFILER)
-	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
+	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
+
+##### SYNTHESIZER #####
+
+SYNTHESIZER_COMPILE_FLAGS = -I/home/aniket/meta_compiler/src \
+	$(EXTRACTOR_COMPILE_FLAGS)
+SYNTHESIZER_LD_FLAGS = 
+
+OBJ_SYNTHESIZER = $(OBJS)/synthesizerC.o
+SRC_SYNTHESIZER = $(SYNTHESIZER_PATH)/synthesizerC.cpp 
+
+synthesizer: $(OBJ_SYNTHESIZER)
+
+$(OBJ_SYNTHESIZER): $(SRC_SYNTHESIZER) $(OBJ_COMMON)
+	$(CC) $(FLAGS) $(SYNTHESIZER_COMPILE_FLAGS) $(SRC_SYNTHESIZER) -c -o $@
+
+just_synthesizer: $(SRC_SYNTHESIZER) $(OBJ_COMMON)
+	rm -f $(OBJ_SYNTHESIZER)
+	$(CC) $(FLAGS) $(SYNTHESIZER_COMPILE_FLAGS) $(SRC_SYNTHESIZER) -c -o $(OBJ_SYNTHESIZER)
+	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR)  $(OBJ_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
 
 ##### DRIVER #####
 
@@ -65,15 +84,15 @@ DRIVER_LD_FLAGS = $(EXTRACTOR_LD_FLAGS)
 OBJ_DRIVER = $(OBJS)/driver.o
 SRC_DRIVER = $(DRIVER_PATH)/driver.cpp 
 
-driver: $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_COMMON)
-	$(CC) $(OBJ_DRIVER) $(OBJ_PROFILER) $(OBJ_EXTRACTOR) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
+driver: $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON)
+	$(CC) $(OBJ_DRIVER) $(OBJ_PROFILER) $(OBJ_EXTRACTOR) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
 $(OBJ_DRIVER): $(SRC_DRIVER)
 	$(CC) $(FLAGS) $(DRIVER_COMPILE_FLAGS) $(SRC_DRIVER) -c -o $@
 
-just_driver: $(OBJ_EXTRACTOR) $(SRC_PROFILER) $(OBJ_COMMON)
+just_driver: $(OBJ_EXTRACTOR) $(SRC_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON)
 	rm -f $(OBJ_DRIVER)
 	$(CC) $(FLAGS) $(DRIVER_COMPILE_FLAGS) $(SRC_DRIVER) -c -o $(OBJ_DRIVER)
-	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
+	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
 
 ##### CLEAN #####
 clean:

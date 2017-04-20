@@ -5,6 +5,7 @@
 #include "options.h"
 #include "extractor/extractor.h"
 #include "profiler/profilerC.h"
+#include "synthesizer/synthesizerC.h"
 //#include "profiler/profilerCPP.h"
 //#include "profiler/profilerFortan.h"
 
@@ -19,6 +20,7 @@ class Driver {
 	vector<string> mCompiler_datafolder_paths;
 	Extractor *extr;
 	ProfilerC *prof;
+	SynthesizerC *synth;
 public:
 	Driver() {};
 	void setInputFile( string str ) { input_file = str; };
@@ -29,11 +31,12 @@ public:
 	string getLastDataFolderPath() 
 		{ return mCompiler_datafolder_paths.back(); };
 	string getInputFile() { return input_file; };
-	string getOuputBinary() { return output_binary; };
+	string getOutputBinary() { return output_binary; };
 	string getCompilerFlags() { return compiler_flags; };
 	
 	void initiateExtractor( string file_name );
 	void initiateProfiler( string data_folder_path, bool parallel );
+	void initiateSynthesizer( string data_folder_path, bool parallel );
 
 };
 
