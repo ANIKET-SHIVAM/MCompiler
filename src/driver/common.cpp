@@ -17,6 +17,8 @@ string pgi_str     = "_pgi";
 string pluto_str   = "_pluto";
 string polly_str   = "_polly";
 
+string profile_data_csv = "profile_data.csv";
+
 string executeCommand( string cmd_str ) {
 	// Since, pipe doesn't capture stderr, redirect it to stdout
 	cmd_str = cmd_str + " 2>&1";
@@ -60,4 +62,25 @@ void addLinkerFlags(){
 	flag_vec.push_back("-w");
 	linker_flags[compiler_ICC] = flag_vec;	
 
+}
+
+bool isEndingWith( string const &fullString, string const &ending ){
+    if( fullString.length() >= ending.length() )
+		return ( fullString.compare( fullString.length() - ending.length(), ending.length(), ending ) == 0 );
+    else 
+        return false;
+}
+
+bool isEndingWithCompilerName( string const &fullString ){
+	if( 
+		fullString.compare( fullString.length() - icc_str.length(), icc_str.length(), icc_str ) == 0 ||
+		fullString.compare( fullString.length() - gcc_str.length(), gcc_str.length(), gcc_str ) == 0 ||
+		fullString.compare( fullString.length() - pgi_str.length(), pgi_str.length(), pgi_str ) == 0 ||
+		fullString.compare( fullString.length() - llvm_str.length(), llvm_str.length(), llvm_str ) == 0 ||
+		fullString.compare( fullString.length() - pluto_str.length(), pluto_str.length(), pluto_str ) == 0 ||
+		fullString.compare( fullString.length() - polly_str.length(), polly_str.length(), polly_str ) == 0 ){
+		return true;
+    } else {
+        return false;
+	}
 }

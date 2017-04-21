@@ -13,6 +13,8 @@
 #include <regex>
 #include <dirent.h>
 
+#include "csv.h"
+
 using namespace std;
 
 typedef enum{
@@ -37,6 +39,8 @@ extern string pgi_str;
 extern string pluto_str;
 extern string polly_str;
 
+extern string profile_data_csv;
+
 extern map< compiler_type, bool > compiler_candidate;
 extern map< compiler_type, vector<string> > optimization_flags;
 /* vector format: [ CC, -O?, ... ] */
@@ -45,4 +49,6 @@ extern map< compiler_type, vector<string> > linker_flags;
 string executeCommand( string cmd_str );
 void addOptimizationFlags();
 void addLinkerFlags();
+bool isEndingWith( string const &fullString, string const &ending );
+bool isEndingWithCompilerName( string const &fullString );
 #endif

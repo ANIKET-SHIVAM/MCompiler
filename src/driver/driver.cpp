@@ -56,7 +56,7 @@ int main( int argc, char* argv[] ){
 		print_usage_options();
 		exit(EXIT_FAILURE);
 	}
-
+	/* TODO: Clear the mCompiler data folder, if starting from beginning */
 	string *files_and_flags = set_mCompiler_options( argc, argv );
 	Driver *driver = new Driver();
 	driver->setInputFile( files_and_flags[0] );

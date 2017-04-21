@@ -76,7 +76,7 @@ void ProfilerC::getHotspotFiles(){
 		/* print all the files and directories within directory */
 		while ( ( ent = readdir(dir) ) != NULL ){
 			string filename( ent->d_name );
-			if( filename.at(0) != '.' && filename.find(".c") != string::npos ){
+			if( filename.at(0) != '.' && isEndingWith(filename, ".c") ){
 				files_to_compile.insert( getDataFolderPath() +forward_slash_str+ ent->d_name );
 				cout << "Adding files for compiling: " << ent->d_name << endl;
 			}
@@ -102,8 +102,9 @@ void ProfilerC::iccOptimize(){
 	
 	set<string>::iterator iters;
 	for( iters = files_to_compile.begin(); iters != files_to_compile.end(); iters++){
-		string out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + "_icc"; 
-		executeCommand( CL + *iters + space_str + minus_o_str + space_str + out_file + dot_o_str );
+		string out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + icc_str + dot_o_str; 
+		files_to_link.insert( out_file );
+		executeCommand( CL + *iters + space_str + minus_o_str + space_str + out_file );
 	}
 
 }
@@ -122,7 +123,7 @@ void ProfilerC::plutoOptimize(){
 
 void ProfilerC::pollyOptimize(){
 }
-
+/*
 void ProfilerC::Optimize(){
 	map< compiler_type, bool >::iterator iter;
 	getHotspotFiles();
@@ -146,20 +147,21 @@ void ProfilerC::Optimize(){
 	}
 	
 }
-
+*/
 /* 
  * Phase 2 of profiler: Collect all .o from same compiler,
  * link to create an executable and run multiple times,
  * put timing data for each loop in .csv file for combiner to use.
  */ 
-void ProfilerC::getObjectFiles(){
+void ProfilerC::getObjectFiles( const string& compiler_name ){
 	DIR *dir;
 	struct dirent *ent;
+	files_to_link.clear();
 	if ( ( dir = opendir( ( getDataFolderPath() ).c_str() ) ) != NULL) {
 		/* print all the files and directories within directory */
 		while ( ( ent = readdir(dir) ) != NULL ){
 			string filename( ent->d_name );
-			if( filename.at(0) != '.' && filename.find("_icc.o") != string::npos ){
+			if( filename.at(0) != '.' && isEndingWith(filename,compiler_name+dot_o_str) ){
 				files_to_link.insert( getDataFolderPath() +forward_slash_str+ ent->d_name );
 				cout << "Adding files for Linking: " << ent->d_name << endl;
 			}
@@ -172,11 +174,25 @@ void ProfilerC::getObjectFiles(){
 	}
 }
 
-void ProfilerC::gatherProfilingData( const string& binary_file ){
+void ProfilerC::gatherProfilingData( const string& binary_file, const string& compiler_str ){
 	string result = executeCommand( binary_file );
+
+	bool writing_file = false;
+	CSV csv_file( getDataFolderPath()+forward_slash_str+profile_data_csv, writing_file );
+
+	stringstream line_stream(result);
+	string cell;
+	
+	while( getline( line_stream, cell ) ){
+		int colon_pos = cell.find_last_of(':');
+		csv_file << cell.substr(0, colon_pos) << compiler_str << cell.substr( colon_pos+1 );
+		csv_file << endrow; 
+	}
+
 }
 
 void ProfilerC::iccProfile(){
+	//getObjectFiles(icc_str);
 	vector<string> CL_flags = linker_flags[compiler_ICC];
 	vector<string>::iterator iterv;
 	string CL;
@@ -189,14 +205,14 @@ void ProfilerC::iccProfile(){
 	string out_file;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
 		object_files += *iters + space_str; 
-		if( (*iters).find("_base") != string::npos){
-			out_file = (*iters).substr( 0, ( (*iters).find("_base") ) ) + "_icc";
+		if( (*iters).find(base_str) != string::npos){
+			out_file = (*iters).substr( 0, ( (*iters).find(base_str) ) ) + icc_str;
 		}
 	}
 	executeCommand( CL + object_files + space_str + minus_o_str + space_str + out_file );
 
 	/* Send binary for profiling and storing profiling data */	
-	gatherProfilingData( out_file );
+	gatherProfilingData( out_file, icc_str );
 }
 
 void ProfilerC::gccProfile(){
@@ -216,22 +232,22 @@ void ProfilerC::pollyProfile(){
 
 void ProfilerC::Profile(){
 	map< compiler_type, bool >::iterator iter;
-	getObjectFiles();
+	getHotspotFiles();
 	for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
 		if( iter->second == true ){
 			switch (iter->first) {
 				case compiler_ICC:
-					iccProfile();   break;
+					iccOptimize(); iccProfile();   break;
 				case compiler_GCC:
-					gccProfile();   break;
+					gccOptimize(); gccProfile();   break;
 				case compiler_LLVM:
-					llvmProfile();  break;
+					llvmOptimize(); llvmProfile();  break;
 				case compiler_PGI:
-					pgiProfile();   break;
+					pgiOptimize(); pgiProfile();   break;
 				case compiler_Pluto:
-					plutoProfile(); break;
+					plutoOptimize(); plutoProfile(); break;
 				case compiler_Polly:
-					pollyProfile(); break;
+					pollyOptimize(); pollyProfile(); break;
 			}
 		}
 	}
@@ -243,6 +259,6 @@ ProfilerC::ProfilerC( const string& input_data_folder_path, bool parallel_enable
 	data_folder_path = input_data_folder_path;
 	parallel = parallel_enabled;
 	checkCompilerCandidates();
-	Optimize();  // Phase 1
+//	Optimize();  // Phase 1
 	Profile();  // Phase 2
 }

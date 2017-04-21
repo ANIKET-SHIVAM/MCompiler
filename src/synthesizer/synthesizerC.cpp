@@ -1,12 +1,5 @@
 #include "synthesizerC.h"
 
-bool isEndingWith( string const &fullString, string const &ending ){
-    if( fullString.length() >= ending.length() )
-		return ( fullString.compare( fullString.length() - ending.length(), ending.length(), ending ) == 0 );
-    else 
-        return false;
-}
-
 void SynthesizerC::findCandidateBinaries(){
 	DIR *dir;
 	struct dirent *ent;
@@ -14,7 +7,7 @@ void SynthesizerC::findCandidateBinaries(){
 		/* print all the files and directories within directory */
 		while ( ( ent = readdir(dir) ) != NULL ){
 			string filename( ent->d_name );
-			if( filename.at(0) != '.' && isEndingWith(filename, icc_str) ){
+			if( filename.at(0) != '.' && isEndingWithCompilerName(filename) ){
 				candidate_binaries.insert( getDataFolderPath() +forward_slash_str+ ent->d_name );
 				cout << "Adding Candidate Binary: " << ent->d_name << endl;
 			}

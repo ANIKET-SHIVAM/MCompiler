@@ -33,14 +33,16 @@ public:
 	void checkCompilerCandidates();
 
 	// Phase 1
-	void Optimize();
+	//void Optimize();
 	void getHotspotFiles();
 
 	// Phase 2
 	void Profile();
-	void getObjectFiles();
+	void independentProfile();
+	void getObjectFiles( const string& compiler_name ); 
+	/* getObjectFiles-Only needed if mCompiler started at Profiling phase */ 
 	void linkFiles();
-	void gatherProfilingData( const string& binary_file );
+	void gatherProfilingData( const string& binary_file, const string& compiler_str );
 	
 };
 
