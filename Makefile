@@ -11,17 +11,20 @@ OBJS = objs
 BIN  = bin
 OBJ_COMMON = $(OBJS)/common.o
 
+ROSE_INCLUDE = -I/home/aniket/meta_compiler/tools/rose/boost_1_61_0/include \
+	-I/home/aniket/meta_compiler/tools/rose/rose_build/include/rose
+
+
 all: extractor profiler synthesizer driver #tester
 
 $(OBJ_COMMON): src/driver/common.cpp
-	$(CC) $(FLAGS) src/driver/common.cpp -c -o $@
+	$(CC) $(FLAGS) src/driver/common.cpp $(ROSE_INCLUDE) -c -o $@
 
 
 ##### EXTRACTOR #####
 
 EXTRACTOR_COMPILE_FLAGS = -I/home/aniket/meta_compiler/src \
-	-I/home/aniket/meta_compiler/tools/rose/boost_1_61_0/include \
-	-I/home/aniket/meta_compiler/tools/rose/rose_build/include/rose
+	$(ROSE_INCLUDE)
 EXTRACTOR_LD_FLAGS = -L/home/aniket/meta_compiler/tools/rose/rose_build/lib/ \
 	-lrose -lboost_iostreams -lboost_system
 
@@ -29,12 +32,12 @@ OBJ_EXTRACTOR = $(OBJS)/extractor.o
 SRC_EXTRACTOR  = $(EXTRACTOR_PATH)/extractor.cpp 
 SRC_RUN_EXTRACTOR  = $(EXTRACTOR_PATH)/run_extractor.cpp 
 
-extractor: $(SRC_RUN_EXTRACTOR) $(OBJ_EXTRACTOR) $(OBJ_COMMON)
+extractor: $(OBJ_EXTRACTOR)
 #	$(CC) $(FLAGS) $(SRC_RUN_EXTRACTOR) $(OBJ_EXTRACTOR) $(OBJ_COMMON) \
 	$(EXTRACTOR_LD_FLAGS) \
 	$(EXTRACTOR_COMPILE_FLAGS) -o $(BIN)/$@
 
-$(OBJ_EXTRACTOR): $(SRC_EXTRACTOR)
+$(OBJ_EXTRACTOR): $(SRC_EXTRACTOR) $(OBJ_COMMON)
 	$(CC) $(FLAGS) $(EXTRACTOR_COMPILE_FLAGS) $(SRC_EXTRACTOR) -c -o $@
 
 ##### PROFILER #####
@@ -96,7 +99,7 @@ just_driver: $(OBJ_EXTRACTOR) $(SRC_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON)
 
 ##### CLEAN #####
 clean:
-	rm $(OBJS)/* $(BIN)/*
+	rm -f $(OBJS)/* $(BIN)/*
 
 
 .PHONY: all extract driver clean

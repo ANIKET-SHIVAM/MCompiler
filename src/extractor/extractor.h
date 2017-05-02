@@ -2,8 +2,6 @@
 #define EXTRACTOR_H_
 
 #include "driver/common.h"
-#include "rose.h"
-#include "ASTtools.hh"
 
 using namespace std;
 
@@ -32,7 +30,6 @@ public:
 };
 
 class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
-	string mCompiler_data_folder = "mCompiler_data"; 
 	string mCompiler_file_path; 
 	string mCompiler_file_name; 
 	string mCompiler_file_extn; 
@@ -51,10 +48,8 @@ public:
 	src_lang getSrcType() { return src_type; }
 	SgGlobal* getGlobalNode() { return global_node; }
 	vector<string> getLoopFilesAddr() { return loop_files_addr; }
+	string getDataFolderPath() { return mCompiler_data_folder_path; };
 
-	string getDataFolder() { return mCompiler_data_folder; };
-	string getDataFolderPath() 
-		{ return mCompiler_file_path+"/"+ mCompiler_data_folder; };
 	string getFilePath() { return mCompiler_file_path; };
 	string getFileName() { return mCompiler_file_name; };
 	string getFileExtn() { return mCompiler_file_extn; };

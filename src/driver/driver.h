@@ -17,7 +17,7 @@ class Driver {
 	string output_binary;
 	/* Output file useful if Combiner is being executed */
 	string compiler_flags;
-	vector<string> mCompiler_datafolder_paths;
+//	vector<string> mCompiler_datafolder_paths;
 	Extractor *extr;
 	ProfilerC *prof;
 	SynthesizerC *synth;
@@ -26,17 +26,18 @@ public:
 	void setInputFile( string str ) { input_file = str; };
 	void setOutputBinary( string str ) { output_binary = str; };
 	void setCompilerFlags( string str ) { compiler_flags = str; };
-	void addDataFolderPath( string str ) 
-		{ mCompiler_datafolder_paths.push_back( str ); };
-	string getLastDataFolderPath() 
-		{ return mCompiler_datafolder_paths.back(); };
+//	void addDataFolderPath( string str ) 
+//		{ mCompiler_datafolder_paths.push_back( str ); };
+//	string getLastDataFolderPath() 
+//		{ return mCompiler_datafolder_paths.back(); };
 	string getInputFile() { return input_file; };
 	string getOutputBinary() { return output_binary; };
 	string getCompilerFlags() { return compiler_flags; };
-	
+
+	void createMCompilerDataFolder();
 	void initiateExtractor( string file_name );
-	void initiateProfiler( string data_folder_path, bool parallel );
-	void initiateSynthesizer( string data_folder_path, bool parallel );
+	void initiateProfiler( bool parallel );
+	void initiateSynthesizer( bool parallel );
 
 };
 

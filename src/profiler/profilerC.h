@@ -9,7 +9,6 @@ class ProfilerC {
 private:
 	string data_folder_path;
 	bool parallel;
-	set<string> files_to_compile;
 	set<string> files_to_link;
 
 	void iccOptimize(); 
@@ -27,8 +26,8 @@ private:
 	void pollyProfile(); 
 
 public:
-	ProfilerC( const string& input_data_folder_path, bool parallel );
-	string getDataFolderPath() { return data_folder_path; };
+	ProfilerC( bool parallel );
+	string getDataFolderPath() { return mCompiler_data_folder_path; };
 	bool isParallelEnabled()   { return parallel; };
 	void checkCompilerCandidates();
 

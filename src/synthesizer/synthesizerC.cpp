@@ -1,33 +1,77 @@
 #include "synthesizerC.h"
 
-void SynthesizerC::findCandidateBinaries(){
-	DIR *dir;
-	struct dirent *ent;
-	if ( ( dir = opendir( ( getDataFolderPath() ).c_str() ) ) != NULL) {
-		/* print all the files and directories within directory */
-		while ( ( ent = readdir(dir) ) != NULL ){
-			string filename( ent->d_name );
-			if( filename.at(0) != '.' && isEndingWithCompilerName(filename) ){
-				candidate_binaries.insert( getDataFolderPath() +forward_slash_str+ ent->d_name );
-				cout << "Adding Candidate Binary: " << ent->d_name << endl;
-			}
-		}
-		closedir (dir);
-	} else {
-		/* could not open directory */
-		cerr << "Couldn't open data folder: " << getDataFolderPath() << endl;
-		exit(EXIT_FAILURE);
-	}
+void SynthesizerC::selectOptimalOptimizedCandidate( string hotspot_name ){
+	// pair< compiler_string, running time >
+	set< pair<string, double>, less_than_cmp_set > hotspot_timing_set;
+		
+	map< pair< string, string >, vector<double>* >::iterator dataIter;
+	map< pair< string, string >, string >::iterator locIter;
+
+	/* Add Mean timing for ICC into comparision set */
+	dataIter = profiler_hotspot_data.find( pair<string,string>(hotspot_name,icc_str) );
+	if( dataIter != profiler_hotspot_data.end() )
+		hotspot_timing_set.insert( pair<string,double>(icc_str, getVectorMean(dataIter->second) ) );
+
+	/* Add Mean timing for GCC into comparision set */
+	dataIter = profiler_hotspot_data.find( pair<string,string>(hotspot_name,gcc_str) );
+	if( dataIter != profiler_hotspot_data.end() )
+		hotspot_timing_set.insert( pair<string,double>(gcc_str, getVectorMean(dataIter->second) ) );
+
+	/* Find the lowest running time compiler and add its hotspot object file to final set for linking */	
+	string best_compiler_option = ( hotspot_timing_set.begin() )->first;
+	string best_option_path = ( profiler_hotspot_obj_path.find( pair<string,string>(hotspot_name, best_compiler_option ) ) )->second;
+	best_objs_to_link.insert(best_option_path);
+	
+	cout << "mCompiler chose: " << hotspot_name << " + " << best_compiler_option << endl;
+		
 }
 
-SynthesizerC::SynthesizerC( const string& input_data_folder_path, bool parallel_enabled,
-							const string& custom_binary_name ){
-	data_folder_path = input_data_folder_path;
+void SynthesizerC::analyzeHotspotProfileData(){
+	
+	// TODO: Change from ICC as base file always to best possible option
+	best_objs_to_link.insert( (base_obj_path.find( icc_str ))->second );
+
+	set<string>::iterator iters;
+	for( iters = hotspot_name_set.begin(); iters != hotspot_name_set.end(); iters++ ){
+		selectOptimalOptimizedCandidate(*iters);
+	}
+
+/*
+	map< pair< string, string >, vector<double>* >::iterator dataIter;
+	map< pair< string, string >, string >::iterator locIter;
+	for( dataIter = profiler_hotspot_data.begin(); dataIter != profiler_hotspot_data.end(); dataIter++ ){
+		cout << (dataIter->first).first << (dataIter->first).second << getVectorMean(dataIter->second) << endl;
+	}
+	for( locIter = profiler_hotspot_obj_path.begin(); locIter != profiler_hotspot_obj_path.end(); locIter++ ){
+		cout << (locIter->first).first << (locIter->first).second << locIter->second << endl;
+	}
+*/
+}
+
+void SynthesizerC::generateFinalBinary(){
+	// TODO: Change linker from ICC to LLD or faster option
+	vector<string> CL_flags = linker_flags[compiler_ICC];
+	vector<string>::iterator iterv;
+	string CL;
+	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+
+	set<string>::iterator iters;
+	string object_files;
+	for( iters = best_objs_to_link.begin(); iters != best_objs_to_link.end(); iters++){
+		object_files += *iters + space_str; 
+	}
+	executeCommand( CL + object_files + space_str + minus_o_str + space_str + binary_name );
+}
+
+SynthesizerC::SynthesizerC( bool parallel_enabled, const string& custom_binary_name ){
 	parallel = parallel_enabled;
 	if( custom_binary_name.empty() )
-		binary_name = data_folder_path.substr( data_folder_path.find_last_of( forward_slash_str ) );
+		binary_name = mCompiler_curr_dir_path + mCompiler_binary_name;
 	else
 		binary_name = custom_binary_name;
 
-
+	analyzeHotspotProfileData();
+	generateFinalBinary();
 }

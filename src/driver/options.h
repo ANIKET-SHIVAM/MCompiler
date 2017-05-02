@@ -1,7 +1,7 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-#include <map>
+#include "common.h"
 
 typedef enum {
 	option_extract    = 0,
@@ -55,9 +55,10 @@ string* set_mCompiler_options( int argc, char* argv[] ){
 			mCompiler_enabled_options[option_test]     = true;
 		else if( *iter == "-report" )
 			mCompiler_enabled_options[option_report]   = true;
-		else if( *iter == "-noparallel" )
+		else if( *iter == "-noparallel" ){
 			mCompiler_enabled_options[option_report]   = false;
-		else if( *iter == "-help" || *iter == "--help" ) {
+			auto_parallel_enabled = false;
+		} else if( *iter == "-help" || *iter == "--help" ) {
 			print_usage_options();	
 			exit(EXIT_FAILURE);
 		} else if( *iter == "-o" ){

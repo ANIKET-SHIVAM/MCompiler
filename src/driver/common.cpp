@@ -4,6 +4,14 @@ map< compiler_type, bool > compiler_candidate;
 map< compiler_type, vector<string> > optimization_flags;
 map< compiler_type, vector<string> > linker_flags;
 
+/* Profiler to Synthesizer */
+set<string> hotspot_name_set;
+/* map< compiler_string, base file obj location > */
+map<string, string> base_obj_path;
+/* map< pair<hotspot_name, compiler_string>, timing/obj_location > */
+map< pair< string, string >, vector<double>* > profiler_hotspot_data;
+map< pair< string, string >, string > profiler_hotspot_obj_path;
+
 string space_str         = " ";
 string forward_slash_str = "/";
 string minus_c_str = "-c";
@@ -17,7 +25,57 @@ string pgi_str     = "_pgi";
 string pluto_str   = "_pluto";
 string polly_str   = "_polly";
 
-string profile_data_csv = "profile_data.csv";
+string mCompiler_binary_name = "mCompiler_out";
+string mCompiler_data_folder = "mCompiler_data";
+string mCompiler_data_folder_path;
+string mCompiler_curr_dir_path;
+
+bool auto_parallel_enabled = true;
+
+/* Extractor passes to Profiler */
+set<string> files_to_compile;
+
+int    mCompiler_profiler_runs     = 10;
+string mCompiler_profile_data_csv = "profile_data.csv";
+
+// TODO: Add flags given to driver to following flag list (without or with mapping)
+void addOptimizationFlags(){
+	vector<string> flag_vec;
+	/* ICC */
+	flag_vec.clear();
+	flag_vec.push_back("icc");
+	flag_vec.push_back("-Ofast");
+	flag_vec.push_back("-xhost");
+	flag_vec.push_back("-qopenmp");
+	flag_vec.push_back("-w");
+	optimization_flags[compiler_ICC] = flag_vec;	
+
+	/* GCC */
+	flag_vec.clear();
+	flag_vec.push_back("gcc");
+	flag_vec.push_back("-O3");
+	flag_vec.push_back("-");
+	flag_vec.push_back("-fopenmp");
+	flag_vec.push_back("-w");
+	optimization_flags[compiler_GCC] = flag_vec;	
+}
+
+void addLinkerFlags(){
+	vector<string> flag_vec;
+	/* ICC */
+	flag_vec.clear();
+	flag_vec.push_back("icc");
+	flag_vec.push_back("-qopenmp");
+	flag_vec.push_back("-w");
+	linker_flags[compiler_ICC] = flag_vec;	
+
+	/* GCC */
+	flag_vec.clear();
+	flag_vec.push_back("gcc");
+	flag_vec.push_back("-fopenmp");
+	flag_vec.push_back("-w");
+	linker_flags[compiler_GCC] = flag_vec;	
+}
 
 string executeCommand( string cmd_str ) {
 	// Since, pipe doesn't capture stderr, redirect it to stdout
@@ -41,27 +99,14 @@ string executeCommand( string cmd_str ) {
     return result;
 }
 
-// TODO: Add flags given to driver to following flag list (without or with mapping)
-void addOptimizationFlags(){
-	/* ICC */
-	vector<string> flag_vec;
-	flag_vec.push_back("icc");
-	flag_vec.push_back("-Ofast");
-	flag_vec.push_back("-xhost");
-	flag_vec.push_back("-qopenmp");
-	flag_vec.push_back("-w");
-	optimization_flags[compiler_ICC] = flag_vec;	
-
-}
-
-void addLinkerFlags(){
-	/* ICC */
-	vector<string> flag_vec;
-	flag_vec.push_back("icc");
-	flag_vec.push_back("-qopenmp");
-	flag_vec.push_back("-w");
-	linker_flags[compiler_ICC] = flag_vec;	
-
+bool isDirExist( const string &path ) {
+	struct stat info;
+	if( stat(path.c_str(), &info) != 0 )
+		return false;
+	else if( info.st_mode & S_IFDIR )
+		return true;
+	else 
+		return false; 
 }
 
 bool isEndingWith( string const &fullString, string const &ending ){
@@ -84,3 +129,29 @@ bool isEndingWithCompilerName( string const &fullString ){
         return false;
 	}
 }
+
+double getVectorMean( vector<double>* dataVec ){
+	double sum = accumulate(dataVec->begin(), dataVec->end(), 0.0);
+	double mean = sum / dataVec->size();
+	return mean;
+}
+
+double getVectorStdev( vector<double>* dataVec ){
+	double mean = getVectorMean( dataVec );
+	vector<double> diff(dataVec->size());
+	transform(dataVec->begin(), dataVec->end(), diff.begin(), [mean](double x) { return x - mean; });
+	double sq_sum = inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+	double stdev = sqrt(sq_sum / dataVec->size());
+	return stdev;
+}
+
+double getVectorMedian( vector<double>* dataVec ){
+	sort( dataVec->begin(), dataVec->end() );
+	if ( dataVec->size()%2 == 0 ) 
+	{
+	  return ( dataVec->at( ( dataVec->size()/2 ) - 1) + dataVec->at(dataVec->size()/2) )/2.0;
+	} 
+	return dataVec->at( dataVec->size() / 2 );
+}
+
+

@@ -84,7 +84,7 @@ void ProfilerC::getHotspotFiles(){
 		closedir (dir);
 	} else {
 		/* could not open directory */
-		cerr << "Couldn't open data folder: " << getDataFolderPath() << endl;
+		cerr << "Profiler: Couldn't open data folder: " << getDataFolderPath() << endl;
 		exit(EXIT_FAILURE);
 	}
 }
@@ -162,7 +162,7 @@ void ProfilerC::getObjectFiles( const string& compiler_name ){
 		while ( ( ent = readdir(dir) ) != NULL ){
 			string filename( ent->d_name );
 			if( filename.at(0) != '.' && isEndingWith(filename,compiler_name+dot_o_str) ){
-				files_to_link.insert( getDataFolderPath() +forward_slash_str+ ent->d_name );
+				files_to_link.insert( getDataFolderPath() + ent->d_name );
 				cout << "Adding files for Linking: " << ent->d_name << endl;
 			}
 		}
@@ -175,24 +175,51 @@ void ProfilerC::getObjectFiles( const string& compiler_name ){
 }
 
 void ProfilerC::gatherProfilingData( const string& binary_file, const string& compiler_str ){
-	string result = executeCommand( binary_file );
-
+	// CSV file open for storing profiler data
 	bool writing_file = false;
-	CSV csv_file( getDataFolderPath()+forward_slash_str+profile_data_csv, writing_file );
-
-	stringstream line_stream(result);
-	string cell;
+	CSV csv_file( getDataFolderPath()+mCompiler_profile_data_csv, writing_file );
 	
-	while( getline( line_stream, cell ) ){
-		int colon_pos = cell.find_last_of(':');
-		csv_file << cell.substr(0, colon_pos) << compiler_str << cell.substr( colon_pos+1 );
-		csv_file << endrow; 
-	}
+	for( int i = 0; i < mCompiler_profiler_runs; i++ ){
+		string result;
+		result = executeCommand( binary_file );
+		
+		/* Store result of execution(loops and their running time) into profiler_hotspot_data */
+		stringstream line_stream(result);
+		string cell;	
+		while( getline( line_stream, cell ) ){
+			int colon_pos = cell.find_last_of(':');
+			string hotspot_name = cell.substr(0, colon_pos);
+			double hotspot_time = stod( cell.substr( colon_pos+1 ) );
+			// Check if that loop's object file is present
+			string obj_file_path =  getDataFolderPath() + hotspot_name + compiler_str + dot_o_str;
+			set<string>::iterator iter = files_to_link.find( obj_file_path );
 
+			if ( iter == files_to_link.end() ){
+				cerr << "Profiler: Loops object file not found: " << obj_file_path << endl;
+				exit(EXIT_FAILURE);
+			}
+			pair<string,string>	data_key = make_pair(hotspot_name, compiler_str);
+			// If such hotspot timing vector doesn't exist, create entry and add empty vector
+			if( profiler_hotspot_data.find( data_key ) == profiler_hotspot_data.end() ){
+				vector<double> *temp_vec = new vector<double>(mCompiler_profiler_runs);
+				hotspot_name_set.insert(hotspot_name);
+				// Add timing vector for each hotspot and its location into correspoing maps
+				profiler_hotspot_data.insert( pair< pair< string, string >, vector<double>* >( data_key, temp_vec ) );
+				profiler_hotspot_obj_path.insert( pair< pair< string, string >, string >( data_key, *iter ) );
+			}
+			
+			map< pair< string, string >, vector<double>* >::iterator mIter = profiler_hotspot_data.find( data_key );
+			(mIter->second)->push_back( hotspot_time );
+			
+			/* Dump same data in CSV file for reference */
+			csv_file << hotspot_name << compiler_str << to_string(hotspot_time) << *iter;
+			csv_file << endrow; 
+		}
+	}
 }
 
 void ProfilerC::iccProfile(){
-	//getObjectFiles(icc_str);
+	getObjectFiles(icc_str);
 	vector<string> CL_flags = linker_flags[compiler_ICC];
 	vector<string>::iterator iterv;
 	string CL;
@@ -204,9 +231,12 @@ void ProfilerC::iccProfile(){
 	string object_files;
 	string out_file;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
-		object_files += *iters + space_str; 
+		object_files += *iters + space_str;
+		// Extract binary name from base file name bcoz there's only one  
 		if( (*iters).find(base_str) != string::npos){
 			out_file = (*iters).substr( 0, ( (*iters).find(base_str) ) ) + icc_str;
+			// Store base obj file for synthesizer
+			base_obj_path.insert( pair<string,string>(icc_str,*iters) );
 		}
 	}
 	executeCommand( CL + object_files + space_str + minus_o_str + space_str + out_file );
@@ -237,13 +267,13 @@ void ProfilerC::Profile(){
 		if( iter->second == true ){
 			switch (iter->first) {
 				case compiler_ICC:
-					iccOptimize(); iccProfile();   break;
+					iccOptimize();   iccProfile();   break;
 				case compiler_GCC:
-					gccOptimize(); gccProfile();   break;
+					gccOptimize();   gccProfile();   break;
 				case compiler_LLVM:
-					llvmOptimize(); llvmProfile();  break;
+					llvmOptimize();  llvmProfile();  break;
 				case compiler_PGI:
-					pgiOptimize(); pgiProfile();   break;
+					pgiOptimize();   pgiProfile();   break;
 				case compiler_Pluto:
 					plutoOptimize(); plutoProfile(); break;
 				case compiler_Polly:
@@ -255,8 +285,7 @@ void ProfilerC::Profile(){
 }
 
 /* Constructor */
-ProfilerC::ProfilerC( const string& input_data_folder_path, bool parallel_enabled ){
-	data_folder_path = input_data_folder_path;
+ProfilerC::ProfilerC( bool parallel_enabled ){
 	parallel = parallel_enabled;
 	checkCompilerCandidates();
 //	Optimize();  // Phase 1

@@ -5,23 +5,30 @@
 
 using namespace std;
 
+/* Operator to order the hotspot set based on running time */
+struct less_than_cmp_set{
+    bool operator ()(const pair< string, double> &a, const pair<string, double> &b){
+        return a.second < b.second;
+	}
+};
+
 class SynthesizerC {
 private:
-	string data_folder_path;
 	bool parallel;
 	string binary_name;
-	set<string> candidate_binaries;
-
+	//set<string> candidate_binaries; -- task moved to Profiler
+	multimap< pair<string,string>, double > hotspot_compiler_timing_map;
+	map< pair<string,string>, string > hotspot_obj_file_map;
+	set<string> best_objs_to_link;
 
 public:
-	SynthesizerC( const string& input_data_folder_path, bool parallel,
-				  const string& custom_binary_name );
-	string getDataFolderPath() { return data_folder_path; };
+	SynthesizerC( bool parallel, const string& custom_binary_name );
 	bool isParallelEnabled()   { return parallel; };
+	string getDataFolderPath() { return mCompiler_data_folder_path; };
 
-	void findCandidateBinaries();
-	void collectHotspotProfileData();
-	void selectOptimalOptimizedCandidate();
+	//void findCandidateBinaries(); -- task moved to Profiler
+	void analyzeHotspotProfileData();
+	void selectOptimalOptimizedCandidate(string hotspot_name);
 	void generateFinalBinary();
 };
 #endif

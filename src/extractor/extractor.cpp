@@ -6,16 +6,6 @@
  */
 #include "extractor.h"
 
-bool isDirExist( const string &path ) {
-	struct stat info;
-	if( stat(path.c_str(), &info) != 0 )
-		return false;
-	else if( info.st_mode & S_IFDIR )
-		return true;
-	else 
-		return false; 
-}
-
 string Extractor::getFilePath( const string &fileNameWithPath ) {
 	int lastSlashPos = fileNameWithPath.find_last_of('/');
 	mCompiler_file_path = fileNameWithPath.substr(0, lastSlashPos);
@@ -60,19 +50,12 @@ string Extractor::getExtractionFileName( SgNode *astNode ) {
 	string fileExtn = getFileExtn(fileNameWithPath);
 	int lineNumber = getAstNodeLineNum(astNode);
 
-	string outputPath = filePath + forward_slash_str + mCompiler_data_folder + forward_slash_str;
+	string outputPath = getDataFolderPath();
 
 	fileName += "_line" + to_string(lineNumber);
 
 	fileName = fileName + "." + fileExtn;
 
-	if (!isDirExist(outputPath)) {
-		const int dir_err = mkdir(outputPath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-		if (dir_err == -1) {
-			cout << "Error creating extraction directory!" << endl;
-			exit(1);
-		}
-	}
 	return outputPath + fileName;
 }
 
