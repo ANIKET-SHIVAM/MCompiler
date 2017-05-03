@@ -38,7 +38,6 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	set<string> global_vars;
 	SgGlobal *global_node; // Needed to add the extern calls
 	src_lang src_type;
-	vector<string> loop_files_addr;
 public:	
 	ofstream loop_file_buf;
 public:
@@ -47,7 +46,6 @@ public:
 
 	src_lang getSrcType() { return src_type; }
 	SgGlobal* getGlobalNode() { return global_node; }
-	vector<string> getLoopFilesAddr() { return loop_files_addr; }
 	string getDataFolderPath() { return mCompiler_data_folder_path; };
 
 	string getFilePath() { return mCompiler_file_path; };

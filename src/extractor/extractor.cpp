@@ -45,7 +45,7 @@ int Extractor::getAstNodeLineNum( SgNode *const &astNode ) {
 
 string Extractor::getExtractionFileName( SgNode *astNode ) {
 	string fileNameWithPath = (astNode->get_file_info())->get_filenameString();
-	string filePath = getFilePath(fileNameWithPath);
+	//string filePath = getFilePath(fileNameWithPath);
 	string fileName = getFileName(fileNameWithPath);
 	string fileExtn = getFileExtn(fileNameWithPath);
 	int lineNumber = getAstNodeLineNum(astNode);
@@ -119,7 +119,7 @@ void LoopInfo::getVarsInScope(){
 		} else if( extr.getSrcType() == src_lang_CPP )
 			scope_vars_str_vec.insert( var_type_str + "& " + var->get_name().getString() );
 			
-		//cerr << "Symbol Table : " << *(scope_vars_str_vec.rbegin()) << endl;
+		cerr << "Symbol Table : " << *(scope_vars_str_vec.rbegin()) << endl;
 	}
 }
 
@@ -169,11 +169,13 @@ void LoopInfo::printLoopFunc(){
 	
 	// Function definition 
 	loop_file_buf << endl << "void " << getFuncName() << "( ";
-	set<string>::iterator iter = scope_vars_str_vec.begin();
-	loop_file_buf << *iter;
-	iter++;
-	for( ; iter != scope_vars_str_vec.end(); iter++ )
-		loop_file_buf << ", " << *iter;
+	if( !scope_vars_str_vec.empty() ){
+		set<string>::iterator iter = scope_vars_str_vec.begin();
+		loop_file_buf << *iter;
+		iter++;
+		for( ; iter != scope_vars_str_vec.end(); iter++ )
+			loop_file_buf << ", " << *iter;
+	}
 	loop_file_buf<< " ){" << endl; // Function Start
 
 	//Required only for C, since C++ is passed through reference(&) 
@@ -188,7 +190,6 @@ void LoopInfo::printLoopFunc(){
 	
 	// Entire Loop Body
 	if( extr.getSrcType() == src_lang_C ){
-		// TODO: Make non-array data as pointer access
 		loop_file_buf << loop->unparseToCompleteString() << endl;	
 	} else if( extr.getSrcType() == src_lang_CPP ){
 		loop_file_buf << loop->unparseToCompleteString() << endl;	
@@ -271,7 +272,7 @@ void LoopInfo::addLoopFuncCall(){
 void Extractor::extractLoops( SgNode *astNode ){
 	SgForStatement *loop = dynamic_cast<SgForStatement *>(astNode);
 	string loop_file_name = getExtractionFileName(astNode);
-	loop_files_addr.push_back( loop_file_name );
+	files_to_compile.insert( loop_file_name );
 	loop_file_buf.open(loop_file_name.c_str(), ofstream::out);
 	
 	// Create loop object
@@ -299,6 +300,7 @@ void Extractor::extractLoops( SgNode *astNode ){
 /* Required for Top Down parsing */
 InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 															  InheritedAttribute inh_attr ){
+	/* If condition so that Post traversal doesn't mess up extractor changes to the graph */
 	if( astNodesCollector.find(astNode) == astNodesCollector.end() ){
 		astNodesCollector.insert(astNode);
 		switch (astNode->variantT()) {
@@ -309,7 +311,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 					break;
 				}  
 				++inh_attr.loop_nest_depth_;
-				//cerr << "Found a " << loop->class_name() << " with depth: " << inh_attr.loop_nest_depth_ << endl;
+				cerr << "Found node: " << loop->class_name() << " with depth: " << inh_attr.loop_nest_depth_ << endl;
 				// TODO: Upto what loop depth to extract as tool option
 				if( inh_attr.loop_nest_depth_ < 2 ){
 					//cerr << "Extracting loop now" << endl;
@@ -321,7 +323,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 				global_node = isSgGlobal(astNode);
 			}
 			default: { 
-					//cerr << "Found a " << astNode->class_name() << endl;	
+					cerr << "Found node: " << astNode->class_name() << endl;	
 			}
 		}
 
@@ -365,7 +367,14 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 					SgScopeStatement* scope = variableDeclaration->get_scope();
 					if (isSgGlobal(scope) != NULL){
 						//cerr << "Found a global var: " << var_type_str + " " + initializedName->get_name().getString() << endl;	
-						global_vars.insert( var_type_str + " " + initializedName->get_name().getString() );
+						if( variableType->variantT() == V_SgArrayType ){
+							/* To change to var_type var_name[][][] */
+							int first_square_brac = var_type_str.find_first_of("[");
+							global_vars.insert( var_type_str.substr( 0,first_square_brac ) + initializedName->get_name().getString()
+												+ var_type_str.substr( first_square_brac ) );
+						} else {
+							global_vars.insert( var_type_str + " " + initializedName->get_name().getString() );
+						}
 					}
 					if (isSgClassDefinition(scope) != NULL)
 					{

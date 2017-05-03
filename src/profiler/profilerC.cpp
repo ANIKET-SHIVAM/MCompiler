@@ -63,12 +63,14 @@ void ProfilerC::checkCompilerCandidates(){
 	/* In common.h */
 	addOptimizationFlags();
 	addLinkerFlags();
+	addPostLinkerFlags();
 }
 
 /* 
  * Phase 1 of profiler: Compile all .c files to .o,
  * with available compilers and with appropriate flags (serial/parallel).
  */ 
+// Function only used if Extractor is used seperately
 void ProfilerC::getHotspotFiles(){
 	DIR *dir;
 	struct dirent *ent;
@@ -77,7 +79,7 @@ void ProfilerC::getHotspotFiles(){
 		while ( ( ent = readdir(dir) ) != NULL ){
 			string filename( ent->d_name );
 			if( filename.at(0) != '.' && isEndingWith(filename, ".c") ){
-				files_to_compile.insert( getDataFolderPath() +forward_slash_str+ ent->d_name );
+				files_to_compile.insert( getDataFolderPath() + ent->d_name );
 				cout << "Adding files for compiling: " << ent->d_name << endl;
 			}
 		}
@@ -110,9 +112,42 @@ void ProfilerC::iccOptimize(){
 }
 
 void ProfilerC::gccOptimize(){
+	vector<string> CL_flags = optimization_flags[compiler_GCC];
+	vector<string>::iterator iterv;
+	string CL;
+	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+
+	//Since we only want to generate .o at this point
+	CL += minus_c_str + space_str;
+	
+	set<string>::iterator iters;
+	for( iters = files_to_compile.begin(); iters != files_to_compile.end(); iters++){
+		string out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + gcc_str + dot_o_str; 
+		files_to_link.insert( out_file );
+		executeCommand( CL + *iters + space_str + minus_o_str + space_str + out_file );
+	}
+
 }
 
 void ProfilerC::llvmOptimize(){
+	vector<string> CL_flags = optimization_flags[compiler_LLVM];
+	vector<string>::iterator iterv;
+	string CL;
+	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+
+	//Since we only want to generate .o at this point
+	CL += minus_c_str + space_str;
+	
+	set<string>::iterator iters;
+	for( iters = files_to_compile.begin(); iters != files_to_compile.end(); iters++){
+		string out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + llvm_str + dot_o_str; 
+		files_to_link.insert( out_file );
+		executeCommand( CL + *iters + space_str + minus_o_str + space_str + out_file );
+	}
 }
 
 void ProfilerC::pgiOptimize(){
@@ -178,6 +213,12 @@ void ProfilerC::gatherProfilingData( const string& binary_file, const string& co
 	// CSV file open for storing profiler data
 	bool writing_file = false;
 	CSV csv_file( getDataFolderPath()+mCompiler_profile_data_csv, writing_file );
+
+	/* Check if binary file is present at all */
+	if( !isFileExist( binary_file ) ){
+		cerr << "Profiler: Following binary file doesn't exist: " << binary_file << endl;
+		exit(EXIT_FAILURE);
+	}
 	
 	for( int i = 0; i < mCompiler_profiler_runs; i++ ){
 		string result;
@@ -220,13 +261,15 @@ void ProfilerC::gatherProfilingData( const string& binary_file, const string& co
 
 void ProfilerC::iccProfile(){
 	getObjectFiles(icc_str);
-	vector<string> CL_flags = linker_flags[compiler_ICC];
-	vector<string>::iterator iterv;
 	string CL;
+
+	/* For CC and other flags */	
+	vector<string>::iterator iterv;
+	vector<string> CL_flags = linker_flags[compiler_ICC];
 	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
 		CL += *iterv + space_str;
 	}
-
+	/* For gathering object files */
 	set<string>::iterator iters;
 	string object_files;
 	string out_file;
@@ -239,16 +282,91 @@ void ProfilerC::iccProfile(){
 			base_obj_path.insert( pair<string,string>(icc_str,*iters) );
 		}
 	}
-	executeCommand( CL + object_files + space_str + minus_o_str + space_str + out_file );
+	/* Add object files then add -o binary_name, before adding post linker flags */
+	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
+	
+	/* For flags that go at the end of the command line */
+	vector<string> post_CL_flags = post_linker_flags[compiler_ICC];
+	for( iterv = post_CL_flags.begin(); iterv != post_CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+
+	executeCommand( CL );
 
 	/* Send binary for profiling and storing profiling data */	
 	gatherProfilingData( out_file, icc_str );
 }
 
 void ProfilerC::gccProfile(){
+	getObjectFiles(gcc_str);
+	string CL;
+	
+	vector<string>::iterator iterv;
+	vector<string> CL_flags = linker_flags[compiler_GCC];
+	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+
+	set<string>::iterator iters;
+	string object_files;
+	string out_file;
+	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
+		object_files += *iters + space_str;
+		// Extract binary name from base file name bcoz there's only one  
+		if( (*iters).find(base_str) != string::npos){
+			out_file = (*iters).substr( 0, ( (*iters).find(base_str) ) ) + gcc_str;
+			// Store base obj file for synthesizer
+			base_obj_path.insert( pair<string,string>(gcc_str,*iters) );
+		}
+	}
+	
+	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
+	
+	vector<string> post_CL_flags = post_linker_flags[compiler_GCC];
+	for( iterv = post_CL_flags.begin(); iterv != post_CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+
+	executeCommand( CL );
+
+	/* Send binary for profiling and storing profiling data */	
+	gatherProfilingData( out_file, gcc_str );
 }
 
 void ProfilerC::llvmProfile(){
+	getObjectFiles(llvm_str);
+	string CL;
+	
+	vector<string>::iterator iterv;
+	vector<string> CL_flags = linker_flags[compiler_LLVM];
+	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+
+	set<string>::iterator iters;
+	string object_files;
+	string out_file;
+	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
+		object_files += *iters + space_str;
+		// Extract binary name from base file name bcoz there's only one  
+		if( (*iters).find(base_str) != string::npos){
+			out_file = (*iters).substr( 0, ( (*iters).find(base_str) ) ) + llvm_str;
+			// Store base obj file for synthesizer
+			base_obj_path.insert( pair<string,string>(llvm_str,*iters) );
+		}
+	}
+
+	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
+
+	vector<string> post_CL_flags = post_linker_flags[compiler_LLVM];
+	for( iterv = post_CL_flags.begin(); iterv != post_CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+
+	executeCommand( CL );
+
+	/* Send binary for profiling and storing profiling data */	
+	gatherProfilingData( out_file, llvm_str );
 }
 
 void ProfilerC::pgiProfile(){
@@ -262,7 +380,7 @@ void ProfilerC::pollyProfile(){
 
 void ProfilerC::Profile(){
 	map< compiler_type, bool >::iterator iter;
-	getHotspotFiles();
+	//getHotspotFiles(); -- Only if Extractor is called separately
 	for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
 		if( iter->second == true ){
 			switch (iter->first) {

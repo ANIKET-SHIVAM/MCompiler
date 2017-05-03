@@ -60,6 +60,8 @@ extern map< compiler_type, bool > compiler_candidate;
 extern map< compiler_type, vector<string> > optimization_flags;
 /* vector format: [ CC, -O?, ... ] */
 extern map< compiler_type, vector<string> > linker_flags;
+/* For dynamic libs to be linked the end of CL like -lm */
+extern map< compiler_type, vector<string> > post_linker_flags;
 
 /* Profiler to Synthesizer */
 extern set<string> hotspot_name_set;
@@ -72,7 +74,9 @@ extern map< pair< string, string >, string > profiler_hotspot_obj_path;
 string executeCommand( string cmd_str );
 void addOptimizationFlags();
 void addLinkerFlags();
+void addPostLinkerFlags();
 bool isDirExist( const string &path );
+bool isFileExist( const string &filename );
 bool isEndingWith( string const &fullString, string const &ending );
 bool isEndingWithCompilerName( string const &fullString );
 double getVectorMean( vector<double>* dataVec );

@@ -11,11 +11,19 @@ void SynthesizerC::selectOptimalOptimizedCandidate( string hotspot_name ){
 	dataIter = profiler_hotspot_data.find( pair<string,string>(hotspot_name,icc_str) );
 	if( dataIter != profiler_hotspot_data.end() )
 		hotspot_timing_set.insert( pair<string,double>(icc_str, getVectorMean(dataIter->second) ) );
+	cout << "Synthesizer: " << hotspot_name << " + " << icc_str << ":" << getVectorMean(dataIter->second) << endl;
 
 	/* Add Mean timing for GCC into comparision set */
 	dataIter = profiler_hotspot_data.find( pair<string,string>(hotspot_name,gcc_str) );
 	if( dataIter != profiler_hotspot_data.end() )
 		hotspot_timing_set.insert( pair<string,double>(gcc_str, getVectorMean(dataIter->second) ) );
+	cout << "Synthesizer: " << hotspot_name << " + " << gcc_str << ":" << getVectorMean(dataIter->second) << endl;
+
+	/* Add Mean timing for LLVM into comparision set */
+	dataIter = profiler_hotspot_data.find( pair<string,string>(hotspot_name,llvm_str) );
+	if( dataIter != profiler_hotspot_data.end() )
+		hotspot_timing_set.insert( pair<string,double>(llvm_str, getVectorMean(dataIter->second) ) );
+	cout << "Synthesizer: " << hotspot_name << " + " << llvm_str << ":" << getVectorMean(dataIter->second) << endl;
 
 	/* Find the lowest running time compiler and add its hotspot object file to final set for linking */	
 	string best_compiler_option = ( hotspot_timing_set.begin() )->first;

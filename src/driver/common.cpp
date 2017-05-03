@@ -3,6 +3,7 @@
 map< compiler_type, bool > compiler_candidate;
 map< compiler_type, vector<string> > optimization_flags;
 map< compiler_type, vector<string> > linker_flags;
+map< compiler_type, vector<string> > post_linker_flags;
 
 /* Profiler to Synthesizer */
 set<string> hotspot_name_set;
@@ -54,10 +55,17 @@ void addOptimizationFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("gcc");
 	flag_vec.push_back("-O3");
-	flag_vec.push_back("-");
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-w");
 	optimization_flags[compiler_GCC] = flag_vec;	
+
+	/* LLVM */
+	flag_vec.clear();
+	flag_vec.push_back("clang");
+	flag_vec.push_back("-O3");
+	flag_vec.push_back("-fopenmp");
+	flag_vec.push_back("-w");
+	optimization_flags[compiler_LLVM] = flag_vec;	
 }
 
 void addLinkerFlags(){
@@ -75,9 +83,35 @@ void addLinkerFlags(){
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-w");
 	linker_flags[compiler_GCC] = flag_vec;	
+	
+	/* LLVM */
+	flag_vec.clear();
+	flag_vec.push_back("clang");
+	flag_vec.push_back("-fopenmp");
+	flag_vec.push_back("-w");
+	linker_flags[compiler_LLVM] = flag_vec;	
 }
 
-string executeCommand( string cmd_str ) {
+/* For flags that go at the end of the CL */
+void addPostLinkerFlags(){
+	vector<string> flag_vec;
+	/* ICC */
+	flag_vec.clear();
+	flag_vec.push_back("-lm");
+	post_linker_flags[compiler_ICC] = flag_vec;	
+
+	/* GCC */
+	flag_vec.clear();
+	flag_vec.push_back("-lm");
+	post_linker_flags[compiler_GCC] = flag_vec;	
+	
+	/* LLVM */
+	flag_vec.clear();
+	flag_vec.push_back("-lm");
+	post_linker_flags[compiler_LLVM] = flag_vec;	
+}
+
+string executeCommand( string cmd_str ){
 	// Since, pipe doesn't capture stderr, redirect it to stdout
 	cmd_str = cmd_str + " 2>&1";
 	const char *cmd_char_ptr = cmd_str.c_str();
@@ -99,7 +133,7 @@ string executeCommand( string cmd_str ) {
     return result;
 }
 
-bool isDirExist( const string &path ) {
+bool isDirExist( const string &path ){
 	struct stat info;
 	if( stat(path.c_str(), &info) != 0 )
 		return false;
@@ -107,6 +141,11 @@ bool isDirExist( const string &path ) {
 		return true;
 	else 
 		return false; 
+}
+
+bool isFileExist( const string &filename ){
+  struct stat info;   
+  return (stat (filename.c_str(), &info) == 0); 
 }
 
 bool isEndingWith( string const &fullString, string const &ending ){
