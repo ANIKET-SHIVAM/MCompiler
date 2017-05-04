@@ -31,7 +31,7 @@ string Extractor::getFileExtn( const string &fileNameWithPath ) {
 	else if( regex_match(extn, fortran_extn) )
 		src_type = src_lang_FORTRAN;
 	else 
-		ROSE_ASSERT(true);
+		ROSE_ASSERT(false);
 
 	mCompiler_file_extn = extn;
 	return mCompiler_file_extn;
@@ -91,35 +91,55 @@ void Extractor::printGlobalsAsExtern( SgNode *const &astNode ){
 	}
 
 }
-// TODO: Remove read only variables in the scope
-void LoopInfo::getVarsInScope(){
-	SgSymbolTable *symbols      = loop_scope->get_symbol_table();
-	std::set<SgNode*> sym_table = symbols->get_symbols();
-	set<SgNode*>::iterator iter;
-	for( iter = sym_table.begin(); iter != sym_table.end(); iter++ ){
-		SgVariableSymbol *var = dynamic_cast<SgVariableSymbol *>(*iter);
-		scope_vars_symbol_vec.insert( var ); // Needed for function call	
-		scope_vars_initName_vec.insert( var->get_declaration() ); // Needed for function extern defn	
 
-		string var_type_str = (var->get_type())->unparseToString();
-		if( (var->get_type())->variantT() == V_SgArrayType ){
-			int first_square_brac = var_type_str.find_first_of("[");
-			var_type_str =  var_type_str.substr(0,first_square_brac-1);
+bool LoopInfo::isDeclaredInInnerScope( SgScopeStatement *var_scope ){
+	vector<SgNode *> nested_scopes = NodeQuery::querySubTree( loop_scope, V_SgScopeStatement );
+	if( var_scope == NULL || nested_scopes.empty() )
+		return false;
+	vector<SgNode *>::const_iterator scopeItr = nested_scopes.begin();
+	for( ; scopeItr != nested_scopes.end(); scopeItr++ ){
+		if( isSgNode(var_scope) == isSgNode(*scopeItr) )
+			return true;
+	}
+	return false;	
+}
+
+void LoopInfo::getVarsInScope(){
+	/* collectVarRefs will collect all variables used in the loop body */
+	vector<SgVarRefExp *> sym_table;
+	SageInterface::collectVarRefs( dynamic_cast<SgLocatedNode *>(astNode), sym_table );
+
+	vector<SgVarRefExp *>::iterator iter;
+	for( iter = sym_table.begin(); iter != sym_table.end(); iter++ ){
+		SgVariableSymbol *var = (*iter)->get_symbol();
+		SgScopeStatement *var_scope = ( var->get_declaration() )->get_scope();
+		
+		/* Neither globals variables nor variables declared inside the loop body should be passed */ 
+		if( !( isSgGlobal(var_scope) || isDeclaredInInnerScope(var_scope) ) ){
+			//SgVariableSymbol *var = dynamic_cast<SgVariableSymbol *>(*iter);
+			scope_vars_symbol_vec.insert( var ); // Needed for function call	
+			scope_vars_initName_vec.insert( var->get_declaration() ); // Needed for function extern defn	
+
+			string var_type_str = (var->get_type())->unparseToString();
+			if( (var->get_type())->variantT() == V_SgArrayType ){
+				int first_square_brac = var_type_str.find_first_of("[");
+				var_type_str =  var_type_str.substr(0,first_square_brac-1);
+			}
+			if( extr.getSrcType() == src_lang_C ){
+				/* 
+				 * Add '_primitive' after primitive parameter name,
+				 * so that actual name can be used inside the body 
+				 */
+				if( (var->get_type())->variantT() != V_SgArrayType )
+					scope_vars_str_vec.insert( var_type_str + "* " + var->get_name().getString()
+						+ "_primitive" );
+				else
+					scope_vars_str_vec.insert( var_type_str + "* " + var->get_name().getString() );
+			} else if( extr.getSrcType() == src_lang_CPP ){
+				scope_vars_str_vec.insert( var_type_str + "& " + var->get_name().getString() );
+			}		
+			cerr << "Symbol Table : " << *(scope_vars_str_vec.rbegin()) << endl;
 		}
-		if( extr.getSrcType() == src_lang_C ){
-			/* 
-			 * Add '_primitive' after primitive parameter name,
-			 * so that actual name can be used inside the body 
-			 */
-			if( (var->get_type())->variantT() != V_SgArrayType )
-				scope_vars_str_vec.insert( var_type_str + "* " + var->get_name().getString()
-					+ "_primitive" );
-			else
-				scope_vars_str_vec.insert( var_type_str + "* " + var->get_name().getString() );
-		} else if( extr.getSrcType() == src_lang_CPP )
-			scope_vars_str_vec.insert( var_type_str + "& " + var->get_name().getString() );
-			
-		cerr << "Symbol Table : " << *(scope_vars_str_vec.rbegin()) << endl;
 	}
 }
 
@@ -164,8 +184,11 @@ void LoopInfo::printLoopFunc(){
 
 	ofstream& loop_file_buf = extr.loop_file_buf;
 
-	loop_scope = loop->get_scope();
-	getVarsInScope();	
+	/* Scope of loop body contains the variables needed for this loop to compile */
+	loop_scope = ( loop->get_loop_body() )->get_scope();
+
+	getVarsInScope();
+	//getParamatersInFunc	
 	
 	// Function definition 
 	loop_file_buf << endl << "void " << getFuncName() << "( ";
@@ -215,6 +238,10 @@ void LoopInfo::printLoopFunc(){
 	loop_file_buf << "}" << endl; // Function End
 }
 
+void Extractor::addExternDefs( SgFunctionDeclaration *func ){
+	externDefinitionsToAdd.push_back( dynamic_cast<SgStatement *>(func) );
+}
+
 /* Add loop function call as extern in the base source file */
 void LoopInfo::addLoopFuncAsExtern(){
 	if( extr.getGlobalNode() != NULL ){
@@ -243,7 +270,8 @@ void LoopInfo::addLoopFuncAsExtern(){
 			( func_name, SageBuilder::buildVoidType(), paramList, extr.getGlobalNode() );
 		SageInterface::setExtern(func);
 		// Insert Function into Global scope
-		extr.getGlobalNode()->prepend_declaration( func );
+		//SageInterface::prependStatement( func, extr.getGlobalNode() );
+		extr.addExternDefs( func );
 	} else {
 		ROSE_ASSERT( extr.getGlobalNode() != NULL );
 	}
@@ -268,7 +296,7 @@ void LoopInfo::addLoopFuncCall(){
 		( func_name, SageBuilder::buildVoidType(), SageBuilder::buildExprListExp( expr_list ),loop_scope );
 	SageInterface::replaceStatement( loop, SageBuilder::buildExprStatement( call_expr ), true);
 }
-	
+
 void Extractor::extractLoops( SgNode *astNode ){
 	SgForStatement *loop = dynamic_cast<SgForStatement *>(astNode);
 	string loop_file_name = getExtractionFileName(astNode);
@@ -388,6 +416,16 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 				i++;
 			}
 		}
+	} else {
+		cout << "In Post traversal, generally shouldn't come here." << endl;
+		/* If Post AST traversal */
+		switch (astNode->variantT()){
+			case V_SgGlobal: {
+				cout << "At Post traversal Global Node" << endl;
+				addPostTraversalDefs(); 
+				//global_node = isSgGlobal(astNode);
+			}
+		} 
 	}
 	return inh_attr;
 }
@@ -398,6 +436,10 @@ int Extractor::evaluateSynthesizedAttribute( SgNode *astNode, InheritedAttribute
 	return 0;
 }
 
+void Extractor::addPostTraversalDefs(){
+	SageInterface::prependStatementList( externDefinitionsToAdd, getGlobalNode() );
+}
+	
 /* Extractor constructor, for initiating via driver */
 Extractor::Extractor( const vector<string> &argv ){
 	SgProject *ast = NULL;
@@ -407,6 +449,7 @@ Extractor::Extractor( const vector<string> &argv ){
 	InheritedAttribute inhr_attr;
 	/* Traverse all files and their ASTs in Top Down fashion (Inherited Attr) and extract loops */
 	this->traverseInputFiles( ast, inhr_attr );
+	this->addPostTraversalDefs();
 	AstTests::runAllTests(ast);
 	/* Generate rose_<orig file name> file for the transformed AST */
 	ast->unparse();

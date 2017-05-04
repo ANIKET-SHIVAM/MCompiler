@@ -33,10 +33,11 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	string mCompiler_file_path; 
 	string mCompiler_file_name; 
 	string mCompiler_file_extn; 
+	SgGlobal *global_node; // Needed to add the extern calls
 	set<SgNode*> astNodesCollector; //Required to not add loop functions on Ast Post Processing
+	vector<SgStatement*> externDefinitionsToAdd;
 	set<string> header_set;
 	set<string> global_vars;
-	SgGlobal *global_node; // Needed to add the extern calls
 	src_lang src_type;
 public:	
 	ofstream loop_file_buf;
@@ -58,8 +59,10 @@ public:
 	string getExtractionFileName( SgNode *astNode );
 	void printHeaders( SgNode *const &astNode );
 	void printGlobalsAsExtern( SgNode *const &astNode );
+	void addExternDefs( SgFunctionDeclaration *func );
+	void addPostTraversalDefs(); 
 
-	/* Important functions */ 
+	/* Important functions */
 	void extractLoops( SgNode *astNode );
 	virtual InheritedAttribute evaluateInheritedAttribute( SgNode *astNode, 
 														   InheritedAttribute inh_attr );
@@ -83,6 +86,7 @@ public:
 		: extr(e) ,astNode(astNode), loop(loop), func_name(func_name){ 
 }
 	string getFuncName() { return func_name; }
+	bool isDeclaredInInnerScope( SgScopeStatement *var_scope );
 	void getVarsInScope();
 
 	void printLoopFunc();
