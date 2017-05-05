@@ -121,24 +121,22 @@ void LoopInfo::getVarsInScope(){
 			scope_vars_initName_vec.insert( var->get_declaration() ); // Needed for function extern defn	
 
 			string var_type_str = (var->get_type())->unparseToString();
-			if( (var->get_type())->variantT() == V_SgArrayType ){
-				int first_square_brac = var_type_str.find_first_of("[");
-				var_type_str =  var_type_str.substr(0,first_square_brac-1);
-			}
 			if( extr.getSrcType() == src_lang_C ){
 				/* 
 				 * Add '_primitive' after primitive parameter name,
 				 * so that actual name can be used inside the body 
 				 */
-				if( (var->get_type())->variantT() != V_SgArrayType )
-					scope_vars_str_vec.insert( var_type_str + "* " + var->get_name().getString()
-						+ "_primitive" );
-				else
-					scope_vars_str_vec.insert( var_type_str + "* " + var->get_name().getString() );
+				if( (var->get_type())->variantT() == V_SgArrayType ){
+					int first_square_brac = var_type_str.find_first_of("[");
+					scope_vars_str_vec.insert( var_type_str.substr( 0,first_square_brac ) + var->get_name().getString()
+										+ var_type_str.substr( first_square_brac ) );
+				} else {
+					scope_vars_str_vec.insert( var_type_str + "* " + var->get_name().getString() + "_primitive" );
+				}
 			} else if( extr.getSrcType() == src_lang_CPP ){
 				scope_vars_str_vec.insert( var_type_str + "& " + var->get_name().getString() );
 			}		
-			cerr << "Symbol Table : " << *(scope_vars_str_vec.rbegin()) << endl;
+			//cerr << "Symbol Table : " << *(scope_vars_str_vec.rbegin()) << endl;
 		}
 	}
 }
@@ -226,9 +224,9 @@ void LoopInfo::printLoopFunc(){
 	/* Very important for profiler to run and collect running time of each loop/hotspot */
 	// Add OMP Timer difference print
 	if( extr.getSrcType() == src_lang_C ){
-		loop_file_buf << "printf(\"" << getFuncName() << ": \%.9f\\n\", loop_timer_end - loop_timer_start );" << endl;
+		loop_file_buf << "printf(\"\\n" << getFuncName() + mCompiler_timing_keyword << " \%.9f\\n\", loop_timer_end - loop_timer_start );" << endl;
 	} else if( extr.getSrcType() == src_lang_CPP ){
-		loop_file_buf << "std::cout << \"" << getFuncName() << ": \" << std::setprecision(9) << (loop_timer_end - loop_timer_start) << std::endl;" << endl;
+		loop_file_buf << "std::cout << std::endl \"" << getFuncName() + mCompiler_timing_keyword << " \" << std::setprecision(9) << (loop_timer_end - loop_timer_start) << std::endl;" << endl;
 	}
 	
 	//Required only for C, since C++ is passed through reference(&) 
@@ -283,9 +281,13 @@ void LoopInfo::addLoopFuncCall(){
 	vector<SgExpression*> expr_list;
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++){
 			if( extr.getSrcType() == src_lang_C ){
-				// 'Address Of' for C
-				expr_list.push_back( SageBuilder::buildAddressOfOp
-										( SageBuilder::buildVarRefExp( (*iter) ) ) );
+				// 'Address Of' for C except when its an array
+				if( ( (*iter)->get_type() )->variantT() == V_SgArrayType ){
+					expr_list.push_back( SageBuilder::buildVarRefExp( (*iter) ) );
+				} else {
+					expr_list.push_back( SageBuilder::buildAddressOfOp
+											( SageBuilder::buildVarRefExp( (*iter) ) ) );
+				}
 			} else if( extr.getSrcType() == src_lang_CPP ){
 				// Reference for C++
 				expr_list.push_back( SageBuilder::buildVarRefExp( (*iter) ) );
@@ -335,11 +337,11 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 			case V_SgForStatement: {
 				SgForStatement *loop = dynamic_cast<SgForStatement *>(astNode);
 				if (loop == NULL) {
-					cerr << "Error: incorrect loop node type" << endl;
+					//cerr << "Error: incorrect loop node type" << endl;
 					break;
 				}  
 				++inh_attr.loop_nest_depth_;
-				cerr << "Found node: " << loop->class_name() << " with depth: " << inh_attr.loop_nest_depth_ << endl;
+				//cerr << "Found node: " << loop->class_name() << " with depth: " << inh_attr.loop_nest_depth_ << endl;
 				// TODO: Upto what loop depth to extract as tool option
 				if( inh_attr.loop_nest_depth_ < 2 ){
 					//cerr << "Extracting loop now" << endl;
@@ -351,7 +353,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 				global_node = isSgGlobal(astNode);
 			}
 			default: { 
-					cerr << "Found node: " << astNode->class_name() << endl;	
+					//cerr << "Found node: " << astNode->class_name() << endl;	
 			}
 		}
 

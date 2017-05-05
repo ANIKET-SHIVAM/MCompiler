@@ -42,7 +42,9 @@ extern string llvm_str;
 extern string pgi_str;
 extern string pluto_str;
 extern string polly_str;
+extern string baseline_compiler_str;
 
+extern string mCompiler_timing_keyword;
 extern string mCompiler_binary_name;
 extern string mCompiler_data_folder;
 extern string mCompiler_data_folder_path;
@@ -62,6 +64,8 @@ extern map< compiler_type, vector<string> > optimization_flags;
 extern map< compiler_type, vector<string> > linker_flags;
 /* For dynamic libs to be linked the end of CL like -lm */
 extern map< compiler_type, vector<string> > post_linker_flags;
+/* For hotspot obj(with path) collection from baseline compiler that were not executed while profiling */
+extern set<string> hotspots_skipped_profiling;
 
 /* Profiler to Synthesizer */
 extern set<string> hotspot_name_set;

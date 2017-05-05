@@ -36,11 +36,11 @@ void Driver::initiateExtractor( string file_name ){
 	filename_vec.push_back(dummy_arg_for_extractor_frontend);
 	filename_vec.push_back(file_name);
 	extr = new Extractor( filename_vec );
+	string base_file = extr->getDataFolderPath() + extr->getFileName() + base_str + "." + extr->getFileExtn();
+	files_to_compile.insert(base_file);
 	// Move base file to the mCompiler data folder: 
 	// mv rose_filename.x mCompiler_data/filename_base.x
-	executeCommand( "mv rose_"+ extr->getFileName() + "." + extr->getFileExtn() +
-		" " + extr->getDataFolderPath() + forward_slash_str + extr->getFileName() + base_str +
-		"." + extr->getFileExtn() );
+	executeCommand( "mv rose_"+ extr->getFileName() + "." + extr->getFileExtn() + space_str + base_file );
 	// Keep record of all the mCompiler data folders to profile, combine, etc. -- probably wont need it.
 	//addDataFolderPath( extr->getDataFolderPath() );	
 }

@@ -12,6 +12,7 @@ map<string, string> base_obj_path;
 /* map< pair<hotspot_name, compiler_string>, timing/obj_location > */
 map< pair< string, string >, vector<double>* > profiler_hotspot_data;
 map< pair< string, string >, string > profiler_hotspot_obj_path;
+set<string> hotspots_skipped_profiling;
 
 string space_str         = " ";
 string forward_slash_str = "/";
@@ -26,6 +27,12 @@ string pgi_str     = "_pgi";
 string pluto_str   = "_pluto";
 string polly_str   = "_polly";
 
+/* Change baseline compiler to come from CL, since ICC may not always be there */
+string baseline_compiler_str = icc_str;
+
+/* Used by extractor to differentiate from other stdout */
+string mCompiler_timing_keyword = "_mCompilerInfo:";
+
 string mCompiler_binary_name = "mCompiler_out";
 string mCompiler_data_folder = "mCompiler_data";
 string mCompiler_data_folder_path;
@@ -36,7 +43,7 @@ bool auto_parallel_enabled = true;
 /* Extractor passes to Profiler */
 set<string> files_to_compile;
 
-int    mCompiler_profiler_runs     = 10;
+int    mCompiler_profiler_runs     = 1;
 string mCompiler_profile_data_csv = "profile_data.csv";
 
 // TODO: Add flags given to driver to following flag list (without or with mapping)
@@ -48,22 +55,27 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-Ofast");
 	flag_vec.push_back("-xhost");
 	flag_vec.push_back("-qopenmp");
+	flag_vec.push_back("-std=c11");
 	flag_vec.push_back("-w");
 	optimization_flags[compiler_ICC] = flag_vec;	
 
 	/* GCC */
 	flag_vec.clear();
 	flag_vec.push_back("gcc");
-	flag_vec.push_back("-O3");
+	flag_vec.push_back("-Ofast");
+	flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
+	flag_vec.push_back("-std=c11");
 	flag_vec.push_back("-w");
 	optimization_flags[compiler_GCC] = flag_vec;	
 
 	/* LLVM */
 	flag_vec.clear();
 	flag_vec.push_back("clang");
-	flag_vec.push_back("-O3");
+	flag_vec.push_back("-Ofast");
+	flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
+	flag_vec.push_back("-std=c11");
 	flag_vec.push_back("-w");
 	optimization_flags[compiler_LLVM] = flag_vec;	
 }

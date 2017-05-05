@@ -91,7 +91,9 @@ void ProfilerC::getHotspotFiles(){
 	}
 }
 
+// TODO: Check if compilation command failed in optimize functions 
 void ProfilerC::iccOptimize(){
+	files_to_link.clear();
 	vector<string> CL_flags = optimization_flags[compiler_ICC];
 	vector<string>::iterator iterv;
 	string CL;
@@ -112,6 +114,7 @@ void ProfilerC::iccOptimize(){
 }
 
 void ProfilerC::gccOptimize(){
+	files_to_link.clear();
 	vector<string> CL_flags = optimization_flags[compiler_GCC];
 	vector<string>::iterator iterv;
 	string CL;
@@ -132,6 +135,7 @@ void ProfilerC::gccOptimize(){
 }
 
 void ProfilerC::llvmOptimize(){
+	files_to_link.clear();
 	vector<string> CL_flags = optimization_flags[compiler_LLVM];
 	vector<string>::iterator iterv;
 	string CL;
@@ -219,18 +223,27 @@ void ProfilerC::gatherProfilingData( const string& binary_file, const string& co
 		cerr << "Profiler: Following binary file doesn't exist: " << binary_file << endl;
 		exit(EXIT_FAILURE);
 	}
-	
+
+	set<string> covered_hotspots;		
+	if( baseline_compiler_str == compiler_str ){
+		/* Just in case for some reason its occupied */
+		hotspots_skipped_profiling.clear();
+	}
+
 	for( int i = 0; i < mCompiler_profiler_runs; i++ ){
 		string result;
 		result = executeCommand( binary_file );
 		
-		/* Store result of execution(loops and their running time) into profiler_hotspot_data */
+		/* Store result of execution(loops and their running time) */
 		stringstream line_stream(result);
 		string cell;	
 		while( getline( line_stream, cell ) ){
-			int colon_pos = cell.find_last_of(':');
-			string hotspot_name = cell.substr(0, colon_pos);
-			double hotspot_time = stod( cell.substr( colon_pos+1 ) );
+			int keyword_pos = cell.find(mCompiler_timing_keyword);
+			if( keyword_pos == string::npos )
+				continue;
+			int keyword_colon_pos   = keyword_pos + mCompiler_timing_keyword.length();
+			string hotspot_name = cell.substr( 0, keyword_pos );
+			double hotspot_time = stod( cell.substr( keyword_colon_pos + 1 ) );
 			// Check if that loop's object file is present
 			string obj_file_path =  getDataFolderPath() + hotspot_name + compiler_str + dot_o_str;
 			set<string>::iterator iter = files_to_link.find( obj_file_path );
@@ -239,10 +252,15 @@ void ProfilerC::gatherProfilingData( const string& binary_file, const string& co
 				cerr << "Profiler: Loops object file not found: " << obj_file_path << endl;
 				exit(EXIT_FAILURE);
 			}
+			
+			// There's no point of adding it for each run
+			if( i == 0 && baseline_compiler_str == compiler_str )
+				covered_hotspots.insert( *iter );
+			
 			pair<string,string>	data_key = make_pair(hotspot_name, compiler_str);
 			// If such hotspot timing vector doesn't exist, create entry and add empty vector
 			if( profiler_hotspot_data.find( data_key ) == profiler_hotspot_data.end() ){
-				vector<double> *temp_vec = new vector<double>(mCompiler_profiler_runs);
+				vector<double> *temp_vec = new vector<double>();
 				hotspot_name_set.insert(hotspot_name);
 				// Add timing vector for each hotspot and its location into correspoing maps
 				profiler_hotspot_data.insert( pair< pair< string, string >, vector<double>* >( data_key, temp_vec ) );
@@ -257,10 +275,21 @@ void ProfilerC::gatherProfilingData( const string& binary_file, const string& co
 			csv_file << endrow; 
 		}
 	}
+	if( baseline_compiler_str == compiler_str ){
+		set<string>::iterator iter;
+		for( iter = files_to_link.begin(); iter != files_to_link.end(); iter++ ){
+			if( covered_hotspots.find(*iter) == covered_hotspots.end() )
+				hotspots_skipped_profiling.insert( *iter );
+		}
+	}
 }
 
 void ProfilerC::iccProfile(){
-	getObjectFiles(icc_str);
+	/* If mCompiler is started in Profile mode */
+	if( files_to_link.empty() ){
+		cerr << "Profiler: Required object files are not present" << endl;
+		getObjectFiles(icc_str);
+	}
 	string CL;
 
 	/* For CC and other flags */	
@@ -298,7 +327,10 @@ void ProfilerC::iccProfile(){
 }
 
 void ProfilerC::gccProfile(){
-	getObjectFiles(gcc_str);
+	if( files_to_link.empty() ){
+		cerr << "Profiler: Required object files are not present" << endl;
+		getObjectFiles(icc_str);
+	}
 	string CL;
 	
 	vector<string>::iterator iterv;
@@ -334,7 +366,10 @@ void ProfilerC::gccProfile(){
 }
 
 void ProfilerC::llvmProfile(){
-	getObjectFiles(llvm_str);
+	if( files_to_link.empty() ){
+		cerr << "Profiler: Required object files are not present" << endl;
+		getObjectFiles(icc_str);
+	}
 	string CL;
 	
 	vector<string>::iterator iterv;

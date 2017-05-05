@@ -35,13 +35,20 @@ void SynthesizerC::selectOptimalOptimizedCandidate( string hotspot_name ){
 }
 
 void SynthesizerC::analyzeHotspotProfileData(){
-	
-	// TODO: Change from ICC as base file always to best possible option
-	best_objs_to_link.insert( (base_obj_path.find( icc_str ))->second );
+	/* Add basefile from the baseline compiler obj */
+	best_objs_to_link.insert( (base_obj_path.find( baseline_compiler_str ))->second );
 
 	set<string>::iterator iters;
 	for( iters = hotspot_name_set.begin(); iters != hotspot_name_set.end(); iters++ ){
 		selectOptimalOptimizedCandidate(*iters);
+	}
+
+	/* 
+	 * Now add the object files that are required for linking but we dont have 
+	 * runtime info about them, since they didn't run while profiling
+     */	
+	for( iters = hotspots_skipped_profiling.begin(); iters != hotspots_skipped_profiling.end(); iters++ ){
+		best_objs_to_link.insert(*iters);
 	}
 
 /*

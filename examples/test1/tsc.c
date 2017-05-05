@@ -72,7 +72,10 @@ int indx[LEN] __attribute__((aligned(16)));
 float* __restrict__ xx;
 float* yy;
 
-int dummy(float[LEN], float[LEN], float[LEN], float[LEN], float[LEN], float[LEN2][LEN2], float[LEN2][LEN2], float[LEN2][LEN2], float);
+int dummy(float a[LEN], float b[LEN], float c[LEN], float d[LEN], float e[LEN], float aa[LEN2][LEN2], float bb[LEN2][LEN2], float cc[LEN2][LEN2], float s){
+	// --  called in each loop to make all computations appear required
+	return 0;
+}
 
 int set1d(float arr[LEN], float value, int stride)
 {
@@ -370,18 +373,18 @@ int main(){
 
 	start_t = clock();
 	//Better with icc
-	printf("For ICC:\n");
+//	printf("For ICC:\n");
 	s242(s1,s2);
 	s2275();
 
 	//Better with gcc
-	printf("For GCC:\n");
+//	printf("For GCC:\n");
 	s112();
 
 	//Better with llvm
-	printf("For LLVM:\n");
+//	printf("For LLVM:\n");
 	s312();
-	s317();	
+//	s317();	
 
 	end_t = clock(); clock_dif = end_t - start_t;
 	clock_dif_sec = (double) (clock_dif/1000000.0);
