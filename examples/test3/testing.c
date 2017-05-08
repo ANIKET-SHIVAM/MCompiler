@@ -7,7 +7,6 @@ extern void external();
 int main(){
 	int i,j,k,sum1=0,sum2=0;
 	for(i=0;i<10;i++){
-//		i++;
 		for(k=0;k<10;k++)
 			sum1+=i+k;
 	}

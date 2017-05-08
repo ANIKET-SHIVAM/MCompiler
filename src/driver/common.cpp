@@ -139,9 +139,12 @@ string executeCommand( string cmd_str ){
         if (fgets(buffer.data(), 128, pipe.get()) != NULL)
             result += buffer.data();
     }
-	if( !result.empty() )
+	if( !result.empty() ){
 		cerr << "Result of the previous command:" << endl << result << endl;
-	
+		//if( result.find("error") == string::npos )
+		//	exit(EXIT_FAILURE);
+	}
+
     return result;
 }
 

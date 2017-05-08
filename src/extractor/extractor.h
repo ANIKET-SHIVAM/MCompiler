@@ -81,6 +81,7 @@ class LoopInfo {
 	set<string> scope_vars_str_vec;
 	set<SgVariableSymbol*> scope_vars_symbol_vec;
 	set<SgInitializedName*> scope_vars_initName_vec;
+	set<SgFunctionDeclaration *> scope_funcCall_vec;
 public:
 	LoopInfo( SgNode *astNode, SgForStatement *loop, string func_name, Extractor& e)
 		: extr(e) ,astNode(astNode), loop(loop), func_name(func_name){ 
@@ -88,6 +89,8 @@ public:
 	string getFuncName() { return func_name; }
 	bool isDeclaredInInnerScope( SgScopeStatement *var_scope );
 	void getVarsInScope();
+	bool hasFuncCallInScope();
+	void addScopeFuncAsExtern( string &externFuncStr );
 
 	void printLoopFunc();
 	void pushPointersToLocalVars();

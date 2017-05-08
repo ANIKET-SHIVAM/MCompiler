@@ -141,6 +141,30 @@ void LoopInfo::getVarsInScope(){
 	}
 }
 
+bool LoopInfo::hasFuncCallInScope( ){
+	Rose_STL_Container<SgNode *> funcCallList =
+			NodeQuery::querySubTree(loop_scope, V_SgFunctionCallExp);
+	Rose_STL_Container<SgNode *>::iterator funcCallIter = funcCallList.begin();
+	/* If loop contain no function call */
+	if( funcCallIter == funcCallList.end() )
+		return false;
+	
+	for (; funcCallIter != funcCallList.end(); funcCallIter++) {
+		SgFunctionCallExp *funcCallExp = isSgFunctionCallExp(*funcCallIter);
+		SgFunctionDeclaration *funcDecl = funcCallExp->getAssociatedFunctionDeclaration();
+		if( funcDecl != NULL && !SageInterface::isExtern(funcDecl) )
+			scope_funcCall_vec.insert( funcDecl );	
+	}
+	return true;
+}
+
+void LoopInfo::addScopeFuncAsExtern( string &externFuncStr ){
+	set<SgFunctionDeclaration *>::iterator iter;
+	for( iter = scope_funcCall_vec.begin(); iter != scope_funcCall_vec.end(); iter++ ){ 
+		externFuncStr += "extern " + (*iter)->unparseToString() + '\n';
+	}
+}
+
 /* Only called if C */
 void LoopInfo::pushPointersToLocalVars(){
 	ofstream& loop_file_buf = extr.loop_file_buf;
@@ -185,6 +209,12 @@ void LoopInfo::printLoopFunc(){
 	/* Scope of loop body contains the variables needed for this loop to compile */
 	loop_scope = ( loop->get_loop_body() )->get_scope();
 
+	if( hasFuncCallInScope() ){
+		string externFuncStr;
+		addScopeFuncAsExtern( externFuncStr );
+		loop_file_buf << externFuncStr;
+	}
+
 	getVarsInScope();
 	//getParamatersInFunc	
 	
@@ -197,7 +227,7 @@ void LoopInfo::printLoopFunc(){
 		for( ; iter != scope_vars_str_vec.end(); iter++ )
 			loop_file_buf << ", " << *iter;
 	}
-	loop_file_buf<< " ){" << endl; // Function Start
+	loop_file_buf << " ){" << endl; // Function Start
 
 	//Required only for C, since C++ is passed through reference(&) 
 	if( extr.getSrcType() == src_lang_C )
@@ -351,6 +381,13 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 			}
 			case V_SgGlobal: {
 				global_node = isSgGlobal(astNode);
+				break;
+			}
+			case V_SgFunctionDeclaration: {
+				SgFunctionDeclaration *externFunc = dynamic_cast<SgFunctionDeclaration *>(astNode);
+				if( SageInterface::isExtern(externFunc) )
+					header_set.insert( externFunc->unparseToString() +'\n' );			
+				break;
 			}
 			default: { 
 					//cerr << "Found node: " << astNode->class_name() << endl;	
