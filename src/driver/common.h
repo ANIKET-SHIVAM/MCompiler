@@ -45,6 +45,8 @@ extern string polly_str;
 extern string baseline_compiler_str;
 
 extern string mCompiler_timing_keyword;
+extern string mCompiler_header_name;
+extern string mCompiler_header_code_name;
 extern string mCompiler_binary_name;
 extern string mCompiler_data_folder;
 extern string mCompiler_data_folder_path;

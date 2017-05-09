@@ -155,7 +155,9 @@ bool LoopInfo::hasFuncCallInScope( ){
 		if( funcDecl != NULL && !SageInterface::isExtern(funcDecl) )
 			scope_funcCall_vec.insert( funcDecl );	
 	}
-	return true;
+	if( !scope_funcCall_vec.empty() )
+		return true;
+	return false;
 }
 
 void LoopInfo::addScopeFuncAsExtern( string &externFuncStr ){
@@ -251,14 +253,23 @@ void LoopInfo::printLoopFunc(){
 	// Add OMP Timer end
 	loop_file_buf << "double loop_timer_end = omp_get_wtime( );" << endl;	
 
-	/* Very important for profiler to run and collect running time of each loop/hotspot */
+	/* REMOVED: Very important for profiler to run and collect running time of each loop/hotspot */
 	// Add OMP Timer difference print
+/*
 	if( extr.getSrcType() == src_lang_C ){
 		loop_file_buf << "printf(\"\\n" << getFuncName() + mCompiler_timing_keyword << " \%.9f\\n\", loop_timer_end - loop_timer_start );" << endl;
 	} else if( extr.getSrcType() == src_lang_CPP ){
 		loop_file_buf << "std::cout << std::endl \"" << getFuncName() + mCompiler_timing_keyword << " \" << std::setprecision(9) << (loop_timer_end - loop_timer_start) << std::endl;" << endl;
 	}
-	
+*/	
+
+	/* Create name for global timing variable and add to collection vector. */
+	/* Collect timing for each run of the loop */
+	string temp_str = getFuncName();
+	(extr.loop_funcName_vec)->push_back( temp_str );
+	string loopTimingVarStr	= extr.getLoopTimingVarSuffix() + getFuncName();
+	loop_file_buf << loopTimingVarStr << " += " << "loop_timer_end - loop_timer_start;" << endl;
+
 	//Required only for C, since C++ is passed through reference(&) 
 	if( extr.getSrcType() == src_lang_C )
 		popLocalVarsToPointers();
@@ -267,7 +278,7 @@ void LoopInfo::printLoopFunc(){
 }
 
 void Extractor::addExternDefs( SgFunctionDeclaration *func ){
-	externDefinitionsToAdd.push_back( dynamic_cast<SgStatement *>(func) );
+	externLoopFuncDefinitionsAdd.push_back( dynamic_cast<SgStatement *>(func) );
 }
 
 /* Add loop function call as extern in the base source file */
@@ -350,7 +361,7 @@ void Extractor::extractLoops( SgNode *astNode ){
 	 */
 	curr_loop.printLoopFunc();	
 	curr_loop.addLoopFuncAsExtern();
-	curr_loop.addLoopFuncCall();	
+	curr_loop.addLoopFuncCall();
 
 	loop_file_buf.close();
 
@@ -383,10 +394,31 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 				global_node = isSgGlobal(astNode);
 				break;
 			}
+			case V_SgSourceFile: {
+				/* add mCompiler header file into the source */
+				SgSourceFile *sourceFile = dynamic_cast<SgSourceFile *>(astNode);
+				SageInterface::insertHeader(sourceFile, mCompiler_header_name, false, true);
+				break;
+			}
 			case V_SgFunctionDeclaration: {
-				SgFunctionDeclaration *externFunc = dynamic_cast<SgFunctionDeclaration *>(astNode);
-				if( SageInterface::isExtern(externFunc) )
-					header_set.insert( externFunc->unparseToString() +'\n' );			
+				/* Collect all extern functions in this file */
+				SgFunctionDeclaration *declFunc = dynamic_cast<SgFunctionDeclaration *>(astNode);
+				if( SageInterface::isExtern(declFunc) )
+					header_set.insert( declFunc->unparseToString() +'\n' );
+				if( SageInterface::isMain(astNode) ){
+					mainFuncPresent = true;
+					main_scope = dynamic_cast<SgScopeStatement *>( (declFunc->get_definition())->get_body() );	
+					if( (declFunc->get_orig_return_type())->variantT() == V_SgTypeVoid ) 	
+						addTimingFuncCallVoidMain();	
+					else
+						nonVoidMain = true;
+				}
+				break;
+			}
+			case V_SgReturnStmt: {
+				SgStatement *returnstmt = dynamic_cast<SgStatement *>(astNode);
+				if( mainFuncPresent && returnstmt->get_scope() == main_scope && nonVoidMain )
+					addTimingFuncCallNonVoidMain(returnstmt); 
 				break;
 			}
 			default: { 
@@ -476,9 +508,59 @@ int Extractor::evaluateSynthesizedAttribute( SgNode *astNode, InheritedAttribute
 }
 
 void Extractor::addPostTraversalDefs(){
-	SageInterface::prependStatementList( externDefinitionsToAdd, getGlobalNode() );
+	SageInterface::prependStatementList( externLoopFuncDefinitionsAdd, getGlobalNode() );
+}
+
+void Extractor::generateHeaderFile(){
+	header_file_buf.open( (getDataFolderPath()+mCompiler_header_name).c_str(), ofstream::out );
+	
+	header_file_buf << "#ifndef MCOMPILER_H" << endl << "#define MCOMPILER_H" << endl;
+	/* add global timing vars to the header */
+	vector<string>::iterator iter;
+	for( iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end(); iter++){
+		header_file_buf << "double " << getLoopTimingVarSuffix() + *iter << ";" << endl;
+	}
+
+	/* Only add this function if current file contains main */
+	//TODO: Maybe seperated from here later	
+	if( mainFuncPresent ){
+		header_file_buf << "void " << printTimingVarFuncName << "();" << endl;
+		header_file_buf << "#endif" << endl;
+	}
+	header_file_buf.close();
+	
+	if( mainFuncPresent ){
+		header_code_file_buf.open( (getDataFolderPath()+mCompiler_header_code_name).c_str(), ofstream::out );
+		header_code_file_buf << "#include \"" << mCompiler_header_name << "\"" << endl;
+		header_code_file_buf << "void " << printTimingVarFuncName << "(){" << endl;
+		
+		vector<string>::iterator iter;
+		for( iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end(); iter++){
+			if( getSrcType() == src_lang_C ){
+				header_code_file_buf << "printf(\"\\n" << *iter + mCompiler_timing_keyword << " \%.9f\\n\"," << getLoopTimingVarSuffix() + *iter <<");" << endl;
+			} else if( getSrcType() == src_lang_CPP ){
+				header_code_file_buf << "std::cout << std::endl \"" << *iter + mCompiler_timing_keyword << " \" << std::setprecision(9) << " <<  getLoopTimingVarSuffix() + *iter << " << std::endl;" << endl;
+			}
+		}
+		header_code_file_buf << "}" << endl;
+		header_code_file_buf.close();
+		files_to_compile.insert(getDataFolderPath()+mCompiler_header_code_name);
+	}
+}
+
+void Extractor::addTimingFuncCallVoidMain(){
+	SgFunctionCallExp* call_expr = SageBuilder::buildFunctionCallExp
+		( printTimingVarFuncName, SageBuilder::buildVoidType(), NULL, main_scope );
+	SageInterface::appendStatement( SageBuilder::buildExprStatement( call_expr ), main_scope );
 }
 	
+void Extractor::addTimingFuncCallNonVoidMain( SgStatement* returnStmt ){
+	if( main_scope != NULL ){
+		SgFunctionCallExp* call_expr = SageBuilder::buildFunctionCallExp
+			( printTimingVarFuncName, SageBuilder::buildVoidType(), NULL, main_scope );
+		SageInterface::insertStatementBefore( returnStmt, SageBuilder::buildExprStatement( call_expr ) );	
+	}	
+}
 /* Extractor constructor, for initiating via driver */
 Extractor::Extractor( const vector<string> &argv ){
 	SgProject *ast = NULL;
@@ -488,6 +570,7 @@ Extractor::Extractor( const vector<string> &argv ){
 	InheritedAttribute inhr_attr;
 	/* Traverse all files and their ASTs in Top Down fashion (Inherited Attr) and extract loops */
 	this->traverseInputFiles( ast, inhr_attr );
+	this->generateHeaderFile();
 	this->addPostTraversalDefs();
 	AstTests::runAllTests(ast);
 	/* Generate rose_<orig file name> file for the transformed AST */

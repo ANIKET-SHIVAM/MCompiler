@@ -33,6 +33,8 @@ string baseline_compiler_str = icc_str;
 /* Used by extractor to differentiate from other stdout */
 string mCompiler_timing_keyword = "_mCompilerInfo:";
 
+string mCompiler_header_name = "mCompiler.h";
+string mCompiler_header_code_name = "mCompiler.c";
 string mCompiler_binary_name = "mCompiler_out";
 string mCompiler_data_folder = "mCompiler_data";
 string mCompiler_data_folder_path;

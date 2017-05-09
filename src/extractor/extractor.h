@@ -32,15 +32,23 @@ public:
 class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	string mCompiler_file_path; 
 	string mCompiler_file_name; 
-	string mCompiler_file_extn; 
+	string mCompiler_file_extn;
+	string printTimingVarFuncName = "printAccumulatedTimes"; 
+	string loopTimingVarSuffix = "accumulatorTime_";
+	SgScopeStatement* main_scope = NULL;
+	bool nonVoidMain = false;
 	SgGlobal *global_node; // Needed to add the extern calls
 	set<SgNode*> astNodesCollector; //Required to not add loop functions on Ast Post Processing
-	vector<SgStatement*> externDefinitionsToAdd;
+	vector<SgStatement*> externLoopFuncDefinitionsAdd;
 	set<string> header_set;
 	set<string> global_vars;
 	src_lang src_type;
-public:	
+public:
+	bool mainFuncPresent = false;	
+	vector<string> *loop_funcName_vec = new vector<string>;
 	ofstream loop_file_buf;
+	ofstream header_file_buf;
+	ofstream header_code_file_buf;
 public:
 	Extractor() {};
 	Extractor( const vector<string> &argv );
@@ -48,6 +56,7 @@ public:
 	src_lang getSrcType() { return src_type; }
 	SgGlobal* getGlobalNode() { return global_node; }
 	string getDataFolderPath() { return mCompiler_data_folder_path; };
+	string getLoopTimingVarSuffix() { return loopTimingVarSuffix; };
 
 	string getFilePath() { return mCompiler_file_path; };
 	string getFileName() { return mCompiler_file_name; };
@@ -61,6 +70,9 @@ public:
 	void printGlobalsAsExtern( SgNode *const &astNode );
 	void addExternDefs( SgFunctionDeclaration *func );
 	void addPostTraversalDefs(); 
+	void generateHeaderFile(); 
+	void addTimingFuncCallVoidMain();
+	void addTimingFuncCallNonVoidMain( SgStatement* returnStmt );
 
 	/* Important functions */
 	void extractLoops( SgNode *astNode );
@@ -84,8 +96,7 @@ class LoopInfo {
 	set<SgFunctionDeclaration *> scope_funcCall_vec;
 public:
 	LoopInfo( SgNode *astNode, SgForStatement *loop, string func_name, Extractor& e)
-		: extr(e) ,astNode(astNode), loop(loop), func_name(func_name){ 
-}
+		: extr(e) ,astNode(astNode), loop(loop), func_name(func_name){}
 	string getFuncName() { return func_name; }
 	bool isDeclaredInInnerScope( SgScopeStatement *var_scope );
 	void getVarsInScope();

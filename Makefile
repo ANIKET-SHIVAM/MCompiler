@@ -26,6 +26,7 @@ $(OBJ_COMMON): src/driver/common.cpp
 EXTRACTOR_COMPILE_FLAGS = -I/home/aniket/meta_compiler/src \
 	$(ROSE_INCLUDE)
 EXTRACTOR_LD_FLAGS = -L/home/aniket/meta_compiler/tools/rose/rose_build/lib/ \
+	-L/home/aniket/meta_compiler/tools/rose/boost_1_61_0/lib/ \
 	-lrose -lboost_iostreams -lboost_system
 
 OBJ_EXTRACTOR = $(OBJS)/extractor.o
