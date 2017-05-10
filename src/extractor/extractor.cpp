@@ -115,10 +115,11 @@ void LoopInfo::getVarsInScope(){
 		SgScopeStatement *var_scope = ( var->get_declaration() )->get_scope();
 		
 		/* Neither globals variables nor variables declared inside the loop body should be passed */ 
-		if( !( isSgGlobal(var_scope) || isDeclaredInInnerScope(var_scope) ) ){
+		if( !( isSgGlobal(var_scope) || isDeclaredInInnerScope(var_scope) ) && 
+			find( scope_vars_symbol_vec.begin(), scope_vars_symbol_vec.end(), var ) == scope_vars_symbol_vec.end() ){
 			//SgVariableSymbol *var = dynamic_cast<SgVariableSymbol *>(*iter);
-			scope_vars_symbol_vec.insert( var ); // Needed for function call	
-			scope_vars_initName_vec.insert( var->get_declaration() ); // Needed for function extern defn	
+			scope_vars_symbol_vec.push_back( var ); // Needed for function call	
+			scope_vars_initName_vec.push_back( var->get_declaration() ); // Needed for function extern defn	
 
 			string var_type_str = (var->get_type())->unparseToString();
 			if( extr.getSrcType() == src_lang_C ){
@@ -128,13 +129,13 @@ void LoopInfo::getVarsInScope(){
 				 */
 				if( (var->get_type())->variantT() == V_SgArrayType ){
 					int first_square_brac = var_type_str.find_first_of("[");
-					scope_vars_str_vec.insert( var_type_str.substr( 0,first_square_brac ) + var->get_name().getString()
+					scope_vars_str_vec.push_back( var_type_str.substr( 0,first_square_brac ) + var->get_name().getString()
 										+ var_type_str.substr( first_square_brac ) );
 				} else {
-					scope_vars_str_vec.insert( var_type_str + "* " + var->get_name().getString() + "_primitive" );
+					scope_vars_str_vec.push_back( var_type_str + "* " + var->get_name().getString() + "_primitive" );
 				}
 			} else if( extr.getSrcType() == src_lang_CPP ){
-				scope_vars_str_vec.insert( var_type_str + "& " + var->get_name().getString() );
+				scope_vars_str_vec.push_back( var_type_str + "& " + var->get_name().getString() );
 			}		
 			//cerr << "Symbol Table : " << *(scope_vars_str_vec.rbegin()) << endl;
 		}
@@ -171,7 +172,7 @@ void LoopInfo::addScopeFuncAsExtern( string &externFuncStr ){
 void LoopInfo::pushPointersToLocalVars(){
 	ofstream& loop_file_buf = extr.loop_file_buf;
 	
-	set<SgVariableSymbol*>::iterator iter;
+	vector<SgVariableSymbol*>::iterator iter;
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++ ){
 		string var_type_str = ((*iter)->get_type())->unparseToString();
 		string var_name_str = ((*iter)->get_name()).getString();
@@ -186,7 +187,7 @@ void LoopInfo::pushPointersToLocalVars(){
 void LoopInfo::popLocalVarsToPointers(){
 	ofstream& loop_file_buf = extr.loop_file_buf;
 	
-	set<SgVariableSymbol*>::iterator iter;
+	vector<SgVariableSymbol*>::iterator iter;
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++ ){
 		string var_type_str = ((*iter)->get_type())->unparseToString();
 		string var_name_str = ((*iter)->get_name()).getString();
@@ -223,7 +224,7 @@ void LoopInfo::printLoopFunc(){
 	// Function definition 
 	loop_file_buf << endl << "void " << getFuncName() << "( ";
 	if( !scope_vars_str_vec.empty() ){
-		set<string>::iterator iter = scope_vars_str_vec.begin();
+		vector<string>::iterator iter = scope_vars_str_vec.begin();
 		loop_file_buf << *iter;
 		iter++;
 		for( ; iter != scope_vars_str_vec.end(); iter++ )
@@ -284,7 +285,7 @@ void Extractor::addExternDefs( SgFunctionDeclaration *func ){
 /* Add loop function call as extern in the base source file */
 void LoopInfo::addLoopFuncAsExtern(){
 	if( extr.getGlobalNode() != NULL ){
-		set<SgInitializedName*>::iterator iter;
+		vector<SgInitializedName*>::iterator iter;
 		SgFunctionParameterList* paramList = SageBuilder::buildFunctionParameterList();
 		for( iter = scope_vars_initName_vec.begin(); iter != scope_vars_initName_vec.end(); iter++){
 			// Create parameter list
@@ -318,7 +319,7 @@ void LoopInfo::addLoopFuncAsExtern(){
 
 /* Replaces the loop subtree with a function call to corresponding loop function */
 void LoopInfo::addLoopFuncCall(){
-	set<SgVariableSymbol*>::iterator iter;
+	vector<SgVariableSymbol*>::iterator iter;
 	vector<SgExpression*> expr_list;
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++){
 			if( extr.getSrcType() == src_lang_C ){

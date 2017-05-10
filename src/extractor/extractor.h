@@ -90,9 +90,9 @@ class LoopInfo {
 	SgForStatement *loop;
 	string func_name;
 	SgScopeStatement *loop_scope;
-	set<string> scope_vars_str_vec;
-	set<SgVariableSymbol*> scope_vars_symbol_vec;
-	set<SgInitializedName*> scope_vars_initName_vec;
+	vector<string> scope_vars_str_vec;
+	vector<SgVariableSymbol*> scope_vars_symbol_vec;
+	vector<SgInitializedName*> scope_vars_initName_vec;
 	set<SgFunctionDeclaration *> scope_funcCall_vec;
 public:
 	LoopInfo( SgNode *astNode, SgForStatement *loop, string func_name, Extractor& e)
