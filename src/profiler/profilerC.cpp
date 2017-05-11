@@ -107,8 +107,18 @@ void ProfilerC::iccOptimize(){
 	set<string>::iterator iters;
 	for( iters = files_to_compile.begin(); iters != files_to_compile.end(); iters++){
 		string out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + icc_str + dot_o_str; 
-		files_to_link.insert( out_file );
 		executeCommand( CL + *iters + space_str + minus_o_str + space_str + out_file );
+		/* We only want to link profile code files (and mCompiler file with printTimingVar function), but compile no profile code files too */
+		if( out_file.find(mCompiler_profile_file_tag) != string::npos )
+			files_to_link.insert( out_file );
+		// Add mCompiler header obj for linking but collect name so as to be skipped by synthesizer
+		if( (*iters).find(mCompiler_header_code_name) != string::npos ){
+			files_to_link.insert( out_file );
+			mCompiler_header_obj.insert( out_file );
+		}
+		// Store base obj file for synthesizer
+		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos )
+			base_obj_path.insert( pair<string,string>(icc_str,*iters) );
 	}
 
 }
@@ -128,8 +138,16 @@ void ProfilerC::gccOptimize(){
 	set<string>::iterator iters;
 	for( iters = files_to_compile.begin(); iters != files_to_compile.end(); iters++){
 		string out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + gcc_str + dot_o_str; 
-		files_to_link.insert( out_file );
 		executeCommand( CL + *iters + space_str + minus_o_str + space_str + out_file );
+		if( out_file.find(mCompiler_profile_file_tag) != string::npos )
+			files_to_link.insert( out_file );
+		if( (*iters).find(mCompiler_header_code_name) != string::npos ){
+			files_to_link.insert( out_file );
+			mCompiler_header_obj.insert( out_file );
+		}
+		// Store base obj file for synthesizer
+		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos )
+			base_obj_path.insert( pair<string,string>(gcc_str,*iters) );
 	}
 
 }
@@ -149,8 +167,16 @@ void ProfilerC::llvmOptimize(){
 	set<string>::iterator iters;
 	for( iters = files_to_compile.begin(); iters != files_to_compile.end(); iters++){
 		string out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + llvm_str + dot_o_str; 
-		files_to_link.insert( out_file );
 		executeCommand( CL + *iters + space_str + minus_o_str + space_str + out_file );
+		if( out_file.find(mCompiler_profile_file_tag) != string::npos )
+			files_to_link.insert( out_file );
+		if( (*iters).find(mCompiler_header_code_name) != string::npos ){
+			files_to_link.insert( out_file );
+			mCompiler_header_obj.insert( out_file );
+		}
+		// Store base obj file for synthesizer
+		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos )
+			base_obj_path.insert( pair<string,string>(llvm_str,*iters) );
 	}
 }
 
@@ -244,12 +270,16 @@ void ProfilerC::gatherProfilingData( const string& binary_file, const string& co
 			int keyword_colon_pos   = keyword_pos + mCompiler_timing_keyword.length();
 			string hotspot_name = cell.substr( 0, keyword_pos );
 			double hotspot_time = stod( cell.substr( keyword_colon_pos + 1 ) );
-			// Check if that loop's object file is present
+			
+			// Check if that loop's profile object file is present
+			string obj_file_path_profile =  getDataFolderPath() + hotspot_name + mCompiler_profile_file_tag + compiler_str + dot_o_str;
+			// This is the file with no profiling code, hence to be finally linked by the synthesizer
 			string obj_file_path =  getDataFolderPath() + hotspot_name + compiler_str + dot_o_str;
-			set<string>::iterator iter = files_to_link.find( obj_file_path );
+			
+			set<string>::iterator iter = files_to_link.find( obj_file_path_profile );
 
 			if ( iter == files_to_link.end() ){
-				cerr << "Profiler: Loops object file not found: " << obj_file_path << endl;
+				cerr << "Profiler: Loops object file not found: " << obj_file_path_profile << endl;
 				exit(EXIT_FAILURE);
 			}
 			
@@ -262,9 +292,9 @@ void ProfilerC::gatherProfilingData( const string& binary_file, const string& co
 			if( profiler_hotspot_data.find( data_key ) == profiler_hotspot_data.end() ){
 				vector<double> *temp_vec = new vector<double>();
 				hotspot_name_set.insert(hotspot_name);
-				// Add timing vector for each hotspot and its location into correspoing maps
+				// Add timing vector for each hotspot and its location( for the no profile code version ) into correspoing maps
 				profiler_hotspot_data.insert( pair< pair< string, string >, vector<double>* >( data_key, temp_vec ) );
-				profiler_hotspot_obj_path.insert( pair< pair< string, string >, string >( data_key, *iter ) );
+				profiler_hotspot_obj_path.insert( pair< pair< string, string >, string >( data_key, obj_file_path ) );
 			}
 			
 			map< pair< string, string >, vector<double>* >::iterator mIter = profiler_hotspot_data.find( data_key );
@@ -275,11 +305,16 @@ void ProfilerC::gatherProfilingData( const string& binary_file, const string& co
 			csv_file << endrow; 
 		}
 	}
+	// Link left over obj files that had hotspot not being executed during profiling
 	if( baseline_compiler_str == compiler_str ){
 		set<string>::iterator iter;
 		for( iter = files_to_link.begin(); iter != files_to_link.end(); iter++ ){
-			if( covered_hotspots.find(*iter) == covered_hotspots.end() )
-				hotspots_skipped_profiling.insert( *iter );
+			if( covered_hotspots.find(*iter) == covered_hotspots.end() ){
+				// Skip mCompiler header obj and base files for synthesizer
+				if( mCompiler_header_obj.find(*iter) == mCompiler_header_obj.end() && 
+					(*iter).find(base_str) == string::npos )
+					hotspots_skipped_profiling.insert( *iter );
+			}
 		}
 	}
 }
@@ -307,8 +342,6 @@ void ProfilerC::iccProfile(){
 		// Extract binary name from base file name bcoz there's only one  
 		if( (*iters).find(base_str) != string::npos){
 			out_file = (*iters).substr( 0, ( (*iters).find(base_str) ) ) + icc_str;
-			// Store base obj file for synthesizer
-			base_obj_path.insert( pair<string,string>(icc_str,*iters) );
 		}
 	}
 	/* Add object files then add -o binary_name, before adding post linker flags */
@@ -347,8 +380,6 @@ void ProfilerC::gccProfile(){
 		// Extract binary name from base file name bcoz there's only one  
 		if( (*iters).find(base_str) != string::npos){
 			out_file = (*iters).substr( 0, ( (*iters).find(base_str) ) ) + gcc_str;
-			// Store base obj file for synthesizer
-			base_obj_path.insert( pair<string,string>(gcc_str,*iters) );
 		}
 	}
 	
@@ -386,8 +417,6 @@ void ProfilerC::llvmProfile(){
 		// Extract binary name from base file name bcoz there's only one  
 		if( (*iters).find(base_str) != string::npos){
 			out_file = (*iters).substr( 0, ( (*iters).find(base_str) ) ) + llvm_str;
-			// Store base obj file for synthesizer
-			base_obj_path.insert( pair<string,string>(llvm_str,*iters) );
 		}
 	}
 

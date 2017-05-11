@@ -45,6 +45,9 @@ extern string polly_str;
 extern string baseline_compiler_str;
 
 extern string mCompiler_timing_keyword;
+
+extern string printTimingVarFuncName; 
+extern string mCompiler_profile_file_tag;
 extern string mCompiler_header_name;
 extern string mCompiler_header_code_name;
 extern string mCompiler_binary_name;

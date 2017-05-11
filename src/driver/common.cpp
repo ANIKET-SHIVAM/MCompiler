@@ -33,10 +33,12 @@ string baseline_compiler_str = icc_str;
 /* Used by extractor to differentiate from other stdout */
 string mCompiler_timing_keyword = "_mCompilerInfo:";
 
-string mCompiler_header_name = "mCompiler.h";
+string printTimingVarFuncName     = "printAccumulatedTimes"; 
+string mCompiler_profile_file_tag = "_mCProfile_";
+string mCompiler_header_name      = "mCompiler.h";
 string mCompiler_header_code_name = "mCompiler.c";
-string mCompiler_binary_name = "mCompiler_out";
-string mCompiler_data_folder = "mCompiler_data";
+string mCompiler_binary_name      = "mCompiler_out";
+string mCompiler_data_folder      = "mCompiler_data";
 string mCompiler_data_folder_path;
 string mCompiler_curr_dir_path;
 
@@ -45,7 +47,7 @@ bool auto_parallel_enabled = true;
 /* Extractor passes to Profiler */
 set<string> files_to_compile;
 
-int    mCompiler_profiler_runs     = 1;
+int    mCompiler_profiler_runs    = 1;
 string mCompiler_profile_data_csv = "profile_data.csv";
 
 // TODO: Add flags given to driver to following flag list (without or with mapping)

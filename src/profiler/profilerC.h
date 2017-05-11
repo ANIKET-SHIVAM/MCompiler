@@ -10,6 +10,7 @@ private:
 	string data_folder_path;
 	bool parallel;
 	set<string> files_to_link;
+	set<string> mCompiler_header_obj;
 
 	void iccOptimize(); 
 	void gccOptimize(); 

@@ -33,7 +33,6 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	string mCompiler_file_path; 
 	string mCompiler_file_name; 
 	string mCompiler_file_extn;
-	string printTimingVarFuncName = "printAccumulatedTimes"; 
 	string loopTimingVarSuffix = "accumulatorTime_";
 	SgScopeStatement* main_scope = NULL;
 	bool nonVoidMain = false;
@@ -46,7 +45,8 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 public:
 	bool mainFuncPresent = false;	
 	vector<string> *loop_funcName_vec = new vector<string>;
-	ofstream loop_file_buf;
+	//ofstream loop_file_buf_profile;
+	//ofstream loop_file_buf_profile;
 	ofstream header_file_buf;
 	ofstream header_code_file_buf;
 public:
@@ -65,9 +65,9 @@ public:
 	string getFileName( const string &fileNameWithPath );
 	string getFileExtn( const string &fileNameWithPath );
 	int getAstNodeLineNum( SgNode *const &astNode );
-	string getExtractionFileName( SgNode *astNode );
-	void printHeaders( SgNode *const &astNode );
-	void printGlobalsAsExtern( SgNode *const &astNode );
+	string getExtractionFileName( SgNode *astNode, bool isProfileFile );
+	void printHeaders( ofstream& loop_file_buf );
+	void printGlobalsAsExtern( ofstream& loop_file_buf );
 	void addExternDefs( SgFunctionDeclaration *func );
 	void addPostTraversalDefs(); 
 	void generateHeaderFile(); 
@@ -95,17 +95,17 @@ class LoopInfo {
 	vector<SgInitializedName*> scope_vars_initName_vec;
 	set<SgFunctionDeclaration *> scope_funcCall_vec;
 public:
-	LoopInfo( SgNode *astNode, SgForStatement *loop, string func_name, Extractor& e)
-		: extr(e) ,astNode(astNode), loop(loop), func_name(func_name){}
+	LoopInfo( SgNode *astNode, SgForStatement *loop, string func_name, Extractor& e )
+		: extr(e) ,astNode(astNode), loop(loop), func_name(func_name) {}
 	string getFuncName() { return func_name; }
 	bool isDeclaredInInnerScope( SgScopeStatement *var_scope );
 	void getVarsInScope();
 	bool hasFuncCallInScope();
 	void addScopeFuncAsExtern( string &externFuncStr );
 
-	void printLoopFunc();
-	void pushPointersToLocalVars();
-	void popLocalVarsToPointers();
+	void printLoopFunc( ofstream& loop_file_buf, bool isProfileFile );
+	void pushPointersToLocalVars( ofstream& loop_file_buf );
+	void popLocalVarsToPointers( ofstream& loop_file_buf );
 	void addLoopFuncAsExtern();	// In Base file
 	void addLoopFuncCall();	// In Base file
 };

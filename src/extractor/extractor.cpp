@@ -43,7 +43,7 @@ int Extractor::getAstNodeLineNum( SgNode *const &astNode ) {
 	return rose::getLineNumber(locatedNode);
 }
 
-string Extractor::getExtractionFileName( SgNode *astNode ) {
+string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 	string fileNameWithPath = (astNode->get_file_info())->get_filenameString();
 	//string filePath = getFilePath(fileNameWithPath);
 	string fileName = getFileName(fileNameWithPath);
@@ -53,13 +53,16 @@ string Extractor::getExtractionFileName( SgNode *astNode ) {
 	string outputPath = getDataFolderPath();
 
 	fileName += "_line" + to_string(lineNumber);
-
-	fileName = fileName + "." + fileExtn;
+	
+	if( isProfileFile )
+		fileName = fileName + mCompiler_profile_file_tag + "." + fileExtn;
+	else
+		fileName = fileName + "." + fileExtn;
 
 	return outputPath + fileName;
 }
 
-void Extractor::printHeaders( SgNode *const &astNode ){
+void Extractor::printHeaders( ofstream& loop_file_buf ){
 	set<string>::iterator iter;
 	bool hasOMP = false;
 	bool hasIO = false;
@@ -83,13 +86,12 @@ void Extractor::printHeaders( SgNode *const &astNode ){
 
 }
 
-void Extractor::printGlobalsAsExtern( SgNode *const &astNode ){
+void Extractor::printGlobalsAsExtern( ofstream& loop_file_buf ){
 	set<string>::iterator iter;
 	for( iter = global_vars.begin(); iter != global_vars.end(); iter++ ){
 		string var_str = *iter;
 		loop_file_buf << "extern " << var_str << ";" << endl; 
 	}
-
 }
 
 bool LoopInfo::isDeclaredInInnerScope( SgScopeStatement *var_scope ){
@@ -169,8 +171,8 @@ void LoopInfo::addScopeFuncAsExtern( string &externFuncStr ){
 }
 
 /* Only called if C */
-void LoopInfo::pushPointersToLocalVars(){
-	ofstream& loop_file_buf = extr.loop_file_buf;
+void LoopInfo::pushPointersToLocalVars( ofstream& loop_file_buf ){
+	//ofstream& loop_file_buf = extr.loop_file_buf;
 	
 	vector<SgVariableSymbol*>::iterator iter;
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++ ){
@@ -184,8 +186,8 @@ void LoopInfo::pushPointersToLocalVars(){
 }
 
 /* Only called if C */
-void LoopInfo::popLocalVarsToPointers(){
-	ofstream& loop_file_buf = extr.loop_file_buf;
+void LoopInfo::popLocalVarsToPointers( ofstream& loop_file_buf ){
+	//ofstream& loop_file_buf = extr.loop_file_buf;
 	
 	vector<SgVariableSymbol*>::iterator iter;
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++ ){
@@ -205,9 +207,9 @@ void LoopInfo::popLocalVarsToPointers(){
  * Add OMP Timer around the loop. (Not sure)
  * Manages variables that are needed for extracting the loop.
  */
-void LoopInfo::printLoopFunc(){
+void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 
-	ofstream& loop_file_buf = extr.loop_file_buf;
+//	ofstream& loop_file_buf = extr.loop_file_buf;
 
 	/* Scope of loop body contains the variables needed for this loop to compile */
 	loop_scope = ( loop->get_loop_body() )->get_scope();
@@ -234,10 +236,11 @@ void LoopInfo::printLoopFunc(){
 
 	//Required only for C, since C++ is passed through reference(&) 
 	if( extr.getSrcType() == src_lang_C )
-		pushPointersToLocalVars();
+		pushPointersToLocalVars( loop_file_buf );
 	
 	// Add OMP Timer start
-	loop_file_buf << "double loop_timer_start = omp_get_wtime( );" << endl;
+	if( isProfileFile )
+		loop_file_buf << "double loop_timer_start = omp_get_wtime( );" << endl;
 
 	// TODO: Add SCoP pragma based on tool option 
 	loop_file_buf << "#pragma scop" << endl;
@@ -252,7 +255,8 @@ void LoopInfo::printLoopFunc(){
 	loop_file_buf << "#pragma endscop" << endl;
 	
 	// Add OMP Timer end
-	loop_file_buf << "double loop_timer_end = omp_get_wtime( );" << endl;	
+	if( isProfileFile )
+		loop_file_buf << "double loop_timer_end = omp_get_wtime( );" << endl;	
 
 	/* REMOVED: Very important for profiler to run and collect running time of each loop/hotspot */
 	// Add OMP Timer difference print
@@ -266,14 +270,15 @@ void LoopInfo::printLoopFunc(){
 
 	/* Create name for global timing variable and add to collection vector. */
 	/* Collect timing for each run of the loop */
-	string temp_str = getFuncName();
-	(extr.loop_funcName_vec)->push_back( temp_str );
-	string loopTimingVarStr	= extr.getLoopTimingVarSuffix() + getFuncName();
-	loop_file_buf << loopTimingVarStr << " += " << "loop_timer_end - loop_timer_start;" << endl;
-
+	if( isProfileFile ){
+		string temp_str = getFuncName();
+		(extr.loop_funcName_vec)->push_back( temp_str );
+		string loopTimingVarStr	= extr.getLoopTimingVarSuffix() + getFuncName();
+		loop_file_buf << loopTimingVarStr << " += " << "loop_timer_end - loop_timer_start;" << endl;
+	}
 	//Required only for C, since C++ is passed through reference(&) 
 	if( extr.getSrcType() == src_lang_C )
-		popLocalVarsToPointers();
+		popLocalVarsToPointers( loop_file_buf );
 	
 	loop_file_buf << "}" << endl; // Function End
 }
@@ -343,28 +348,40 @@ void LoopInfo::addLoopFuncCall(){
 
 void Extractor::extractLoops( SgNode *astNode ){
 	SgForStatement *loop = dynamic_cast<SgForStatement *>(astNode);
-	string loop_file_name = getExtractionFileName(astNode);
-	files_to_compile.insert( loop_file_name );
-	loop_file_buf.open(loop_file_name.c_str(), ofstream::out);
+	string loop_profile_file_name    = getExtractionFileName(astNode, true);
+	string loop_no_profile_file_name = getExtractionFileName(astNode, false);
+	
+	ofstream loop_file_buf_profile;
+	loop_file_buf_profile.open(loop_profile_file_name.c_str(), ofstream::out);
+	ofstream loop_file_buf_no_profile;
+	loop_file_buf_no_profile.open(loop_no_profile_file_name.c_str(), ofstream::out);
+	
+	files_to_compile.insert( loop_profile_file_name );
+	files_to_compile.insert( loop_no_profile_file_name );
 	
 	// Create loop object
 	LoopInfo curr_loop( astNode, loop, 
 		getFileName( (astNode->get_file_info())->get_filenameString() ) + "_line" + 
 			to_string( getAstNodeLineNum(astNode) ), *this); 
 
-	printHeaders(astNode);
-	printGlobalsAsExtern(astNode);
+	printHeaders( loop_file_buf_profile );
+	printGlobalsAsExtern( loop_file_buf_profile );
+	
+	printHeaders( loop_file_buf_no_profile );
+	printGlobalsAsExtern( loop_file_buf_no_profile );
 	
 	//cerr << "Adding loop to file: " << curr_loop.getFuncName() << endl;
 	/* 
 	 * Take cares of print complete loop function and adding func calls
 	 * and extern loop func to the base file.
 	 */
-	curr_loop.printLoopFunc();	
+	curr_loop.printLoopFunc( loop_file_buf_profile, true );	
+	curr_loop.printLoopFunc( loop_file_buf_no_profile, false );	
 	curr_loop.addLoopFuncAsExtern();
 	curr_loop.addLoopFuncCall();
 
-	loop_file_buf.close();
+	loop_file_buf_profile.close();
+	loop_file_buf_no_profile.close();
 
 	/* TODO: Call astyleFormatter here in distant future */
 }
@@ -562,6 +579,7 @@ void Extractor::addTimingFuncCallNonVoidMain( SgStatement* returnStmt ){
 		SageInterface::insertStatementBefore( returnStmt, SageBuilder::buildExprStatement( call_expr ) );	
 	}	
 }
+
 /* Extractor constructor, for initiating via driver */
 Extractor::Extractor( const vector<string> &argv ){
 	SgProject *ast = NULL;
@@ -577,4 +595,17 @@ Extractor::Extractor( const vector<string> &argv ){
 	/* Generate rose_<orig file name> file for the transformed AST */
 	ast->unparse();
 	delete ast;	
+	string base_file = getDataFolderPath() + getFileName() + base_str + "." + getFileExtn();
+	string base_file_profile = getDataFolderPath() + getFileName() + base_str + mCompiler_profile_file_tag + "." + getFileExtn();
+	files_to_compile.insert(base_file);
+	files_to_compile.insert(base_file_profile);
+	// Move base file to the mCompiler data folder: 
+	// mv rose_filename.x mCompiler_data/filename_base.x
+	// cp mCompiler_data/filename_base.x mCompiler_data/filename_base_profile_.x
+	executeCommand( "mv rose_"+ getFileName() + "." + getFileExtn() + space_str + base_file );
+	executeCommand( "cp " + base_file + space_str + base_file_profile );
+
+	/* Remove mCompile header and accumulater timing var print function from non profile base file */
+	string sed_command = "sed -i.bak '/" + mCompiler_header_name + "/d;/" + printTimingVarFuncName + "/d' " + base_file;
+	executeCommand( sed_command );
 }
