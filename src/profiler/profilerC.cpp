@@ -118,7 +118,7 @@ void ProfilerC::iccOptimize(){
 		}
 		// Store base obj file for synthesizer
 		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos )
-			base_obj_path.insert( pair<string,string>(icc_str,*iters) );
+			base_obj_path.insert( pair<string,string>(icc_str, out_file) );
 	}
 
 }
@@ -147,7 +147,7 @@ void ProfilerC::gccOptimize(){
 		}
 		// Store base obj file for synthesizer
 		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos )
-			base_obj_path.insert( pair<string,string>(gcc_str,*iters) );
+			base_obj_path.insert( pair<string,string>(gcc_str, out_file) );
 	}
 
 }
@@ -176,7 +176,7 @@ void ProfilerC::llvmOptimize(){
 		}
 		// Store base obj file for synthesizer
 		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos )
-			base_obj_path.insert( pair<string,string>(llvm_str,*iters) );
+			base_obj_path.insert( pair<string,string>(llvm_str, out_file) );
 	}
 }
 
