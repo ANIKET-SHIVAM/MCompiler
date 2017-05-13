@@ -55,8 +55,7 @@ void Driver::initiateProfiler( bool parallel){
 void Driver::initiateSynthesizer( bool parallel){
 	src_lang src_type = extr->getSrcType();
 	if( src_type == src_lang_C ){
-		synth = new SynthesizerC( parallel, 
-								  getOutputBinary() );
+		synth = new SynthesizerC( parallel );
 	}else if( src_type == src_lang_C ){
 		//SynthesizerCPP( string data_folder_path );
 	} else if( src_type == src_lang_FORTRAN ){
@@ -68,36 +67,29 @@ void Driver::initiateSynthesizer( bool parallel){
 }
 
 int main( int argc, char* argv[] ){
-	if( argc < 2 ){
-		print_usage_options();
-		exit(EXIT_FAILURE);
-	}
-	/* TODO: Clear the mCompiler data folder, if starting from beginning */
-	string *files_and_flags = set_mCompiler_options( argc, argv );
+	set_mCompiler_options( argc, argv );
 	Driver *driver = new Driver();
-	driver->setInputFile( files_and_flags[0] );
-	driver->setOutputBinary( files_and_flags[1] );
-	driver->setCompilerFlags( files_and_flags[2] );
 	
+	/* TODO: Clear the mCompiler data folder, if starting from beginning */
 	driver->createMCompilerDataFolder();
 
-	if( mCompiler_enabled_options[option_extract] == true )
+	if( mCompiler_enabled_options[EXTRACT] == true )
 		driver->initiateExtractor( driver->getInputFile() );
 
-	if( mCompiler_enabled_options[option_profile] == true ){
+	if( mCompiler_enabled_options[PROFILE] == true ){
 		if( mCompiler_data_folder_path.empty() ){
 			cerr << "Couldn't find the folder to profile hotspots" << endl;	
 			exit(EXIT_FAILURE);
 		}
-		driver->initiateProfiler( mCompiler_enabled_options[option_parallel] );
+		driver->initiateProfiler( mCompiler_enabled_options[PARALLEL] );
 	}
 
-	if( mCompiler_enabled_options[option_synthesize] == true ){
+	if( mCompiler_enabled_options[SYNTHESIZE] == true ){
 		if( mCompiler_data_folder_path.empty() ){
 			cerr << "Couldn't find the folder to synthesize hotspots" << endl;	
 			exit(EXIT_FAILURE);
 		}	
-		driver->initiateSynthesizer( mCompiler_enabled_options[option_parallel] );
+		driver->initiateSynthesizer( mCompiler_enabled_options[PARALLEL] );
 	}
 
 	delete driver;

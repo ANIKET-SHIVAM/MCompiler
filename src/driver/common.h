@@ -55,6 +55,9 @@ extern string mCompiler_data_folder;
 extern string mCompiler_data_folder_path;
 extern string mCompiler_curr_dir_path;
 
+/* For the extractor */
+extern vector<string> mCompiler_input_file;
+
 extern bool auto_parallel_enabled;
 
 /* Extractor passes to Profiler */
@@ -62,6 +65,7 @@ extern set<string> files_to_compile;
 
 extern int mCompiler_profiler_runs;
 extern string mCompiler_profile_data_csv;
+extern string mCompiler_profiler_input;
 
 extern map< compiler_type, bool > compiler_candidate;
 extern map< compiler_type, vector<string> > optimization_flags;

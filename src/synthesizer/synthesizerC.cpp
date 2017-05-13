@@ -80,12 +80,9 @@ void SynthesizerC::generateFinalBinary(){
 	executeCommand( CL + object_files + space_str + minus_o_str + space_str + binary_name );
 }
 
-SynthesizerC::SynthesizerC( bool parallel_enabled, const string& custom_binary_name ){
+SynthesizerC::SynthesizerC( bool parallel_enabled ){
 	parallel = parallel_enabled;
-	if( custom_binary_name.empty() )
-		binary_name = mCompiler_curr_dir_path + mCompiler_binary_name;
-	else
-		binary_name = custom_binary_name;
+	binary_name = mCompiler_curr_dir_path + mCompiler_binary_name;
 
 	analyzeHotspotProfileData();
 	generateFinalBinary();

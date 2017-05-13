@@ -22,7 +22,7 @@ private:
 	set<string> best_objs_to_link;
 
 public:
-	SynthesizerC( bool parallel, const string& custom_binary_name );
+	SynthesizerC( bool parallel );
 	bool isParallelEnabled()   { return parallel; };
 	string getDataFolderPath() { return mCompiler_data_folder_path; };
 

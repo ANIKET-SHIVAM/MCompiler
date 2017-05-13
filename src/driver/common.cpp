@@ -42,13 +42,17 @@ string mCompiler_data_folder      = "mCompiler_data";
 string mCompiler_data_folder_path;
 string mCompiler_curr_dir_path;
 
+/* For the extractor */
+vector<string> mCompiler_input_file;
+
 bool auto_parallel_enabled = true;
 
 /* Extractor passes to Profiler */
 set<string> files_to_compile;
 
-int    mCompiler_profiler_runs    = 1;
+int    mCompiler_profiler_runs    = 3;
 string mCompiler_profile_data_csv = "profile_data.csv";
+string mCompiler_profiler_input   = "";
 
 // TODO: Add flags given to driver to following flag list (without or with mapping)
 void addOptimizationFlags(){
@@ -60,6 +64,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-xhost");
 	flag_vec.push_back("-qopenmp");
 	flag_vec.push_back("-std=c11");
+	flag_vec.push_back("-ipo");
 	flag_vec.push_back("-w");
 	optimization_flags[compiler_ICC] = flag_vec;	
 
@@ -90,6 +95,7 @@ void addLinkerFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("icc");
 	flag_vec.push_back("-qopenmp");
+	flag_vec.push_back("-ipo");
 	flag_vec.push_back("-w");
 	linker_flags[compiler_ICC] = flag_vec;	
 
