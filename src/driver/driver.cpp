@@ -68,13 +68,23 @@ void Driver::initiateExtractor( string file_name ){
 	vector<string> filename_vec;
 	string dummy_arg_for_extractor_frontend = "Rose, please let me run the extractor!";
 	filename_vec.push_back(dummy_arg_for_extractor_frontend);
+
 	/* Rose frontend needs each include path in different vector entry */
-	istringstream buf(mCompiler_include_path);
-    istream_iterator<string> beg(buf), end;
-    vector<string> tokens(beg, end);
-	for(auto& s: tokens)
-		filename_vec.push_back(s);
+	istringstream bufI(mCompiler_include_path);
+    istream_iterator<string> begI(bufI), endI;
+    vector<string> tokensI(begI, endI);
+	for(auto& sI: tokensI)
+		filename_vec.push_back(sI);
+
+	/* Rose frontend needs each Macro definition in different vector entry */
+	istringstream bufM(mCompiler_macro_defs);
+    istream_iterator<string> begM(bufM), endM;
+    vector<string> tokensM(begM, endM);
+	for(auto& sM: tokensM)
+		filename_vec.push_back(sM);
+	
 	filename_vec.push_back(file_name);
+
 	extr = new Extractor( filename_vec );
 
 	mainFuncPresent = extr->mainFuncPresent;

@@ -360,10 +360,14 @@ void Extractor::extractLoops( SgNode *astNode ){
 	files_to_compile.insert( loop_profile_file_name );
 	files_to_compile.insert( loop_no_profile_file_name );
 	
+	string nameForNextLoop = getFileName( (astNode->get_file_info())->get_filenameString() ) +
+										  "_line" + to_string( getAstNodeLineNum(astNode) );
+	/* Since you cannot start Function name with a digit */ 
+	if( isdigit(nameForNextLoop[0]) )	
+		nameForNextLoop.insert(0,1,'_');
+
 	// Create loop object
-	LoopInfo curr_loop( astNode, loop, 
-		getFileName( (astNode->get_file_info())->get_filenameString() ) + "_line" + 
-			to_string( getAstNodeLineNum(astNode) ), *this); 
+	LoopInfo curr_loop( astNode, loop, nameForNextLoop, *this); 
 
 	printHeaders( loop_file_buf_profile );
 	printGlobalsAsExtern( loop_file_buf_profile );

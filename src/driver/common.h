@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 #include <regex>
+#include <cctype>
 #include <dirent.h>
 
 // For Extractor especially
@@ -75,6 +76,7 @@ extern set<string> files_to_compile;
 extern int mCompiler_profiler_runs;
 extern string mCompiler_profile_data_csv;
 extern string mCompiler_profiler_input;
+extern string mCompiler_macro_defs;
 extern string mCompiler_include_path;
 extern string mCompiler_link_path;
 extern string mCompiler_libraries;

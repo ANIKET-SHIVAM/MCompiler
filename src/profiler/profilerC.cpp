@@ -287,6 +287,8 @@ void ProfilerC::gatherProfilingData( const string& binary_file, const string& co
 				continue;
 			int keyword_colon_pos   = keyword_pos + mCompiler_timing_keyword.length();
 			string hotspot_name = cell.substr( 0, keyword_pos );
+			if( hotspot_name.substr(0,1) == "_" )
+				hotspot_name = hotspot_name.substr(1,string::npos);
 			double hotspot_time = stod( cell.substr( keyword_colon_pos + 1 ) );
 			
 			// Check if that loop's profile object file is present
@@ -357,10 +359,7 @@ void ProfilerC::iccProfile(){
 	string out_file;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
 		object_files += *iters + space_str;
-		// Extract binary name from base file name bcoz there's only one  
-		if( (*iters).find(base_str) != string::npos){
-			out_file = (*iters).substr( 0, ( (*iters).find(base_str) ) ) + icc_str;
-		}
+		out_file = getDataFolderPath() + mCompiler_binary_name + icc_str;
 	}
 	/* Add object files then add -o binary_name, before adding post linker flags */
 	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
@@ -395,10 +394,7 @@ void ProfilerC::gccProfile(){
 	string out_file;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
 		object_files += *iters + space_str;
-		// Extract binary name from base file name bcoz there's only one  
-		if( (*iters).find(base_str) != string::npos){
-			out_file = (*iters).substr( 0, ( (*iters).find(base_str) ) ) + gcc_str;
-		}
+		out_file = getDataFolderPath() + mCompiler_binary_name + gcc_str;
 	}
 	
 	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
@@ -432,10 +428,7 @@ void ProfilerC::llvmProfile(){
 	string out_file;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
 		object_files += *iters + space_str;
-		// Extract binary name from base file name bcoz there's only one  
-		if( (*iters).find(base_str) != string::npos){
-			out_file = (*iters).substr( 0, ( (*iters).find(base_str) ) ) + llvm_str;
-		}
+		out_file = getDataFolderPath() + mCompiler_binary_name + llvm_str;
 	}
 
 	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;

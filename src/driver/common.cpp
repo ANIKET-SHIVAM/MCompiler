@@ -53,6 +53,7 @@ set<string> files_to_compile;
 int    mCompiler_profiler_runs    = 3; //Default: If CL provided then replaced with that number
 string mCompiler_profile_data_csv = "profile_data.csv";
 string mCompiler_profiler_input = "";
+string mCompiler_macro_defs = "";
 string mCompiler_include_path = "";
 string mCompiler_link_path = "";
 string mCompiler_libraries = "";
@@ -76,6 +77,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
+	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	optimization_flags[compiler_ICC] = flag_vec;	
 
 	/* GCC */
@@ -88,6 +90,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
+	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	optimization_flags[compiler_GCC] = flag_vec;	
 
 	/* LLVM */
@@ -100,6 +103,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
+	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	optimization_flags[compiler_LLVM] = flag_vec;	
 }
 

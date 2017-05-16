@@ -33,7 +33,7 @@ struct Arg: public option::Arg{
 
 typedef enum{ EXTRACT, PROFILE, SYNTHESIZE, TEST, REPORT, PARALLEL,
 			  PROFILE_COUNT, INPUT_PROFILE, OUTPUT_BINARY, OUTPUT_OBJECT,
-			  INCLUDE_PATH, LINKER_PATH, LIBS_PATH, 
+			  INCLUDE_PATH, LINKER_PATH, LIBS_PATH, MACRO_DEFS,
 			  HELP, UNKNOWN 
 			} mCompiler_options;
 
@@ -59,6 +59,7 @@ const option::Descriptor usage[] =
 	{INCLUDE_PATH       , 0, "I" , "include"       ,Arg::Required , "    -I[<arg>]            Directory to include file search path" },
 	{LINKER_PATH        , 0, "L" , "link"          ,Arg::Required , "    -L[<arg>]            Directory to search for libraries" },
 	{LIBS_PATH          , 0, "l" , "libs"          ,Arg::Required , "    -l[<arg>]            Instruct the linker to link in the -l<string> library" },
+	{MACRO_DEFS         , 0, "D" , "DEFS"          ,Arg::Required , "    -D[<arg>]            Macro definition" },
 	{0,0,0,0,0,0}
 };
 
@@ -137,6 +138,9 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		case LIBS_PATH:
 			mCompiler_libraries += space_str + "-l" + string(opt.arg) + space_str;
+			break;
+		case MACRO_DEFS:
+			mCompiler_macro_defs += space_str + "-D" + string(opt.arg) + space_str;
 			break;
 		}
 	}
