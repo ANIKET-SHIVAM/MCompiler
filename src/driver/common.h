@@ -21,6 +21,12 @@
 
 using namespace std;
 
+typedef enum src_lang_enum{
+	src_lang_C       = 0,
+	src_lang_CPP     = 1,
+	src_lang_FORTRAN = 2,
+}src_lang;
+
 typedef enum{
 	compiler_ICC   = 0,
 	compiler_GCC   = 1,
@@ -47,6 +53,7 @@ extern string baseline_compiler_str;
 extern string mCompiler_timing_keyword;
 
 extern string printTimingVarFuncName; 
+extern string loopTimingVarSuffix;
 extern string mCompiler_profile_file_tag;
 extern string mCompiler_header_name;
 extern string mCompiler_header_code_name;
@@ -58,6 +65,8 @@ extern string mCompiler_curr_dir_path;
 /* For the extractor */
 extern vector<string> mCompiler_input_file;
 
+extern vector<string> mCompiler_object_file;
+
 extern bool auto_parallel_enabled;
 
 /* Extractor passes to Profiler */
@@ -66,6 +75,11 @@ extern set<string> files_to_compile;
 extern int mCompiler_profiler_runs;
 extern string mCompiler_profile_data_csv;
 extern string mCompiler_profiler_input;
+extern string mCompiler_include_path;
+extern string mCompiler_link_path;
+extern string mCompiler_libraries;
+extern string mCompiler_extraPreSrcFlags;
+extern string mCompiler_extraPostSrcFlags;
 
 extern map< compiler_type, bool > compiler_candidate;
 extern map< compiler_type, vector<string> > optimization_flags;
@@ -79,7 +93,7 @@ extern set<string> hotspots_skipped_profiling;
 /* Profiler to Synthesizer */
 extern set<string> hotspot_name_set;
 /* map< compiler_string, base file obj location > */
-extern map<string, string> base_obj_path;
+extern map<string, vector<string>* > base_obj_path;
 /* map< pair<hotspot_name, compiler_string>, timing/obj_location > */
 extern map< pair< string, string >, vector<double>* > profiler_hotspot_data;
 extern map< pair< string, string >, string > profiler_hotspot_obj_path;

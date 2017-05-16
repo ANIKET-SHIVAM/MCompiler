@@ -8,7 +8,7 @@ map< compiler_type, vector<string> > post_linker_flags;
 /* Profiler to Synthesizer */
 set<string> hotspot_name_set;
 /* map< compiler_string, base file obj location > */
-map<string, string> base_obj_path;
+map<string, vector<string>* > base_obj_path;
 /* map< pair<hotspot_name, compiler_string>, timing/obj_location > */
 map< pair< string, string >, vector<double>* > profiler_hotspot_data;
 map< pair< string, string >, string > profiler_hotspot_obj_path;
@@ -33,28 +33,36 @@ string baseline_compiler_str = icc_str;
 /* Used by extractor to differentiate from other stdout */
 string mCompiler_timing_keyword = "_mCompilerInfo:";
 
-string printTimingVarFuncName     = "printAccumulatedTimes"; 
+string printTimingVarFuncName     = "printAccumulatedTimes";
+string loopTimingVarSuffix        = "accumulatorTime_";
 string mCompiler_profile_file_tag = "_mCProfile_";
 string mCompiler_header_name      = "mCompiler.h";
 string mCompiler_header_code_name = "mCompiler.c";
-string mCompiler_binary_name      = "mCompiler_out";
 string mCompiler_data_folder      = "mCompiler_data";
 string mCompiler_data_folder_path;
 string mCompiler_curr_dir_path;
 
+/*** Parameter that change based on the CL input ***/
 /* For the extractor */
 vector<string> mCompiler_input_file;
-
+vector<string> mCompiler_object_file;
+string mCompiler_binary_name      = "mCompiler_out"; //Default: If CL provided then replaced with that name
 bool auto_parallel_enabled = true;
-
 /* Extractor passes to Profiler */
 set<string> files_to_compile;
-
-int    mCompiler_profiler_runs    = 3;
+int    mCompiler_profiler_runs    = 3; //Default: If CL provided then replaced with that number
 string mCompiler_profile_data_csv = "profile_data.csv";
-string mCompiler_profiler_input   = "";
+string mCompiler_profiler_input = "";
+string mCompiler_include_path = "";
+string mCompiler_link_path = "";
+string mCompiler_libraries = "";
+string mCompiler_extraPreSrcFlags = "";
+string mCompiler_extraPostSrcFlags = "";
+
+/*** END: Parameter that change based on the CL input ***/
 
 // TODO: Add flags given to driver to following flag list (without or with mapping)
+// Called inside Profiler
 void addOptimizationFlags(){
 	vector<string> flag_vec;
 	/* ICC */
@@ -66,6 +74,8 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-std=c11");
 	flag_vec.push_back("-ipo");
 	flag_vec.push_back("-w");
+	flag_vec.push_back(mCompiler_include_path);
+	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	optimization_flags[compiler_ICC] = flag_vec;	
 
 	/* GCC */
@@ -76,6 +86,8 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-std=c11");
 	flag_vec.push_back("-w");
+	flag_vec.push_back(mCompiler_include_path);
+	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	optimization_flags[compiler_GCC] = flag_vec;	
 
 	/* LLVM */
@@ -86,9 +98,12 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-std=c11");
 	flag_vec.push_back("-w");
+	flag_vec.push_back(mCompiler_include_path);
+	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	optimization_flags[compiler_LLVM] = flag_vec;	
 }
 
+// Called inside Profiler
 void addLinkerFlags(){
 	vector<string> flag_vec;
 	/* ICC */
@@ -97,6 +112,8 @@ void addLinkerFlags(){
 	flag_vec.push_back("-qopenmp");
 	flag_vec.push_back("-ipo");
 	flag_vec.push_back("-w");
+	flag_vec.push_back(mCompiler_link_path);
+	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_ICC] = flag_vec;	
 
 	/* GCC */
@@ -104,6 +121,8 @@ void addLinkerFlags(){
 	flag_vec.push_back("gcc");
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-w");
+	flag_vec.push_back(mCompiler_link_path);
+	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_GCC] = flag_vec;	
 	
 	/* LLVM */
@@ -111,6 +130,8 @@ void addLinkerFlags(){
 	flag_vec.push_back("clang");
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-w");
+	flag_vec.push_back(mCompiler_link_path);
+	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_LLVM] = flag_vec;	
 }
 
@@ -119,17 +140,20 @@ void addPostLinkerFlags(){
 	vector<string> flag_vec;
 	/* ICC */
 	flag_vec.clear();
-	flag_vec.push_back("-lm");
+	flag_vec.push_back(mCompiler_libraries);
+	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	post_linker_flags[compiler_ICC] = flag_vec;	
 
 	/* GCC */
 	flag_vec.clear();
-	flag_vec.push_back("-lm");
+	flag_vec.push_back(mCompiler_libraries);
+	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	post_linker_flags[compiler_GCC] = flag_vec;	
 	
 	/* LLVM */
 	flag_vec.clear();
-	flag_vec.push_back("-lm");
+	flag_vec.push_back(mCompiler_libraries);
+	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	post_linker_flags[compiler_LLVM] = flag_vec;	
 }
 

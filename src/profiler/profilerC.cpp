@@ -117,8 +117,14 @@ void ProfilerC::iccOptimize(){
 			mCompiler_header_obj.insert( out_file );
 		}
 		// Store base obj file for synthesizer
-		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos )
-			base_obj_path.insert( pair<string,string>(icc_str, out_file) );
+		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos ){
+			if( base_obj_path.find( icc_str ) == base_obj_path.end() ){	
+				vector<string> *temp_vec = new vector<string>();
+				base_obj_path.insert( pair<string,vector<string>* >(icc_str, temp_vec) );
+			}
+			map< string, vector<string>* >::iterator mIter = base_obj_path.find( icc_str );
+			(mIter->second)->push_back( out_file );
+		}
 	}
 
 }
@@ -146,8 +152,14 @@ void ProfilerC::gccOptimize(){
 			mCompiler_header_obj.insert( out_file );
 		}
 		// Store base obj file for synthesizer
-		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos )
-			base_obj_path.insert( pair<string,string>(gcc_str, out_file) );
+		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos ){
+			if( base_obj_path.find( gcc_str ) == base_obj_path.end() ){	
+				vector<string> *temp_vec = new vector<string>();
+				base_obj_path.insert( pair<string,vector<string>* >(gcc_str, temp_vec) );
+			}
+			map< string, vector<string>* >::iterator mIter = base_obj_path.find( gcc_str );
+			(mIter->second)->push_back( out_file );
+		}
 	}
 
 }
@@ -175,8 +187,14 @@ void ProfilerC::llvmOptimize(){
 			mCompiler_header_obj.insert( out_file );
 		}
 		// Store base obj file for synthesizer
-		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos )
-			base_obj_path.insert( pair<string,string>(llvm_str, out_file) );
+		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos ){
+			if( base_obj_path.find( llvm_str ) == base_obj_path.end() ){	
+				vector<string> *temp_vec = new vector<string>();
+				base_obj_path.insert( pair<string,vector<string>* >(llvm_str, temp_vec) );
+			}
+			map< string, vector<string>* >::iterator mIter = base_obj_path.find( llvm_str );
+			(mIter->second)->push_back( out_file );
+		}
 	}
 }
 

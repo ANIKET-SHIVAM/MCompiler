@@ -63,7 +63,7 @@ string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 }
 
 void Extractor::printHeaders( ofstream& loop_file_buf ){
-	set<string>::iterator iter;
+	vector<string>::iterator iter;
 	bool hasOMP = false;
 	bool hasIO = false;
 	for( iter = header_set.begin(); iter != header_set.end(); iter++ ){
@@ -155,8 +155,9 @@ bool LoopInfo::hasFuncCallInScope( ){
 	for (; funcCallIter != funcCallList.end(); funcCallIter++) {
 		SgFunctionCallExp *funcCallExp = isSgFunctionCallExp(*funcCallIter);
 		SgFunctionDeclaration *funcDecl = funcCallExp->getAssociatedFunctionDeclaration();
-		if( funcDecl != NULL && !SageInterface::isExtern(funcDecl) )
-			scope_funcCall_vec.insert( funcDecl );	
+		if( funcDecl != NULL && !SageInterface::isExtern(funcDecl) ){
+			scope_funcCall_vec.insert( funcDecl );
+		}
 	}
 	if( !scope_funcCall_vec.empty() )
 		return true;
@@ -421,8 +422,10 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 			case V_SgFunctionDeclaration: {
 				/* Collect all extern functions in this file */
 				SgFunctionDeclaration *declFunc = dynamic_cast<SgFunctionDeclaration *>(astNode);
-				if( SageInterface::isExtern(declFunc) )
-					header_set.insert( declFunc->unparseToString() +'\n' );
+				if( SageInterface::isExtern(declFunc) ){
+					header_set.push_back( declFunc->unparseToString() +'\n' );
+				} 
+
 				if( SageInterface::isMain(astNode) ){
 					mainFuncPresent = true;
 					main_scope = dynamic_cast<SgScopeStatement *>( (declFunc->get_definition())->get_body() );	
@@ -446,21 +449,45 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 
 		/* For gathering the header files */
 		SgLocatedNode *locatedNode = isSgLocatedNode(astNode);
-		if (locatedNode != NULL) {
+		if (locatedNode != NULL ) {
+			SgStatement *locatedNode_SgStatement = dynamic_cast<SgStatement *>(astNode);
 			AttachedPreprocessingInfoType *directives = locatedNode->getAttachedPreprocessingInfo();
-			if (directives != NULL) {
+			if (directives != NULL && isSgGlobal(locatedNode_SgStatement->get_scope()) ) {
 				AttachedPreprocessingInfoType::iterator i;
 				for (i = directives->begin(); i != directives->end(); i++) {
 					string directiveTypeName = PreprocessingInfo::directiveTypeName((*i)->getTypeOfDirective()).c_str();
 					string headerName = (*i)->getString().c_str();
+					//cerr << "Header Type: " << directiveTypeName << endl;	
+					// #include
 					if (directiveTypeName == "CpreprocessorIncludeDeclaration" &&
-						header_set.find(headerName) == header_set.end()) {
-						header_set.insert(headerName);
+						find( header_set.begin(), header_set.end(), headerName ) ==  header_set.end()) {
+						header_set.push_back(headerName);
 						//cerr << "Header: " << headerName << endl;	
 					}	
+					// #define
 					if (directiveTypeName == "CpreprocessorDefineDeclaration" &&
-						header_set.find(headerName) == header_set.end()) {
-						header_set.insert(headerName);
+						find( header_set.begin(), header_set.end(), headerName ) ==  header_set.end()) {
+						header_set.push_back(headerName);
+						//cerr << "Header: " << headerName << endl;	
+					}	
+					// #ifdef
+					if (directiveTypeName == "CpreprocessorIfdefDeclaration"){
+						header_set.push_back(headerName);
+						//cerr << "Header: " << headerName << endl;	
+					}	
+					// #ifndef
+					if (directiveTypeName == "CpreprocessorIfndefDeclaration" ){
+						header_set.push_back(headerName);
+						//cerr << "Header: " << headerName << endl;	
+					}	
+					// #else
+					if (directiveTypeName == "CpreprocessorElseDeclaration" ){
+						header_set.push_back(headerName);
+						//cerr << "Header: " << headerName << endl;	
+					}	
+					// #endif
+					if (directiveTypeName == "CpreprocessorEndifDeclaration" ){
+						header_set.push_back(headerName);
 						//cerr << "Header: " << headerName << endl;	
 					}	
 				}
@@ -483,14 +510,17 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 					// Now check if this is a global variable or an static class member
 					SgScopeStatement* scope = variableDeclaration->get_scope();
 					if (isSgGlobal(scope) != NULL){
-						//cerr << "Found a global var: " << var_type_str + " " + initializedName->get_name().getString() << endl;	
+						string var_str = initializedName->get_name().getString();
+						//cerr << "Found a global var: " << var_type_str + " " + var_str << endl;	
 						if( variableType->variantT() == V_SgArrayType ){
 							/* To change to var_type var_name[][][] */
 							int first_square_brac = var_type_str.find_first_of("[");
-							global_vars.insert( var_type_str.substr( 0,first_square_brac ) + initializedName->get_name().getString()
+							global_vars.insert( var_type_str.substr( 0,first_square_brac ) + var_str
 												+ var_type_str.substr( first_square_brac ) );
 						} else {
-							global_vars.insert( var_type_str + " " + initializedName->get_name().getString() );
+							/* Bcoz Rose add wierd stuff like __PRETTY_FUNCTION__ on assert() calls */
+							if( var_str.find(ignorePrettyFunctionCall) == string::npos )	
+								global_vars.insert( var_type_str + " " + var_str );
 						}
 					}
 					if (isSgClassDefinition(scope) != NULL)
@@ -529,43 +559,6 @@ void Extractor::addPostTraversalDefs(){
 	SageInterface::prependStatementList( externLoopFuncDefinitionsAdd, getGlobalNode() );
 }
 
-void Extractor::generateHeaderFile(){
-	header_file_buf.open( (getDataFolderPath()+mCompiler_header_name).c_str(), ofstream::out );
-	
-	header_file_buf << "#ifndef MCOMPILER_H" << endl << "#define MCOMPILER_H" << endl;
-	/* add global timing vars to the header */
-	vector<string>::iterator iter;
-	for( iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end(); iter++){
-		header_file_buf << "double " << getLoopTimingVarSuffix() + *iter << ";" << endl;
-	}
-
-	/* Only add this function if current file contains main */
-	//TODO: Maybe seperated from here later	
-	if( mainFuncPresent ){
-		header_file_buf << "void " << printTimingVarFuncName << "();" << endl;
-		header_file_buf << "#endif" << endl;
-	}
-	header_file_buf.close();
-	
-	if( mainFuncPresent ){
-		header_code_file_buf.open( (getDataFolderPath()+mCompiler_header_code_name).c_str(), ofstream::out );
-		header_code_file_buf << "#include \"" << mCompiler_header_name << "\"" << endl;
-		header_code_file_buf << "void " << printTimingVarFuncName << "(){" << endl;
-		
-		vector<string>::iterator iter;
-		for( iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end(); iter++){
-			if( getSrcType() == src_lang_C ){
-				header_code_file_buf << "printf(\"\\n" << *iter + mCompiler_timing_keyword << " \%.9f\\n\"," << getLoopTimingVarSuffix() + *iter <<");" << endl;
-			} else if( getSrcType() == src_lang_CPP ){
-				header_code_file_buf << "std::cout << std::endl \"" << *iter + mCompiler_timing_keyword << " \" << std::setprecision(9) << " <<  getLoopTimingVarSuffix() + *iter << " << std::endl;" << endl;
-			}
-		}
-		header_code_file_buf << "}" << endl;
-		header_code_file_buf.close();
-		files_to_compile.insert(getDataFolderPath()+mCompiler_header_code_name);
-	}
-}
-
 void Extractor::addTimingFuncCallVoidMain(){
 	SgFunctionCallExp* call_expr = SageBuilder::buildFunctionCallExp
 		( printTimingVarFuncName, SageBuilder::buildVoidType(), NULL, main_scope );
@@ -589,7 +582,7 @@ Extractor::Extractor( const vector<string> &argv ){
 	InheritedAttribute inhr_attr;
 	/* Traverse all files and their ASTs in Top Down fashion (Inherited Attr) and extract loops */
 	this->traverseInputFiles( ast, inhr_attr );
-	this->generateHeaderFile();
+	//this->generateHeaderFile();
 	this->addPostTraversalDefs();
 	AstTests::runAllTests(ast);
 	/* Generate rose_<orig file name> file for the transformed AST */

@@ -5,12 +5,6 @@
 
 using namespace std;
 
-typedef enum src_lang_enum{
-	src_lang_C       = 0,
-	src_lang_CPP     = 1,
-	src_lang_FORTRAN = 2,
-}src_lang;
-
 class InheritedAttribute {
 public:
 	int loop_nest_depth_;
@@ -33,22 +27,19 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	string mCompiler_file_path; 
 	string mCompiler_file_name; 
 	string mCompiler_file_extn;
-	string loopTimingVarSuffix = "accumulatorTime_";
 	SgScopeStatement* main_scope = NULL;
 	bool nonVoidMain = false;
 	SgGlobal *global_node; // Needed to add the extern calls
 	set<SgNode*> astNodesCollector; //Required to not add loop functions on Ast Post Processing
 	vector<SgStatement*> externLoopFuncDefinitionsAdd;
-	set<string> header_set;
+	/* header_set needs to be vector so that the order of IFDEF,ENDIF,etc. remain same */
+	vector<string> header_set;
 	set<string> global_vars;
 	src_lang src_type;
 public:
+	string ignorePrettyFunctionCall = "__PRETTY_FUNCTION__";
 	bool mainFuncPresent = false;	
 	vector<string> *loop_funcName_vec = new vector<string>;
-	//ofstream loop_file_buf_profile;
-	//ofstream loop_file_buf_profile;
-	ofstream header_file_buf;
-	ofstream header_code_file_buf;
 public:
 	Extractor() {};
 	Extractor( const vector<string> &argv );
@@ -70,7 +61,6 @@ public:
 	void printGlobalsAsExtern( ofstream& loop_file_buf );
 	void addExternDefs( SgFunctionDeclaration *func );
 	void addPostTraversalDefs(); 
-	void generateHeaderFile(); 
 	void addTimingFuncCallVoidMain();
 	void addTimingFuncCallNonVoidMain( SgStatement* returnStmt );
 

@@ -3,77 +3,6 @@
 
 #include "common.h"
 #include "optionparser.h"
-/*
-typedef enum {
-	option_extract    = 0,
-	option_profile    = 1,
-	option_synthesize = 2,
-	option_test       = 3,
-	option_report     = 4,
-	option_parallel   = 5,
-	option_none       = 6
-}mCompiler_options;
-
-map< mCompiler_options, bool > mCompiler_enabled_options;
-
-void print_usage_options(){
-    fprintf(stdout, "Usage:  mCompiler <input.c> [options] [-o output]\n");
-    fprintf(stdout, "\nOptions:\n");
-    fprintf(stdout, "	-[no]extract       Extract hotspots\n");
-    fprintf(stdout, "	-[no]profile       Profile extracted hotspots\n");
-    fprintf(stdout, "	-[no]synthesize    Combine best performing hotspots to create the final executable\n");
-    fprintf(stdout, "	-test              Test performance compared to single compiler optimized code\n");
-    fprintf(stdout, "	-report            Generate mCompiler performance report\n");
-    fprintf(stdout, "	-[no]parallel      Auto-parallelize the hotspots, -noparallel for serial code generation (with vectorization)\n");
-    fprintf(stdout, "	-o <binary>        Output binary name\n");
-    fprintf(stdout, "	-I,-L, etc.        Flags required to compile the source\n");
-}
-
-string* set_mCompiler_options( int argc, char* argv[] ){
-	mCompiler_enabled_options = {
-		{ option_extract,  true  },
-		{ option_profile,  true  },
-		{ option_synthesize, true  },
-		{ option_test,     false },
-		{ option_report,   false },
-		{ option_parallel, true  },
-		{ option_none,     false }
-	};
-	// [input_file, output_file, compiler_flags]
-	string* driver_return_str = new string[3];
-	string compiler_flags;
-	vector<string> options(argv + 1, argv + argc);
-	vector<string>::iterator iter = options.begin(); 
-	driver_return_str[0] = *iter;
-	for( iter = options.begin(); iter != options.end(); iter++ ){
-		if( *iter == "-noextract" )
-			mCompiler_enabled_options[option_extract]  = false;
-		else if( *iter == "-noprofile" )
-			mCompiler_enabled_options[option_profile]  = false;
-		else if( *iter == "-nosynthesize" )
-			mCompiler_enabled_options[option_synthesize] = false;
-		else if( *iter == "-test" )
-			mCompiler_enabled_options[option_test]     = true;
-		else if( *iter == "-report" )
-			mCompiler_enabled_options[option_report]   = true;
-		else if( *iter == "-noparallel" ){
-			mCompiler_enabled_options[option_report]   = false;
-			auto_parallel_enabled = false;
-		} else if( *iter == "-help" || *iter == "--help" ) {
-			print_usage_options();	
-			exit(EXIT_FAILURE);
-		} else if( *iter == "-o" ){
-			iter++;
-			driver_return_str[1] = *iter;
-		} else
-			compiler_flags += *iter;
-	}
-	driver_return_str[2] = compiler_flags;
-	return driver_return_str; 	
-}
-
-// TODO: Map compiler options from ICC, GCC and LLVM.
-*/
 
 struct Arg: public option::Arg{
 	static void printError(const char* msg1, const option::Option& opt, const char* msg2){ 
@@ -103,7 +32,8 @@ struct Arg: public option::Arg{
 
 
 typedef enum{ EXTRACT, PROFILE, SYNTHESIZE, TEST, REPORT, PARALLEL,
-			  PROFILE_COUNT, INPUT_PROFILE, OUTPUT_BINARY, OUTPUT_OBJECT, 
+			  PROFILE_COUNT, INPUT_PROFILE, OUTPUT_BINARY, OUTPUT_OBJECT,
+			  INCLUDE_PATH, LINKER_PATH, LIBS_PATH, 
 			  HELP, UNKNOWN 
 			} mCompiler_options;
 
@@ -126,6 +56,9 @@ const option::Descriptor usage[] =
 	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>       Input to the program."
 																							  "Needed to generate profiling information" },
 	{OUTPUT_BINARY      , 0, "o" , "output"        ,Arg::Required , "    -o[<arg>]            Output binary name" },
+	{INCLUDE_PATH       , 0, "I" , "include"       ,Arg::Required , "    -I[<arg>]            Directory to include file search path" },
+	{LINKER_PATH        , 0, "L" , "link"          ,Arg::Required , "    -L[<arg>]            Directory to search for libraries" },
+	{LIBS_PATH          , 0, "l" , "libs"          ,Arg::Required , "    -l[<arg>]            Instruct the linker to link in the -l<string> library" },
 	{0,0,0,0,0,0}
 };
 
@@ -196,16 +129,37 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		case OUTPUT_BINARY:
 			mCompiler_binary_name = opt.arg;
 			break;
+		case INCLUDE_PATH:
+			mCompiler_include_path += space_str + "-I" + mCompiler_curr_dir_path + string(opt.arg) + space_str;
+			break;
+		case LINKER_PATH:
+			mCompiler_link_path += space_str + "-L" + mCompiler_curr_dir_path + string(opt.arg) + space_str;
+			break;
+		case LIBS_PATH:
+			mCompiler_libraries += space_str + "-l" + string(opt.arg) + space_str;
+			break;
 		}
 	}
-
+	
+	bool postSourceFlags = false;
+	
 	for (int i = 0; i < parse.nonOptionsCount(); ++i){
 		string str = parse.nonOption(i);
-		if( isEndingWith( str, ".c" ) || isEndingWith( str, ".cc" ) || isEndingWith( str, ".cpp" ) || 
-			isEndingWith( str, ".f" ) || isEndingWith( str, ".f90" ) )
+		if( isEndingWith( str,".c" ) || isEndingWith( str,".cc" ) || isEndingWith( str,".cpp" ) || 
+			isEndingWith( str,".f" ) || isEndingWith( str,".f90" ) ){
+		/* Search for source files in the name */
 			mCompiler_input_file.push_back( str );
-		else
+			postSourceFlags = true;
+		} else if( isEndingWith( str, ".o" ) ){ 
+		/* Search for object files in the name */
+			mCompiler_object_file.push_back( str );
+		} else {
 			cout << "Non-option argument: " << str << endl;
+			if( postSourceFlags )
+				mCompiler_extraPostSrcFlags += space_str + str;
+			else
+				mCompiler_extraPreSrcFlags += space_str + str;
+		}
 	}
 }
 #endif

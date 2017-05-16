@@ -13,13 +13,24 @@ using namespace std;
 
 class Driver {
 	string compiler_flags;
+	vector<string> *loop_funcName_vec = new vector<string>;
+	ofstream header_file_buf;
+	ofstream header_code_file_buf;
+	src_lang src_type;	
+
 	Extractor *extr;
 	ProfilerC *prof;
 	SynthesizerC *synth;
 public:
+	bool mainFuncPresent = false;
+	bool isLastSrcFile = false;
+public:
 	Driver() {};
-	string getInputFile(){ return *(mCompiler_input_file.begin()); }
+	string getLoopTimingVarSuffix() { return loopTimingVarSuffix; };
+	src_lang getSrcType() { return src_type; }
+	string getDataFolderPath() { return mCompiler_data_folder_path; };
 	void createMCompilerDataFolder();
+	void generateMCompilerHeaderFile();
 	void initiateExtractor( string file_name );
 	void initiateProfiler( bool parallel );
 	void initiateSynthesizer( bool parallel );

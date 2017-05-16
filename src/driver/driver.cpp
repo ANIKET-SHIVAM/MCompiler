@@ -23,6 +23,40 @@ void Driver::createMCompilerDataFolder(){
 	}
 }
 
+void Driver::generateMCompilerHeaderFile(){
+	/* Create mCompiler header file */
+	header_file_buf.open( (getDataFolderPath()+mCompiler_header_name).c_str(), ofstream::out );
+    header_file_buf << "#ifndef MCOMPILER_H" << endl << "#define MCOMPILER_H" << endl;
+
+	/* add global timing vars to the header */
+	vector<string>::iterator iter;
+	for( iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end(); iter++){
+		header_file_buf << "double " << getLoopTimingVarSuffix() + *iter << ";" << endl;
+	}
+
+	header_file_buf << "void " << printTimingVarFuncName << "();" << endl;
+	header_file_buf << "#endif" << endl;
+	
+	header_file_buf.close();
+
+	/* Now open mCompiler header's code file */	
+	header_code_file_buf.open( (getDataFolderPath()+mCompiler_header_code_name).c_str(), ofstream::out );
+	header_code_file_buf << "#include \"" << mCompiler_header_name << "\"" << endl;
+	header_code_file_buf << "void " << printTimingVarFuncName << "(){" << endl;
+	
+	for( iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end(); iter++){
+		if( getSrcType() == src_lang_C ){
+			header_code_file_buf << "printf(\"\\n" << *iter + mCompiler_timing_keyword << " \%.9f\\n\"," << getLoopTimingVarSuffix() + *iter <<");" << endl;
+		} else if( getSrcType() == src_lang_CPP ){
+			header_code_file_buf << "std::cout << std::endl \"" << *iter + mCompiler_timing_keyword << " \" << std::setprecision(9) << " <<  getLoopTimingVarSuffix() + *iter << " << std::endl;" << endl;
+		}
+	}
+	header_code_file_buf << "}" << endl;
+	header_code_file_buf.close();
+	files_to_compile.insert(getDataFolderPath()+mCompiler_header_code_name);
+
+}
+
 /* file_name is the relative path to the file to be extracted */
 void Driver::initiateExtractor( string file_name ){
     if (FILE *file = fopen(file_name.c_str(), "r")) {
@@ -34,8 +68,24 @@ void Driver::initiateExtractor( string file_name ){
 	vector<string> filename_vec;
 	string dummy_arg_for_extractor_frontend = "Rose, please let me run the extractor!";
 	filename_vec.push_back(dummy_arg_for_extractor_frontend);
+	/* Rose frontend needs each include path in different vector entry */
+	istringstream buf(mCompiler_include_path);
+    istream_iterator<string> beg(buf), end;
+    vector<string> tokens(beg, end);
+	for(auto& s: tokens)
+		filename_vec.push_back(s);
 	filename_vec.push_back(file_name);
 	extr = new Extractor( filename_vec );
+
+	mainFuncPresent = extr->mainFuncPresent;
+	src_type = extr->getSrcType();
+
+	/* Keep on collection Loop Functions name - Append two vector */	
+	loop_funcName_vec->insert( loop_funcName_vec->end(), (extr->loop_funcName_vec)->begin(), (extr->loop_funcName_vec)->end() );	
+	/* mCompiler header must be printed at last */
+	if( isLastSrcFile ){
+		generateMCompilerHeaderFile();
+	}
 }
 
 void Driver::initiateProfiler( bool parallel){
@@ -67,14 +117,23 @@ void Driver::initiateSynthesizer( bool parallel){
 }
 
 int main( int argc, char* argv[] ){
-	set_mCompiler_options( argc, argv );
 	Driver *driver = new Driver();
 	
 	/* TODO: Clear the mCompiler data folder, if starting from beginning */
 	driver->createMCompilerDataFolder();
+	
+	set_mCompiler_options( argc, argv );
 
-	if( mCompiler_enabled_options[EXTRACT] == true )
-		driver->initiateExtractor( driver->getInputFile() );
+	/* Send all files in the command line for extraction */
+	if( mCompiler_enabled_options[EXTRACT] == true ){
+		vector<string>::iterator iter;
+		for( iter = mCompiler_input_file.begin();  iter != mCompiler_input_file.end(); iter++ ){
+			if( *iter == mCompiler_input_file.back() ){
+				driver->isLastSrcFile = true;
+			}
+			driver->initiateExtractor( *iter );
+		}
+	}
 
 	if( mCompiler_enabled_options[PROFILE] == true ){
 		if( mCompiler_data_folder_path.empty() ){

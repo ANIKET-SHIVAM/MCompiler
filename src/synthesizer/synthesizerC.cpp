@@ -35,8 +35,11 @@ void SynthesizerC::selectOptimalOptimizedCandidate( string hotspot_name ){
 }
 
 void SynthesizerC::analyzeHotspotProfileData(){
-	/* Add basefile from the baseline compiler obj */
-	best_objs_to_link.insert( (base_obj_path.find( baseline_compiler_str ))->second );
+	/* Add basefiles from the baseline compiler obj */
+	vector<string>::iterator vIters;
+	for( vIters = ((base_obj_path.find( baseline_compiler_str ))->second)->begin(); vIters != ((base_obj_path.find( baseline_compiler_str ))->second)->end(); vIters++ ){
+		best_objs_to_link.insert( *vIters );
+	}
 
 	set<string>::iterator iters;
 	for( iters = hotspot_name_set.begin(); iters != hotspot_name_set.end(); iters++ ){
@@ -77,7 +80,17 @@ void SynthesizerC::generateFinalBinary(){
 	for( iters = best_objs_to_link.begin(); iters != best_objs_to_link.end(); iters++){
 		object_files += *iters + space_str; 
 	}
-	executeCommand( CL + object_files + space_str + minus_o_str + space_str + binary_name );
+
+	/* Add object files then add -o binary_name, before adding post linker flags */
+	CL += object_files + space_str + minus_o_str + space_str + binary_name + space_str;
+	
+	/* For flags that go at the end of the command line */
+	vector<string> post_CL_flags = post_linker_flags[compiler_ICC];
+	for( iterv = post_CL_flags.begin(); iterv != post_CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+	
+	executeCommand( CL );
 }
 
 SynthesizerC::SynthesizerC( bool parallel_enabled ){

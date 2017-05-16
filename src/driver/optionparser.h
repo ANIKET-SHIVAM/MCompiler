@@ -1511,7 +1511,7 @@ inline bool Parser::workhorse(bool gnu, const Descriptor usage[], int numargs, c
   while (numargs != 0 && *args != 0)
   {
     const char* param = *args; // param can be --long-option, -srto or non-option argument
-
+	bool invalidOption = false;
     // in POSIX mode the first non-option argument terminates the option list
     // a lone minus character is a non-option argument
     if (param[0] != '-' || param[1] == 0)
@@ -1621,10 +1621,18 @@ inline bool Parser::workhorse(bool gnu, const Descriptor usage[], int numargs, c
       if (descriptor->shortopt == 0) /**************  unknown option ********************/
       {
         // look for dummy entry (shortopt == "" and longopt == "") to use as Descriptor for unknown options
-        idx = 0;
-        while (usage[idx].shortopt != 0 && (usage[idx].shortopt[0] != 0 || usage[idx].longopt[0] != 0))
-          ++idx;
-        descriptor = (usage[idx].shortopt == 0 ? 0 : &usage[idx]);
+        //idx = 0;
+        //while (usage[idx].shortopt != 0 && (usage[idx].shortopt[0] != 0 || usage[idx].longopt[0] != 0))
+         // ++idx;
+        //descriptor = (usage[idx].shortopt == 0 ? 0 : &usage[idx]);
+		 
+			++nonops;
+			++args;
+			if (numargs > 0)
+			  --numargs;
+			invalidOption = true;
+            handle_short_options = false;
+			descriptor = 0;
       }
 
       if (descriptor != 0)
@@ -1649,8 +1657,20 @@ inline bool Parser::workhorse(bool gnu, const Descriptor usage[], int numargs, c
 
             break;
           case ARG_IGNORE:
-          case ARG_NONE:
             option.arg = 0;
+            break;
+          case ARG_NONE:
+			/*
+			++nonops;
+			++args;
+			if (numargs > 0)
+			  --numargs;
+			
+			invalidOption = true;
+            handle_short_options = false;
+			continue;
+            */
+			option.arg = 0;
             break;
         }
 
@@ -1659,12 +1679,13 @@ inline bool Parser::workhorse(bool gnu, const Descriptor usage[], int numargs, c
       }
 
     } while (handle_short_options);
-
-    shift(args, nonops);
-    ++args;
-    if (numargs > 0)
-      --numargs;
-
+	
+	if( !invalidOption ){
+		shift(args, nonops);
+		++args;
+		if (numargs > 0)
+		  --numargs;
+	}
   } // while
 
   if (numargs > 0 && *args == 0) // It's a bug in the caller if numargs is greater than the actual number
