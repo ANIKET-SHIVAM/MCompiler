@@ -11,15 +11,17 @@ private:
 	bool parallel;
 	set<string> files_to_link;
 	set<string> mCompiler_header_obj;
+	set<string> *pluto_files_to_compile = new set<string>();
+	string pluto_success_str = "[Pluto] Output written";	
 
-	void iccOptimize(); 
+	void iccOptimize( bool asPlutoBackend ); 
 	void gccOptimize(); 
 	void llvmOptimize(); 
 	void pgiOptimize();
 	void plutoOptimize(); 
 	void pollyOptimize(); 
 
-	void iccProfile(); 
+	void iccProfile( bool asPlutoBackend ); 
 	void gccProfile(); 
 	void llvmProfile(); 
 	void pgiProfile();

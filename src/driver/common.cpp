@@ -44,7 +44,7 @@ string mCompiler_curr_dir_path;
 
 /*** Parameter that change based on the CL input ***/
 /* For the extractor */
-vector<string> mCompiler_input_file;
+vector<string> mCompiler_input_file = vector<string>();
 vector<string> mCompiler_object_file;
 string mCompiler_binary_name      = "mCompiler_out"; //Default: If CL provided then replaced with that name
 bool auto_parallel_enabled = true;
@@ -105,6 +105,13 @@ void addOptimizationFlags(){
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	optimization_flags[compiler_LLVM] = flag_vec;	
+
+	/* PLuTo */
+	flag_vec.clear();
+	/* Tiling and parallel code option are off by default */
+	flag_vec.push_back("polycc");
+	optimization_flags[compiler_Pluto] = flag_vec;	
+	
 }
 
 // Called inside Profiler

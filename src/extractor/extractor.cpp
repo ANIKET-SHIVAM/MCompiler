@@ -603,6 +603,6 @@ Extractor::Extractor( const vector<string> &argv ){
 	executeCommand( "cp " + base_file + space_str + base_file_profile );
 
 	/* Remove mCompile header and accumulater timing var print function from non profile base file */
-	string sed_command = "sed -i.bak '/" + mCompiler_header_name + "/d;/" + printTimingVarFuncName + "/d' " + base_file;
+	string sed_command = "sed -i '/" + mCompiler_header_name + "/d;/" + printTimingVarFuncName + "/d' " + base_file;
 	executeCommand( sed_command );
 }

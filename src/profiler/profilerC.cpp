@@ -92,7 +92,7 @@ void ProfilerC::getHotspotFiles(){
 }
 
 // TODO: Check if compilation command failed in optimize functions 
-void ProfilerC::iccOptimize(){
+void ProfilerC::iccOptimize( bool asPlutoBackend ){
 	files_to_link.clear();
 	vector<string> CL_flags = optimization_flags[compiler_ICC];
 	vector<string>::iterator iterv;
@@ -103,10 +103,30 @@ void ProfilerC::iccOptimize(){
 
 	//Since we only want to generate .o at this point
 	CL += minus_c_str + space_str;
+
+	/* If compiling PLuTo optimized files or just simple ICC */	
+	set<string> files_compile = set<string>();
+	string compiler_str;
+	if( !asPlutoBackend ){
+		files_compile.insert(files_to_compile.begin(), files_to_compile.end());
+		compiler_str = icc_str;
+	} else {
+		files_compile.insert(pluto_files_to_compile->begin(), pluto_files_to_compile->end());
+		compiler_str = pluto_str;
+	}
 	
 	set<string>::iterator iters;
-	for( iters = files_to_compile.begin(); iters != files_to_compile.end(); iters++){
-		string out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + icc_str + dot_o_str; 
+	for( iters = files_compile.begin(); iters != files_compile.end(); iters++){
+		string out_file = "";
+		/* _pluto is added for pluto optimized file already */
+		if( !asPlutoBackend ){
+			out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + compiler_str + dot_o_str; 
+		} else {
+			if( (*iters).find(pluto_str) == string::npos )
+				out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + compiler_str + dot_o_str; 
+			else
+				out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + dot_o_str; 
+		}
 		executeCommand( CL + *iters + space_str + minus_o_str + space_str + out_file );
 		/* We only want to link profile code files (and mCompiler file with printTimingVar function), but compile no profile code files too */
 		if( out_file.find(mCompiler_profile_file_tag) != string::npos )
@@ -118,11 +138,11 @@ void ProfilerC::iccOptimize(){
 		}
 		// Store base obj file for synthesizer
 		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos ){
-			if( base_obj_path.find( icc_str ) == base_obj_path.end() ){	
+			if( base_obj_path.find( compiler_str ) == base_obj_path.end() ){	
 				vector<string> *temp_vec = new vector<string>();
-				base_obj_path.insert( pair<string,vector<string>* >(icc_str, temp_vec) );
+				base_obj_path.insert( pair<string,vector<string>* >(compiler_str, temp_vec) );
 			}
-			map< string, vector<string>* >::iterator mIter = base_obj_path.find( icc_str );
+			map< string, vector<string>* >::iterator mIter = base_obj_path.find( compiler_str );
 			(mIter->second)->push_back( out_file );
 		}
 	}
@@ -202,6 +222,41 @@ void ProfilerC::pgiOptimize(){
 }
 
 void ProfilerC::plutoOptimize(){
+	vector<string> CL_flags = optimization_flags[compiler_Pluto];
+	vector<string>::iterator iterv;
+	string CL;
+	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+	
+	set<string>::iterator iters;
+	for( iters = files_to_compile.begin(); iters != files_to_compile.end(); iters++){
+		string file_to_optimize = *iters;
+		// If a base file just skip
+		if( file_to_optimize.find(base_str) != string::npos ){
+			pluto_files_to_compile->insert(file_to_optimize);
+			continue;
+		}
+		// filename.c to filename_pluto.c
+		int pos_of_dot = file_to_optimize.find_last_of(".");
+		string pluto_opt_file = file_to_optimize.substr( 0, pos_of_dot ) + pluto_str + 
+								file_to_optimize.substr( pos_of_dot, string::npos  );
+		string result = executeCommand( CL + file_to_optimize + space_str + minus_o_str + 
+										space_str + pluto_opt_file );
+		/* If PLuTo was able to optimze it i.e. it was a SCoP, 
+		 *	then choose pluto file else keep original */
+		if( result.find(pluto_success_str) != string::npos ){
+			pluto_files_to_compile->insert(pluto_opt_file);
+			/* Pluto bug workaround: Removes omp.h if parallel option not given :O */
+			string sed_command = string("sed -i 's/") + "#include <math.h>" + "/" + 
+								  "#include <math.h>\\\n#include <omp.h>" + "/' " + pluto_opt_file;
+			executeCommand( sed_command );
+		} else {
+			pluto_files_to_compile->insert(file_to_optimize);
+		}	
+	}
+	// Run iccOptimize as PLuTo backend
+	iccOptimize(true);
 }
 
 void ProfilerC::pollyOptimize(){
@@ -339,12 +394,7 @@ void ProfilerC::gatherProfilingData( const string& binary_file, const string& co
 	}
 }
 
-void ProfilerC::iccProfile(){
-	/* If mCompiler is started in Profile mode */
-	if( files_to_link.empty() ){
-		cerr << "Profiler: Required object files are not present" << endl;
-		getObjectFiles(icc_str);
-	}
+void ProfilerC::iccProfile( bool asPlutoBackend ){
 	string CL;
 
 	/* For CC and other flags */	
@@ -353,13 +403,27 @@ void ProfilerC::iccProfile(){
 	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
 		CL += *iterv + space_str;
 	}
+	
+	string compiler_str;
+	if( !asPlutoBackend ){
+		compiler_str = icc_str;
+	} else {
+		compiler_str = pluto_str;
+	}
+	
+	/* If mCompiler is started in Profile mode */
+	if( files_to_link.empty() ){
+		cerr << "Profiler: Required object files are not present" << endl;
+		getObjectFiles(compiler_str);
+	}
+
 	/* For gathering object files */
 	set<string>::iterator iters;
 	string object_files;
 	string out_file;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
 		object_files += *iters + space_str;
-		out_file = getDataFolderPath() + mCompiler_binary_name + icc_str;
+		out_file = getDataFolderPath() + mCompiler_binary_name + compiler_str;
 	}
 	/* Add object files then add -o binary_name, before adding post linker flags */
 	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
@@ -373,7 +437,7 @@ void ProfilerC::iccProfile(){
 	executeCommand( CL );
 
 	/* Send binary for profiling and storing profiling data */	
-	gatherProfilingData( out_file, icc_str );
+	gatherProfilingData( out_file, compiler_str );
 }
 
 void ProfilerC::gccProfile(){
@@ -448,6 +512,8 @@ void ProfilerC::pgiProfile(){
 }
 
 void ProfilerC::plutoProfile(){
+	// Run iccProfile as PLuTo backend	
+	iccProfile(true);
 }
 
 void ProfilerC::pollyProfile(){
@@ -456,11 +522,12 @@ void ProfilerC::pollyProfile(){
 void ProfilerC::Profile(){
 	map< compiler_type, bool >::iterator iter;
 	//getHotspotFiles(); -- Only if Extractor is called separately
+	bool asPlutoBackend = false;
 	for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
 		if( iter->second == true ){
 			switch (iter->first) {
 				case compiler_ICC:
-					iccOptimize();   iccProfile();   break;
+					iccOptimize(asPlutoBackend); iccProfile(asPlutoBackend); break;
 				case compiler_GCC:
 					gccOptimize();   gccProfile();   break;
 				case compiler_LLVM:
