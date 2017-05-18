@@ -184,9 +184,21 @@ void ProfilerC::gccOptimize(){
 
 }
 
-void ProfilerC::llvmOptimize(){
+void ProfilerC::llvmOptimize( bool withPollyPlugin ){
 	files_to_link.clear();
-	vector<string> CL_flags = optimization_flags[compiler_LLVM];
+
+	string compiler_str;
+	compiler_type compiler_in_action;
+	/* If using Polly as optimizer+vectorizer */
+	if( !withPollyPlugin ){
+		compiler_in_action = compiler_LLVM;
+		compiler_str = llvm_str;
+	} else {
+		compiler_in_action = compiler_Polly;
+		compiler_str = polly_str;
+	}
+	
+	vector<string> CL_flags = optimization_flags[compiler_in_action];
 	vector<string>::iterator iterv;
 	string CL;
 	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
@@ -198,7 +210,7 @@ void ProfilerC::llvmOptimize(){
 	
 	set<string>::iterator iters;
 	for( iters = files_to_compile.begin(); iters != files_to_compile.end(); iters++){
-		string out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + llvm_str + dot_o_str; 
+		string out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + compiler_str + dot_o_str; 
 		executeCommand( CL + *iters + space_str + minus_o_str + space_str + out_file );
 		if( out_file.find(mCompiler_profile_file_tag) != string::npos )
 			files_to_link.insert( out_file );
@@ -208,11 +220,11 @@ void ProfilerC::llvmOptimize(){
 		}
 		// Store base obj file for synthesizer
 		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos ){
-			if( base_obj_path.find( llvm_str ) == base_obj_path.end() ){	
+			if( base_obj_path.find( compiler_str ) == base_obj_path.end() ){	
 				vector<string> *temp_vec = new vector<string>();
-				base_obj_path.insert( pair<string,vector<string>* >(llvm_str, temp_vec) );
+				base_obj_path.insert( pair<string,vector<string>* >(compiler_str, temp_vec) );
 			}
-			map< string, vector<string>* >::iterator mIter = base_obj_path.find( llvm_str );
+			map< string, vector<string>* >::iterator mIter = base_obj_path.find( compiler_str );
 			(mIter->second)->push_back( out_file );
 		}
 	}
@@ -260,6 +272,8 @@ void ProfilerC::plutoOptimize(){
 }
 
 void ProfilerC::pollyOptimize(){
+	// Run llvmOptimize with Polly plugin
+	llvmOptimize(true);
 }
 /*
 void ProfilerC::Optimize(){
@@ -474,15 +488,27 @@ void ProfilerC::gccProfile(){
 	gatherProfilingData( out_file, gcc_str );
 }
 
-void ProfilerC::llvmProfile(){
+void ProfilerC::llvmProfile( bool withPollyPlugin ){
 	if( files_to_link.empty() ){
 		cerr << "Profiler: Required object files are not present" << endl;
 		getObjectFiles(icc_str);
 	}
-	string CL;
+
+	string compiler_str;
+	compiler_type compiler_in_action;
+	/* If using Polly as optimizer+vectorizer */
+	if( !withPollyPlugin ){
+		compiler_in_action = compiler_LLVM;
+		compiler_str = llvm_str;
+	} else {
+		/* Since Linker has nothing to do with Polly */
+		compiler_in_action = compiler_LLVM;
+		compiler_str = polly_str;
+	}
 	
+	string CL;	
 	vector<string>::iterator iterv;
-	vector<string> CL_flags = linker_flags[compiler_LLVM];
+	vector<string> CL_flags = linker_flags[compiler_in_action];
 	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
 		CL += *iterv + space_str;
 	}
@@ -492,12 +518,12 @@ void ProfilerC::llvmProfile(){
 	string out_file;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
 		object_files += *iters + space_str;
-		out_file = getDataFolderPath() + mCompiler_binary_name + llvm_str;
+		out_file = getDataFolderPath() + mCompiler_binary_name + compiler_str;
 	}
 
 	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
 
-	vector<string> post_CL_flags = post_linker_flags[compiler_LLVM];
+	vector<string> post_CL_flags = post_linker_flags[compiler_in_action];
 	for( iterv = post_CL_flags.begin(); iterv != post_CL_flags.end(); iterv++){
 		CL += *iterv + space_str;
 	}
@@ -505,7 +531,7 @@ void ProfilerC::llvmProfile(){
 	executeCommand( CL );
 
 	/* Send binary for profiling and storing profiling data */	
-	gatherProfilingData( out_file, llvm_str );
+	gatherProfilingData( out_file, compiler_str );
 }
 
 void ProfilerC::pgiProfile(){
@@ -517,12 +543,15 @@ void ProfilerC::plutoProfile(){
 }
 
 void ProfilerC::pollyProfile(){
+	// Run as Polly's linker
+	llvmProfile(true);
 }
 
 void ProfilerC::Profile(){
 	map< compiler_type, bool >::iterator iter;
 	//getHotspotFiles(); -- Only if Extractor is called separately
 	bool asPlutoBackend = false;
+	bool withPollyPlugin = false;
 	for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
 		if( iter->second == true ){
 			switch (iter->first) {
@@ -531,7 +560,7 @@ void ProfilerC::Profile(){
 				case compiler_GCC:
 					gccOptimize();   gccProfile();   break;
 				case compiler_LLVM:
-					llvmOptimize();  llvmProfile();  break;
+					llvmOptimize(withPollyPlugin); llvmProfile(withPollyPlugin); break;
 				case compiler_PGI:
 					pgiOptimize();   pgiProfile();   break;
 				case compiler_Pluto:

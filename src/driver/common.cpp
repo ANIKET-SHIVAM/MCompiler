@@ -111,6 +111,21 @@ void addOptimizationFlags(){
 	/* Tiling and parallel code option are off by default */
 	flag_vec.push_back("polycc");
 	optimization_flags[compiler_Pluto] = flag_vec;	
+
+	/* Polly */
+	flag_vec.clear();
+	flag_vec.push_back("clang");
+	flag_vec.push_back("-O3");
+	flag_vec.push_back("-mllvm -polly");
+	flag_vec.push_back("-mllvm -polly-vectorizer=stripmine");
+	flag_vec.push_back("-march=native");
+	flag_vec.push_back("-fopenmp");
+	flag_vec.push_back("-std=c11");
+	flag_vec.push_back("-w");
+	flag_vec.push_back(mCompiler_include_path);
+	flag_vec.push_back(mCompiler_extraPreSrcFlags);
+	flag_vec.push_back(mCompiler_extraPostSrcFlags);
+	optimization_flags[compiler_Polly] = flag_vec;	
 	
 }
 
