@@ -46,8 +46,8 @@ const option::Descriptor usage[] =
 	{EXTRACT            , 0, ""  , "noextract"     ,Arg::None     , "    --[no]extract        Extract hotspots" },
 	{PROFILE            , 0, ""  , "noprofile"     ,Arg::None     , "    --[no]profile        Profile extracted hotspots" },
 	{SYNTHESIZE         , 0, ""  , "nosynthesize"  ,Arg::None     , "    --[no]synthesize     Combine best performing hotspots to generate binary" },
-	{TEST               , 0, ""  , "test"          ,Arg::None     , "    --test               Test performance compared to a single compiler"
-																							  "optimized code" },
+	{TEST               , 0, ""  , "test"          ,Arg::None     , "    --test               Test performance compared to other compilers"
+																							  "optimized code (MUST run with Synthesis)" },
 	{REPORT             , 0, ""  , "report"        ,Arg::None     , "    --report             Generate mCompiler performance report" },
 	{PARALLEL           , 0, ""  , "parallel"      ,Arg::None     , "    --parallel           Auto-parallelize the hotspots."
 																							  "Default: Serial code generation (with vectorization)" },

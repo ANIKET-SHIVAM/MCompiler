@@ -161,6 +161,10 @@ int main( int argc, char* argv[] ){
 		driver->initiateSynthesizer( mCompiler_enabled_options[PARALLEL] );
 	}
 
+	if( mCompiler_enabled_options[TEST] == true ){
+		Tester test( mCompiler_enabled_options[PARALLEL] );
+	}
+
 	delete driver;
 	return 0;
 }

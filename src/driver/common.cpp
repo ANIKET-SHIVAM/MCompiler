@@ -26,6 +26,7 @@ string llvm_str    = "_llvm";
 string pgi_str     = "_pgi";
 string pluto_str   = "_pluto";
 string polly_str   = "_polly";
+string test_str    = "_test";
 
 /* Change baseline compiler to come from CL, since ICC may not always be there */
 string baseline_compiler_str = icc_str;

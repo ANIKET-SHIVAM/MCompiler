@@ -49,6 +49,7 @@ extern string llvm_str;
 extern string pgi_str;
 extern string pluto_str;
 extern string polly_str;
+extern string test_str;
 extern string baseline_compiler_str;
 
 extern string mCompiler_timing_keyword;

@@ -15,7 +15,7 @@ ROSE_INCLUDE = -I/home/aniket/meta_compiler/tools/rose/boost_1_61_0/include \
 	-I/home/aniket/meta_compiler/tools/rose/rose_build/include/rose
 
 
-all: extractor profiler synthesizer driver #tester
+all: extractor profiler synthesizer tester driver
 
 $(OBJ_COMMON): src/driver/common.cpp
 	$(CC) $(FLAGS) src/driver/common.cpp $(ROSE_INCLUDE) -c -o $@
@@ -79,6 +79,13 @@ just_synthesizer: $(SRC_SYNTHESIZER)
 	$(CC) $(FLAGS) $(SYNTHESIZER_COMPILE_FLAGS) $(SRC_SYNTHESIZER) -c -o $(OBJ_SYNTHESIZER)
 	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR)  $(OBJ_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
 
+##### TESTER #####
+OBJ_TESTER = $(OBJS)/tester.o
+SRC_TESTER = $(TESTER_PATH)/tester.cpp
+tester: $(OBJ_TESTER)
+$(OBJ_TESTER): $(SRC_TESTER)
+	$(CC) $(FLAGS) $(SRC_TESTER) $(EXTRACTOR_COMPILE_FLAGS) -c -o $@
+
 ##### DRIVER #####
 
 DRIVER_COMPILE_FLAGS = -I/home/aniket/meta_compiler/src \
@@ -88,15 +95,15 @@ DRIVER_LD_FLAGS = $(EXTRACTOR_LD_FLAGS)
 OBJ_DRIVER = $(OBJS)/driver.o
 SRC_DRIVER = $(DRIVER_PATH)/driver.cpp 
 
-driver: $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON)
-	$(CC) $(OBJ_DRIVER) $(OBJ_PROFILER) $(OBJ_EXTRACTOR) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
+driver: $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(OBJ_TESTER)
+	$(CC) $(OBJ_DRIVER) $(OBJ_PROFILER) $(OBJ_EXTRACTOR) $(OBJ_SYNTHESIZER) $(OBJ_TESTER) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
 $(OBJ_DRIVER): $(SRC_DRIVER)
 	$(CC) $(FLAGS) $(DRIVER_COMPILE_FLAGS) $(SRC_DRIVER) -c -o $@
 
-just_driver: $(OBJ_EXTRACTOR) $(SRC_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON)
+just_driver: $(OBJ_EXTRACTOR) $(SRC_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(OBJ_TESTER)
 	rm -f $(OBJ_DRIVER)
 	$(CC) $(FLAGS) $(DRIVER_COMPILE_FLAGS) $(SRC_DRIVER) -c -o $(OBJ_DRIVER)
-	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
+	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(OBJ_TESTER) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
 
 ##### CLEAN #####
 clean:

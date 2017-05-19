@@ -6,6 +6,7 @@
 #include "extractor/extractor.h"
 #include "profiler/profilerC.h"
 #include "synthesizer/synthesizerC.h"
+#include "tester/tester.h"
 //#include "profiler/profilerCPP.h"
 //#include "profiler/profilerFortan.h"
 
