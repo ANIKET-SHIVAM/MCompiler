@@ -85,6 +85,7 @@ extern string mCompiler_extraPreSrcFlags;
 extern string mCompiler_extraPostSrcFlags;
 
 extern map< compiler_type, bool > compiler_candidate;
+extern map< compiler_type, string > compiler_keyword;
 extern map< compiler_type, vector<string> > optimization_flags;
 /* vector format: [ CC, -O?, ... ] */
 extern map< compiler_type, vector<string> > linker_flags;

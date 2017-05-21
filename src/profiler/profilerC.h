@@ -44,7 +44,7 @@ public:
 	void getObjectFiles( const string& compiler_name ); 
 	/* getObjectFiles-Only needed if mCompiler started at Profiling phase */ 
 	void linkFiles();
-	void gatherProfilingData( const string& binary_file, const string& compiler_str );
+	void gatherProfilingData( const string& binary_file, compiler_type curr_compiler );
 	
 };
 

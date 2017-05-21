@@ -28,8 +28,17 @@ string pluto_str   = "_pluto";
 string polly_str   = "_polly";
 string test_str    = "_test";
 
+map<compiler_type, string> compiler_keyword = {
+	{ compiler_ICC,   icc_str.substr(1,string::npos)   },
+	{ compiler_GCC,   gcc_str.substr(1,string::npos)   },
+	{ compiler_LLVM,  llvm_str.substr(1,string::npos)  },
+	{ compiler_PGI,   pgi_str.substr(1,string::npos)   },
+	{ compiler_Pluto, pluto_str.substr(1,string::npos) },
+	{ compiler_Polly, polly_str.substr(1,string::npos) },
+};	
+
 /* Change baseline compiler to come from CL, since ICC may not always be there */
-string baseline_compiler_str = icc_str;
+string baseline_compiler_str = compiler_keyword[compiler_ICC];
 
 /* Used by extractor to differentiate from other stdout */
 string mCompiler_timing_keyword = "_mCompilerInfo:";
@@ -167,18 +176,21 @@ void addPostLinkerFlags(){
 	vector<string> flag_vec;
 	/* ICC */
 	flag_vec.clear();
+	flag_vec.push_back("-lm");
 	flag_vec.push_back(mCompiler_libraries);
 	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	post_linker_flags[compiler_ICC] = flag_vec;	
 
 	/* GCC */
 	flag_vec.clear();
+	flag_vec.push_back("-lm");
 	flag_vec.push_back(mCompiler_libraries);
 	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	post_linker_flags[compiler_GCC] = flag_vec;	
 	
 	/* LLVM */
 	flag_vec.clear();
+	flag_vec.push_back("-lm");
 	flag_vec.push_back(mCompiler_libraries);
 	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	post_linker_flags[compiler_LLVM] = flag_vec;	

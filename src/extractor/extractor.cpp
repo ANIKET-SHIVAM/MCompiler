@@ -484,6 +484,11 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 						header_set.push_back(headerName);
 						//cerr << "Header: " << headerName << endl;	
 					}	
+					// #if
+					if (directiveTypeName == "CpreprocessorIfDeclaration"){
+						header_set.push_back(headerName);
+						//cerr << "Header: " << headerName << endl;	
+					}	
 					// #else
 					if (directiveTypeName == "CpreprocessorElseDeclaration" ){
 						header_set.push_back(headerName);

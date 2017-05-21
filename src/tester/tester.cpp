@@ -16,9 +16,9 @@ void Tester::testCompilerCandidates(){
 				CL += *iterv + space_str;
 			}
 				
-			CL += mCompiler_link_path + mCompiler_libraries;
+			CL += mCompiler_macro_defs + mCompiler_link_path + mCompiler_libraries;
 			string curr_binary = getDataFolderPath() + binary_name + test_str + compiler_keyword[curr_compiler];
-			CL += minus_o_str + space_str + curr_binary;
+			CL += minus_o_str + space_str + curr_binary + " -lm ";
 
 			string result_compilation = executeCommand(CL);
 			if( result_compilation.find("error") != string::npos )
@@ -67,15 +67,6 @@ void Tester::printCompilerTimings(){
 
 Tester::Tester( bool parallel_enabled ){
 	
-	compiler_keyword = {
-		{ compiler_ICC,   icc_str.substr(1,string::npos)   },
-		{ compiler_GCC,   gcc_str.substr(1,string::npos)   },
-		{ compiler_LLVM,  llvm_str.substr(1,string::npos)  },
-		{ compiler_PGI,   pgi_str.substr(1,string::npos)   },
-		{ compiler_Pluto, pluto_str.substr(1,string::npos) },
-		{ compiler_Polly, polly_str.substr(1,string::npos) },
-	};	
-
 	binary_name = mCompiler_binary_name;
 
 	testCompilerCandidates();

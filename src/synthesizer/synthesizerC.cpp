@@ -4,38 +4,23 @@ void SynthesizerC::selectOptimalOptimizedCandidate( string hotspot_name ){
 	// pair< compiler_string, running time >
 	set< pair<string, double>, less_than_cmp_set > hotspot_timing_set;
 		
-	map< pair< string, string >, vector<double>* >::iterator dataIter;
-	map< pair< string, string >, string >::iterator locIter;
-
-	/* Add Mean timing for ICC into comparision set */
-	dataIter = profiler_hotspot_data.find( pair<string,string>(hotspot_name,icc_str) );
-	if( dataIter != profiler_hotspot_data.end() )
-		hotspot_timing_set.insert( pair<string,double>(icc_str, getVectorMean(dataIter->second) ) );
-	cout << "Synthesizer: " << hotspot_name << " + " << icc_str << ":" << getVectorMean(dataIter->second) << endl;
-
-	/* Add Mean timing for GCC into comparision set */
-	dataIter = profiler_hotspot_data.find( pair<string,string>(hotspot_name,gcc_str) );
-	if( dataIter != profiler_hotspot_data.end() )
-		hotspot_timing_set.insert( pair<string,double>(gcc_str, getVectorMean(dataIter->second) ) );
-	cout << "Synthesizer: " << hotspot_name << " + " << gcc_str << ":" << getVectorMean(dataIter->second) << endl;
-
-	/* Add Mean timing for LLVM into comparision set */
-	dataIter = profiler_hotspot_data.find( pair<string,string>(hotspot_name,llvm_str) );
-	if( dataIter != profiler_hotspot_data.end() )
-		hotspot_timing_set.insert( pair<string,double>(llvm_str, getVectorMean(dataIter->second) ) );
-	cout << "Synthesizer: " << hotspot_name << " + " << llvm_str << ":" << getVectorMean(dataIter->second) << endl;
-
-	/* Add Mean timing for PLuTo into comparision set */
-	dataIter = profiler_hotspot_data.find( pair<string,string>(hotspot_name,pluto_str) );
-	if( dataIter != profiler_hotspot_data.end() )
-		hotspot_timing_set.insert( pair<string,double>(pluto_str, getVectorMean(dataIter->second) ) );
-	cout << "Synthesizer: " << hotspot_name << " + " << pluto_str << ":" << getVectorMean(dataIter->second) << endl;
-
-	/* Add Mean timing for Polly into comparision set */
-	dataIter = profiler_hotspot_data.find( pair<string,string>(hotspot_name,polly_str) );
-	if( dataIter != profiler_hotspot_data.end() )
-		hotspot_timing_set.insert( pair<string,double>(polly_str, getVectorMean(dataIter->second) ) );
-	cout << "Synthesizer: " << hotspot_name << " + " << polly_str << ":" << getVectorMean(dataIter->second) << endl;
+	/* Add Mean timing for eligible compilers into comparision set */
+	map< compiler_type, bool >::iterator iter;
+	for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
+		if( iter->second == true ){
+			compiler_type curr_compiler = iter->first;
+			map< pair< string, string >, vector<double>* >::iterator dataIter;
+			dataIter = profiler_hotspot_data.find( pair<string,string>(hotspot_name,
+													 compiler_keyword[curr_compiler]) );
+			if( dataIter != profiler_hotspot_data.end() ){
+				hotspot_timing_set.insert( pair<string,double>(compiler_keyword[curr_compiler], 
+											getVectorMean(dataIter->second) ) );
+				cout << "Synthesizer: " << hotspot_name << " + " << 
+						compiler_keyword[curr_compiler] << ":" << 
+						getVectorMean(dataIter->second) << endl;
+			}
+		}
+	}
 
 	/* Find the lowest running time compiler and add its hotspot object file to final set for linking */	
 	string best_compiler_option = ( hotspot_timing_set.begin() )->first;
