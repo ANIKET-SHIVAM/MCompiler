@@ -116,6 +116,19 @@ void addOptimizationFlags(){
 	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	optimization_flags[compiler_LLVM] = flag_vec;	
 
+	/* PGI */
+	flag_vec.clear();
+	flag_vec.push_back("pgcc");
+	flag_vec.push_back("-fast");
+	flag_vec.push_back("-tp=haswell");
+	flag_vec.push_back("-Mipa");
+	flag_vec.push_back("-mp");
+	flag_vec.push_back("-w");
+	flag_vec.push_back(mCompiler_include_path);
+	flag_vec.push_back(mCompiler_extraPreSrcFlags);
+	flag_vec.push_back(mCompiler_extraPostSrcFlags);
+	optimization_flags[compiler_PGI] = flag_vec;	
+	
 	/* PLuTo */
 	flag_vec.clear();
 	/* Tiling and parallel code option are off by default */
@@ -169,31 +182,29 @@ void addLinkerFlags(){
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_LLVM] = flag_vec;	
+
+	/* PGI */
+	flag_vec.clear();
+	flag_vec.push_back("pgcc");
+	flag_vec.push_back("-Mipa");
+	flag_vec.push_back("-mp");
+	flag_vec.push_back("-w");
+	flag_vec.push_back(mCompiler_link_path);
+	flag_vec.push_back(mCompiler_extraPreSrcFlags);
+	linker_flags[compiler_PGI] = flag_vec;	
 }
 
 /* For flags that go at the end of the CL */
 void addPostLinkerFlags(){
 	vector<string> flag_vec;
-	/* ICC */
 	flag_vec.clear();
 	flag_vec.push_back("-lm");
 	flag_vec.push_back(mCompiler_libraries);
 	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	post_linker_flags[compiler_ICC] = flag_vec;	
-
-	/* GCC */
-	flag_vec.clear();
-	flag_vec.push_back("-lm");
-	flag_vec.push_back(mCompiler_libraries);
-	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	post_linker_flags[compiler_GCC] = flag_vec;	
-	
-	/* LLVM */
-	flag_vec.clear();
-	flag_vec.push_back("-lm");
-	flag_vec.push_back(mCompiler_libraries);
-	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	post_linker_flags[compiler_LLVM] = flag_vec;	
+	post_linker_flags[compiler_PGI] = flag_vec;	
 }
 
 string executeCommand( string cmd_str ){

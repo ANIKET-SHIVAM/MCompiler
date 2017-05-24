@@ -234,6 +234,40 @@ void ProfilerC::llvmOptimize( bool withPollyPlugin ){
 }
 
 void ProfilerC::pgiOptimize(){
+	files_to_link.clear();
+	vector<string> CL_flags = optimization_flags[compiler_PGI];
+	vector<string>::iterator iterv;
+	string CL;
+	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+
+	//Since we only want to generate .o at this point
+	CL += minus_c_str + space_str;
+	
+	set<string>::iterator iters;
+	for( iters = files_to_compile.begin(); iters != files_to_compile.end(); iters++){
+		string out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + 
+						  compiler_keyword[compiler_PGI] + dot_o_str; 
+		executeCommand( CL + *iters + space_str + minus_o_str + space_str + out_file );
+		if( out_file.find(mCompiler_profile_file_tag) != string::npos )
+			files_to_link.insert( out_file );
+		if( (*iters).find(mCompiler_header_code_name) != string::npos ){
+			files_to_link.insert( out_file );
+			mCompiler_header_obj.insert( out_file );
+		}
+		// Store base obj file for synthesizer
+		if( (*iters).find(base_str) != string::npos && out_file.find(mCompiler_profile_file_tag) == string::npos ){
+			if( base_obj_path.find( compiler_keyword[compiler_PGI] ) == base_obj_path.end() ){	
+				vector<string> *temp_vec = new vector<string>();
+				base_obj_path.insert( pair<string,vector<string>* >(compiler_keyword[compiler_PGI],
+																	temp_vec) );
+			}
+			map< string, vector<string>* >::iterator mIter = 
+									base_obj_path.find( compiler_keyword[compiler_PGI] );
+			(mIter->second)->push_back( out_file );
+		}
+	}
 }
 
 void ProfilerC::plutoOptimize(){
@@ -543,6 +577,37 @@ void ProfilerC::llvmProfile( bool withPollyPlugin ){
 }
 
 void ProfilerC::pgiProfile(){
+		if( files_to_link.empty() ){
+		cerr << "Profiler: Required object files are not present" << endl;
+		getObjectFiles(icc_str);
+	}
+	string CL;
+	
+	vector<string>::iterator iterv;
+	vector<string> CL_flags = linker_flags[compiler_PGI];
+	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+
+	set<string>::iterator iters;
+	string object_files;
+	string out_file;
+	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
+		object_files += *iters + space_str;
+		out_file = getDataFolderPath() + mCompiler_binary_name + gcc_str;
+	}
+	
+	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
+	
+	vector<string> post_CL_flags = post_linker_flags[compiler_PGI];
+	for( iterv = post_CL_flags.begin(); iterv != post_CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+
+	executeCommand( CL );
+
+	/* Send binary for profiling and storing profiling data */	
+	gatherProfilingData( out_file, compiler_PGI );
 }
 
 void ProfilerC::plutoProfile(){
