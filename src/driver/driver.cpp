@@ -153,7 +153,8 @@ int main( int argc, char* argv[] ){
 		driver->initiateProfiler( mCompiler_enabled_options[PARALLEL] );
 	}
 
-	if( mCompiler_enabled_options[SYNTHESIZE] == true ){
+	if( mCompiler_enabled_options[SYNTHESIZE] == true && 
+			!(mCompiler_enabled_options[COMPILE_TO_OBJECT]) ){
 		if( mCompiler_data_folder_path.empty() ){
 			cerr << "Couldn't find the folder to synthesize hotspots" << endl;	
 			exit(EXIT_FAILURE);

@@ -31,7 +31,7 @@ struct Arg: public option::Arg{
 };
 
 
-typedef enum{ EXTRACT, PROFILE, SYNTHESIZE, TEST, REPORT, PARALLEL,
+typedef enum{ EXTRACT, PROFILE, SYNTHESIZE, TEST, REPORT, PARALLEL, COMPILE_TO_OBJECT,
 			  PROFILE_COUNT, INPUT_PROFILE, OUTPUT_BINARY, OUTPUT_OBJECT,
 			  INCLUDE_PATH, LINKER_PATH, LIBS_PATH, MACRO_DEFS,
 			  HELP, UNKNOWN 
@@ -55,7 +55,8 @@ const option::Descriptor usage[] =
 																							  "collect data. Default: 3" },
 	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>       Input to the program."
 																							  "Needed to generate profiling information" },
-	{OUTPUT_BINARY      , 0, "o" , "output"        ,Arg::Required , "    -o[<arg>]            Output binary name" },
+	{COMPILE_TO_OBJECT  , 0, "c" , "compile"       ,Arg::Required , "    -c[<arg>]            Compile to object file" },
+	{OUTPUT_BINARY      , 0, "o" , "output"        ,Arg::Required , "    -o[<arg>]            Output object/binary name" },
 	{INCLUDE_PATH       , 0, "I" , "include"       ,Arg::Required , "    -I[<arg>]            Directory to include file search path" },
 	{LINKER_PATH        , 0, "L" , "link"          ,Arg::Required , "    -L[<arg>]            Directory to search for libraries" },
 	{LIBS_PATH          , 0, "l" , "libs"          ,Arg::Required , "    -l[<arg>]            Instruct the linker to link in the -l<string> library" },
@@ -71,6 +72,7 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		{ TEST,       false },
 		{ REPORT,     false },
 		{ PARALLEL,   false },
+		{ COMPILE_TO_OBJECT, false },
 	};
 	argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
 	option::Stats stats(usage, argc, argv);
@@ -121,6 +123,9 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		case PARALLEL:
 			mCompiler_enabled_options[PARALLEL] = true;
 			break;
+		case COMPILE_TO_OBJECT:
+			mCompiler_enabled_options[COMPILE_TO_OBJECT] = true;
+			break;
 		case PROFILE_COUNT:
 			mCompiler_profiler_runs = atoi(opt.arg);
 			break;
@@ -150,7 +155,7 @@ void set_mCompiler_options( int argc, char* argv[] ){
 	for (int i = 0; i < parse.nonOptionsCount(); ++i){
 		string str = parse.nonOption(i);
 		if( isEndingWith( str,".c" ) || isEndingWith( str,".cc" ) || isEndingWith( str,".cpp" ) || 
-			isEndingWith( str,".f" ) || isEndingWith( str,".f90" ) ){
+			isEndingWith( str,".f" ) || isEndingWith( str,".f77" ) || isEndingWith( str,".f90" ) || isEndingWith( str,".f95" ) ){
 		/* Search for source files in the name */
 			mCompiler_input_file.push_back( str );
 			postSourceFlags = true;
