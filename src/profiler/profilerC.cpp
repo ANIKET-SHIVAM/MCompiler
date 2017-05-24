@@ -499,7 +499,7 @@ void ProfilerC::iccProfile( bool asPlutoBackend ){
 void ProfilerC::gccProfile(){
 	if( files_to_link.empty() ){
 		cerr << "Profiler: Required object files are not present" << endl;
-		getObjectFiles(icc_str);
+		getObjectFiles(gcc_str);
 	}
 	string CL;
 	
@@ -531,10 +531,6 @@ void ProfilerC::gccProfile(){
 }
 
 void ProfilerC::llvmProfile( bool withPollyPlugin ){
-	if( files_to_link.empty() ){
-		cerr << "Profiler: Required object files are not present" << endl;
-		getObjectFiles(icc_str);
-	}
 
 	string compiler_str;
 	compiler_type compiler_in_action;
@@ -545,6 +541,10 @@ void ProfilerC::llvmProfile( bool withPollyPlugin ){
 	} else {
 		compiler_in_action = compiler_Polly;
 		compiler_str = polly_str;
+	}
+	if( files_to_link.empty() ){
+		cerr << "Profiler: Required object files are not present" << endl;
+		getObjectFiles(compiler_str);
 	}
 	
 	/* Since Linker flags for Polly are same as LLVM */
@@ -579,7 +579,7 @@ void ProfilerC::llvmProfile( bool withPollyPlugin ){
 void ProfilerC::pgiProfile(){
 		if( files_to_link.empty() ){
 		cerr << "Profiler: Required object files are not present" << endl;
-		getObjectFiles(icc_str);
+		getObjectFiles(pgi_str);
 	}
 	string CL;
 	
@@ -594,7 +594,7 @@ void ProfilerC::pgiProfile(){
 	string out_file;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
 		object_files += *iters + space_str;
-		out_file = getDataFolderPath() + mCompiler_binary_name + gcc_str;
+		out_file = getDataFolderPath() + mCompiler_binary_name + pgi_str;
 	}
 	
 	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
