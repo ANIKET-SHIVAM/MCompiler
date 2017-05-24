@@ -8,15 +8,13 @@
 
 string Extractor::getFilePath( const string &fileNameWithPath ) {
 	int lastSlashPos = fileNameWithPath.find_last_of('/');
-	mCompiler_file_path = fileNameWithPath.substr(0, lastSlashPos);
-	return mCompiler_file_path;
+	return ( fileNameWithPath.substr(0, lastSlashPos) ); 
 }
 
 string Extractor::getFileName( const string &fileNameWithPath ) {
 	int lastSlashPos = fileNameWithPath.find_last_of('/');
 	int lastDotPos   = fileNameWithPath.find_last_of('.');
-	mCompiler_file_name = fileNameWithPath.substr(lastSlashPos + 1, lastDotPos-lastSlashPos-1);
-	return mCompiler_file_name;
+	return ( fileNameWithPath.substr(lastSlashPos + 1, lastDotPos-lastSlashPos-1) );
 }
 
 string Extractor::getFileExtn( const string &fileNameWithPath ) {
@@ -33,8 +31,7 @@ string Extractor::getFileExtn( const string &fileNameWithPath ) {
 	else 
 		ROSE_ASSERT(false);
 
-	mCompiler_file_extn = extn;
-	return mCompiler_file_extn;
+	return extn;
 }
 
 int Extractor::getAstNodeLineNum( SgNode *const &astNode ) {
@@ -46,20 +43,22 @@ int Extractor::getAstNodeLineNum( SgNode *const &astNode ) {
 string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 	string fileNameWithPath = (astNode->get_file_info())->get_filenameString();
 	//string filePath = getFilePath(fileNameWithPath);
-	string fileName = getFileName(fileNameWithPath);
-	string fileExtn = getFileExtn(fileNameWithPath);
+	mCompiler_file_name = getFileName(fileNameWithPath);
+	mCompiler_file_extn = getFileExtn(fileNameWithPath);
 	int lineNumber = getAstNodeLineNum(astNode);
 
-	string outputPath = getDataFolderPath();
-
-	fileName += "_line" + to_string(lineNumber);
+	string output_path = getDataFolderPath();
+	string file_name = mCompiler_file_name;
+	string file_extn = mCompiler_file_extn;
+	
+	file_name += "_line" + to_string(lineNumber);
 	
 	if( isProfileFile )
-		fileName = fileName + mCompiler_profile_file_tag + "." + fileExtn;
+		file_name += mCompiler_profile_file_tag + "." + file_extn;
 	else
-		fileName = fileName + "." + fileExtn;
+		file_name += "." + mCompiler_file_extn;
 
-	return outputPath + fileName;
+	return output_path + file_name;
 }
 
 void Extractor::printHeaders( ofstream& loop_file_buf ){
@@ -596,7 +595,14 @@ Extractor::Extractor( const vector<string> &argv ){
 	AstTests::runAllTests(ast);
 	/* Generate rose_<orig file name> file for the transformed AST */
 	ast->unparse();
-	delete ast;	
+	delete ast;
+	
+	/* If file doesn't have any loop, then mCompiler_file_name,_file_extn would be empty at this point */
+	if( mCompiler_file_name.empty() ){
+		mCompiler_file_name = getFileName(argv.back());
+		mCompiler_file_extn = getFileExtn(argv.back()); 
+	} 
+	
 	string base_file = getDataFolderPath() + getFileName() + base_str + "." + getFileExtn();
 	string base_file_profile = getDataFolderPath() + getFileName() + base_str + mCompiler_profile_file_tag + "." + getFileExtn();
 	files_to_compile.insert(base_file);
