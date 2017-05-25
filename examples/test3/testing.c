@@ -3,6 +3,9 @@
 int X=55;
 int glob=99;
 extern void external();
+inline int yo(int x, int y){
+	return x*y;
+}
 
 int main(){
 	int i,j,k,sum1=0,sum2=0;
@@ -11,7 +14,7 @@ int main(){
 			sum1+=i+k;
 	}
 	for(j=0;j<10;j++){
-		sum2+=j;
+		sum2 = yo(sum2,j);
 		foo(sum2);
 	}
 	bar(&sum1,sum2);

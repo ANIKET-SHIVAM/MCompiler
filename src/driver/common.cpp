@@ -40,6 +40,9 @@ map<compiler_type, string> compiler_keyword = {
 /* Change baseline compiler to come from CL, since ICC may not always be there */
 string baseline_compiler_str = compiler_keyword[compiler_ICC];
 
+/* Mode in which mCompiler is working */
+compiler_mode mCompiler_mode = mode_FULL_PASS;
+
 /* Used by extractor to differentiate from other stdout */
 string mCompiler_timing_keyword = "_mCompilerInfo:";
 
@@ -56,18 +59,17 @@ string mCompiler_curr_dir_path;
 /* For the extractor */
 vector<string> mCompiler_input_file = vector<string>();
 vector<string> mCompiler_object_file;
-string mCompiler_binary_name      = "mCompiler_out"; //Default: If CL provided then replaced with that name
-bool auto_parallel_enabled = true;
+string mCompiler_binary_name       = "mCompiler_out"; //Default: If CL provided then replaced with that name
 /* Extractor passes to Profiler */
 set<string> files_to_compile;
-int    mCompiler_profiler_runs    = 3; //Default: If CL provided then replaced with that number
-string mCompiler_profile_data_csv = "profile_data.csv";
-string mCompiler_profiler_input = "";
-string mCompiler_macro_defs = "";
-string mCompiler_include_path = "";
-string mCompiler_link_path = "";
-string mCompiler_libraries = "";
-string mCompiler_extraPreSrcFlags = "";
+int    mCompiler_profiler_runs     = 3; //Default: If CL provided then replaced with that number
+string mCompiler_profile_data_csv  = "profile_data.csv";
+string mCompiler_profiler_input    = "";
+string mCompiler_macro_defs        = "";
+string mCompiler_include_path      = "";
+string mCompiler_link_path         = "";
+string mCompiler_libraries         = "";
+string mCompiler_extraPreSrcFlags  = "";
 string mCompiler_extraPostSrcFlags = "";
 
 /*** END: Parameter that change based on the CL input ***/

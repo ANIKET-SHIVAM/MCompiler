@@ -29,17 +29,17 @@ private:
 	void pollyProfile(); 
 
 public:
-	ProfilerC( bool parallel );
+	ProfilerC( bool parallel_enabled );
 	string getDataFolderPath() { return mCompiler_data_folder_path; };
 	bool isParallelEnabled()   { return parallel; };
 	void checkCompilerCandidates();
 
 	// Phase 1
-	//void Optimize();
+	void Optimize( const map< compiler_type, bool >::iterator &curr_candidate );
 	void getHotspotFiles();
 
 	// Phase 2
-	void Profile();
+	void Profile( const map< compiler_type, bool >::iterator &curr_candidate );
 	void independentProfile();
 	void getObjectFiles( const string& compiler_name ); 
 	/* getObjectFiles-Only needed if mCompiler started at Profiling phase */ 

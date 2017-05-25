@@ -1,5 +1,32 @@
 #include "driver.h"
 
+void Driver::setMCompilerMode(){
+	/* Check if CL had neither object file nor source files */
+	if( mCompiler_object_file.empty() && mCompiler_input_file.empty() ){
+		cerr << "Driver: Neither source files nor object files provided" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	/* Enable step compilation flag if -c provided */
+	if( mCompiler_enabled_options[COMPILE_TO_OBJECT] ){
+		mCompiler_mode = mode_TO_OBJECT;	
+		cerr << "Driver: Starting -c phase -> Only source files provided" << endl;
+	}
+
+	/* Check if CL had object file but no source files -- Linking phase */
+	if( !mCompiler_object_file.empty() && mCompiler_input_file.empty() ){
+		mCompiler_mode = mode_FROM_OBJECT;	
+		mCompiler_enabled_options[EXTRACT] = false;
+		cerr << "Driver: Starting link phase -> Only object files provided" << endl;
+	}
+
+	/* Check if CL have both object and source files - Complex mode */
+	if( !( mCompiler_object_file.empty() || mCompiler_input_file.empty() ) ){
+		mCompiler_mode = mode_FROM_OBJECT;
+		cerr << "Driver: Starting in complex mode -> Both object and source files provided" << endl;
+	}
+}
+
 void Driver::createMCompilerDataFolder(){
 	// TODO: If -o is provided, then data_folder at that location
 	string pwd_result = executeCommand("pwd");
@@ -98,7 +125,7 @@ void Driver::initiateExtractor( string file_name ){
 	}
 }
 
-void Driver::initiateProfiler( bool parallel){
+void Driver::initiateProfiler( bool parallel ){
 	src_lang src_type = extr->getSrcType();
 	if( src_type == src_lang_C ){
 		prof = new ProfilerC( parallel );
@@ -134,8 +161,10 @@ int main( int argc, char* argv[] ){
 	
 	set_mCompiler_options( argc, argv );
 
+	driver->setMCompilerMode();
+	
 	/* Send all files in the command line for extraction */
-	if( mCompiler_enabled_options[EXTRACT] == true ){
+	if( mCompiler_enabled_options[EXTRACT] ){
 		vector<string>::iterator iter;
 		for( iter = mCompiler_input_file.begin();  iter != mCompiler_input_file.end(); iter++ ){
 			if( *iter == mCompiler_input_file.back() ){
@@ -144,25 +173,25 @@ int main( int argc, char* argv[] ){
 			driver->initiateExtractor( *iter );
 		}
 	}
-
-	if( mCompiler_enabled_options[PROFILE] == true ){
+	
+	if( mCompiler_enabled_options[PROFILE] ){
 		if( mCompiler_data_folder_path.empty() ){
-			cerr << "Couldn't find the folder to profile hotspots" << endl;	
+			cerr << "Driver: Couldn't find the folder to profile hotspots" << endl;	
 			exit(EXIT_FAILURE);
 		}
 		driver->initiateProfiler( mCompiler_enabled_options[PARALLEL] );
 	}
 
-	if( mCompiler_enabled_options[SYNTHESIZE] == true && 
+	if( mCompiler_enabled_options[SYNTHESIZE] && 
 			!(mCompiler_enabled_options[COMPILE_TO_OBJECT]) ){
 		if( mCompiler_data_folder_path.empty() ){
-			cerr << "Couldn't find the folder to synthesize hotspots" << endl;	
+			cerr << "Driver: Couldn't find the folder to synthesize hotspots" << endl;	
 			exit(EXIT_FAILURE);
 		}	
 		driver->initiateSynthesizer( mCompiler_enabled_options[PARALLEL] );
 	}
 
-	if( mCompiler_enabled_options[TEST] == true ){
+	if( mCompiler_enabled_options[TEST] ){
 		Tester test( mCompiler_enabled_options[PARALLEL] );
 	}
 

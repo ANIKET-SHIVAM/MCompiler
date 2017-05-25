@@ -22,7 +22,7 @@
 
 using namespace std;
 
-typedef enum src_lang_enum{
+typedef enum{
 	src_lang_C       = 0,
 	src_lang_CPP     = 1,
 	src_lang_FORTRAN = 2,
@@ -36,6 +36,13 @@ typedef enum{
 	compiler_Pluto = 4,
 	compiler_Polly = 5
 }compiler_type; 
+
+typedef enum{
+	mode_TO_OBJECT   = 0, // -c
+	mode_FROM_OBJECT = 1, // .o only
+	mode_COMPLEX     = 2, // both src and obj in CL
+	mode_FULL_PASS   = 3  // full mCompiler pass
+}compiler_mode;
 
 extern string space_str;
 extern string forward_slash_str;
@@ -51,6 +58,8 @@ extern string pluto_str;
 extern string polly_str;
 extern string test_str;
 extern string baseline_compiler_str;
+
+extern compiler_mode mCompiler_mode;
 
 extern string mCompiler_timing_keyword;
 
@@ -68,8 +77,6 @@ extern string mCompiler_curr_dir_path;
 extern vector<string> mCompiler_input_file;
 
 extern vector<string> mCompiler_object_file;
-
-extern bool auto_parallel_enabled;
 
 /* Extractor passes to Profiler */
 extern set<string> files_to_compile;

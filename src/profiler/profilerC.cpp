@@ -312,31 +312,29 @@ void ProfilerC::pollyOptimize(){
 	// Run llvmOptimize with Polly plugin
 	llvmOptimize(true);
 }
-/*
-void ProfilerC::Optimize(){
-	map< compiler_type, bool >::iterator iter;
-	getHotspotFiles();
-	for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
-		if( iter->second == true ){
-			switch (iter->first) {
-				case compiler_ICC:
-					iccOptimize();   break;
-				case compiler_GCC:
-					gccOptimize();   break;
-				case compiler_LLVM:
-					llvmOptimize();  break;
-				case compiler_PGI:
-					pgiOptimize();   break;
-				case compiler_Pluto:
-					plutoOptimize(); break;
-				case compiler_Polly:
-					pollyOptimize(); break;
-			}
+
+void ProfilerC::Optimize( const map< compiler_type, bool >::iterator &curr_candidate ){
+	bool asPlutoBackend = false;
+	bool withPollyPlugin = false;
+	if( curr_candidate->second == true ){
+		switch (curr_candidate->first) {
+			case compiler_ICC:
+				iccOptimize(asPlutoBackend); break;
+			case compiler_GCC:
+				gccOptimize(); break;
+			case compiler_LLVM:
+				llvmOptimize(withPollyPlugin); break;
+			case compiler_PGI:
+				pgiOptimize(); break;
+			case compiler_Pluto:
+				plutoOptimize(); break;
+			case compiler_Polly:
+				pollyOptimize(); break;
 		}
 	}
 	
 }
-*/
+
 /* 
  * Phase 2 of profiler: Collect all .o from same compiler,
  * link to create an executable and run multiple times,
@@ -383,6 +381,7 @@ void ProfilerC::gatherProfilingData( const string& binary_file, compiler_type cu
 	}
 
 	for( int i = 0; i < mCompiler_profiler_runs; i++ ){
+		cerr << "Profiler: Run " << i << endl; 
 		string result;
 		result = executeCommand( binary_file );
 		
@@ -489,7 +488,8 @@ void ProfilerC::iccProfile( bool asPlutoBackend ){
 	for( iterv = post_CL_flags.begin(); iterv != post_CL_flags.end(); iterv++){
 		CL += *iterv + space_str;
 	}
-
+	
+	/* Link object files together to form the executable for profiling */
 	executeCommand( CL );
 
 	/* Send binary for profiling and storing profiling data */	
@@ -620,27 +620,24 @@ void ProfilerC::pollyProfile(){
 	llvmProfile(true);
 }
 
-void ProfilerC::Profile(){
-	map< compiler_type, bool >::iterator iter;
+void ProfilerC::Profile( const map< compiler_type, bool >::iterator &curr_candidate ){
 	//getHotspotFiles(); -- Only if Extractor is called separately
 	bool asPlutoBackend = false;
 	bool withPollyPlugin = false;
-	for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
-		if( iter->second == true ){
-			switch (iter->first) {
-				case compiler_ICC:
-					iccOptimize(asPlutoBackend); iccProfile(asPlutoBackend); break;
-				case compiler_GCC:
-					gccOptimize();   gccProfile();   break;
-				case compiler_LLVM:
-					llvmOptimize(withPollyPlugin); llvmProfile(withPollyPlugin); break;
-				case compiler_PGI:
-					pgiOptimize();   pgiProfile();   break;
-				case compiler_Pluto:
-					plutoOptimize(); plutoProfile(); break;
-				case compiler_Polly:
-					pollyOptimize(); pollyProfile(); break;
-			}
+	if( curr_candidate->second == true ){
+		switch (curr_candidate->first) {
+			case compiler_ICC:
+				iccProfile(asPlutoBackend); break;
+			case compiler_GCC:
+				gccProfile(); break;
+			case compiler_LLVM:
+				llvmProfile(withPollyPlugin); break;
+			case compiler_PGI:
+				pgiProfile(); break;
+			case compiler_Pluto:
+				plutoProfile(); break;
+			case compiler_Polly:
+				pollyProfile(); break;
 		}
 	}
 	
@@ -650,6 +647,16 @@ void ProfilerC::Profile(){
 ProfilerC::ProfilerC( bool parallel_enabled ){
 	parallel = parallel_enabled;
 	checkCompilerCandidates();
-//	Optimize();  // Phase 1
-	Profile();  // Phase 2
+	/* Rotate through compiler candidates for optimize and profile */
+	map< compiler_type, bool >::iterator iter;
+	for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
+		if( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_TO_OBJECT ||
+			mCompiler_mode == mode_COMPLEX ){
+			Optimize(iter);  // Phase 1
+		}
+		if( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
+			mCompiler_mode == mode_COMPLEX ){
+			Profile(iter);  // Phase 2
+		}
+	}	
 }

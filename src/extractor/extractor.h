@@ -40,6 +40,7 @@ public:
 	string ignorePrettyFunctionCall = "__PRETTY_FUNCTION__";
 	bool mainFuncPresent = false;	
 	vector<string> *loop_funcName_vec = new vector<string>;
+	map<SgFunctionDeclaration*,string> inline_func_map;
 public:
 	Extractor() {};
 	Extractor( const vector<string> &argv );

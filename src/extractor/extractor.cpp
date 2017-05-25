@@ -165,8 +165,19 @@ bool LoopInfo::hasFuncCallInScope( ){
 
 void LoopInfo::addScopeFuncAsExtern( string &externFuncStr ){
 	set<SgFunctionDeclaration *>::iterator iter;
-	for( iter = scope_funcCall_vec.begin(); iter != scope_funcCall_vec.end(); iter++ ){ 
-		externFuncStr += "extern " + (*iter)->unparseToString() + '\n';
+	for( iter = scope_funcCall_vec.begin(); iter != scope_funcCall_vec.end(); iter++ ){
+		SgFunctionDeclaration *declFunc = *iter;
+		bool consider_as_Extern = true;
+		/* Check if it is a inline function */
+		for( auto const &inlineFunc : extr.inline_func_map ){
+			if( SageInterface::isSameFunction( declFunc, inlineFunc.first ) ){
+				externFuncStr += inlineFunc.second;
+				consider_as_Extern = false;
+				break;
+			}
+		}
+		if( consider_as_Extern )
+			externFuncStr += "extern " + declFunc->unparseToString() + '\n';
 	}
 }
 
@@ -425,6 +436,16 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 			case V_SgFunctionDeclaration: {
 				/* Collect all extern functions in this file */
 				SgFunctionDeclaration *declFunc = dynamic_cast<SgFunctionDeclaration *>(astNode);
+				SgFunctionModifier declModf     = declFunc->get_functionModifier();
+				
+				/* Inline function are copied to be put in loops files where neccesary 
+				   Function body is present only here through function declaration. */
+				if( declModf.isInline() ){
+					string inline_func_str = declFunc->unparseToString() + '\n';
+					inline_func_map.insert( pair<SgFunctionDeclaration*,string>
+							(declFunc, inline_func_str) );
+				}
+				
 				if( SageInterface::isExtern(declFunc) ){
 					header_set.push_back( declFunc->unparseToString() +'\n' );
 				} 
