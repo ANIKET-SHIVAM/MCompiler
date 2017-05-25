@@ -44,6 +44,8 @@ void ProfilerC::checkCompilerCandidates(){
 		cout << "Couldn't find in PATH: pgcc (PGI)" << endl;
 	}
 	
+	/* Disabling PLuTo for now */	
+	/*
 	result_compiler_found = executeCommand( "polycc" );
 	if( result_compiler_found.find("not found") == string::npos ){
 		compiler_candidate[compiler_Pluto] = true;	
@@ -51,6 +53,7 @@ void ProfilerC::checkCompilerCandidates(){
 	} else {
 		cout << "Couldn't find in PATH: polycc (Pluto)" << endl;
 	}
+	*/
 
 	result_compiler_found = executeCommand( "clang -O3 -mllvm -polly" );
 	if( result_compiler_found.find("not found") == string::npos ){

@@ -59,7 +59,7 @@ string mCompiler_curr_dir_path;
 /* For the extractor */
 vector<string> mCompiler_input_file = vector<string>();
 vector<string> mCompiler_object_file;
-string mCompiler_binary_name       = "mCompiler_out"; //Default: If CL provided then replaced with that name
+string mCompiler_binary_name       = "a_mc.out"; //Default: If CL provided then replaced with that name
 /* Extractor passes to Profiler */
 set<string> files_to_compile;
 int    mCompiler_profiler_runs     = 3; //Default: If CL provided then replaced with that number
