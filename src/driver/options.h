@@ -41,7 +41,7 @@ map< mCompiler_options, bool > mCompiler_enabled_options;
 
 const option::Descriptor usage[] =
 {
-	{UNKNOWN            , 0, ""  , ""              ,Arg::None     , "Usage:  mCompiler <input.c> [options] [-o output]\nOptions:" },
+	{UNKNOWN            , 0, ""  , ""              ,Arg::None     , "Usage:  mCompiler <input_files> [options] [-o output]\nOptions:" },
 	{HELP               , 0, "h" , "help"          ,Arg::None     , "    -h,--help            Print usage" },
 	{EXTRACT            , 0, ""  , "noextract"     ,Arg::None     , "    --[no]extract        Extract hotspots" },
 	{PROFILE            , 0, ""  , "noprofile"     ,Arg::None     , "    --[no]profile        Profile extracted hotspots" },
@@ -97,6 +97,8 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		option::printUsage(fwrite, stdout, usage, columns);
 		exit(EXIT_FAILURE);
 	}
+	
+	bool postSourceFlags = false;
 
 	for (int i = 0; i < parse.optionsCount(); ++i){
 		option::Option& opt = buffer[i];
@@ -125,6 +127,8 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		case COMPILE_TO_OBJECT:
 			mCompiler_enabled_options[COMPILE_TO_OBJECT] = true;
+			mCompiler_input_file.push_back(opt.arg);
+			postSourceFlags = true;
 			break;
 		case PROFILE_COUNT:
 			mCompiler_profiler_runs = atoi(opt.arg);
@@ -149,8 +153,6 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		}
 	}
-	
-	bool postSourceFlags = false;
 	
 	for (int i = 0; i < parse.nonOptionsCount(); ++i){
 		string str = parse.nonOption(i);

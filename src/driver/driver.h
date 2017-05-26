@@ -30,6 +30,7 @@ public:
 	string getLoopTimingVarSuffix() { return loopTimingVarSuffix; };
 	src_lang getSrcType() { return src_type; }
 	string getDataFolderPath() { return mCompiler_data_folder_path; };
+	void checkCompilerCandidates();
 	void setMCompilerMode();
 	void createMCompilerDataFolder();
 	void generateMCompilerHeaderFile();

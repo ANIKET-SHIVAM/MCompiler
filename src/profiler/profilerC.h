@@ -32,7 +32,6 @@ public:
 	ProfilerC( bool parallel_enabled );
 	string getDataFolderPath() { return mCompiler_data_folder_path; };
 	bool isParallelEnabled()   { return parallel; };
-	void checkCompilerCandidates();
 
 	// Phase 1
 	void Optimize( const map< compiler_type, bool >::iterator &curr_candidate );
@@ -41,7 +40,7 @@ public:
 	// Phase 2
 	void Profile( const map< compiler_type, bool >::iterator &curr_candidate );
 	void independentProfile();
-	void getObjectFiles( const string& compiler_name ); 
+	void getObjectFiles( const string& compiler_str ); 
 	/* getObjectFiles-Only needed if mCompiler started at Profiling phase */ 
 	void linkFiles();
 	void gatherProfilingData( const string& binary_file, compiler_type curr_compiler );

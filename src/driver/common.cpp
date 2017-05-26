@@ -37,8 +37,8 @@ map<compiler_type, string> compiler_keyword = {
 	{ compiler_Polly, polly_str.substr(1,string::npos) },
 };	
 
-/* Change baseline compiler to come from CL, since ICC may not always be there */
-string baseline_compiler_str = compiler_keyword[compiler_ICC];
+/* Set baseline compiler to come from CL */
+string baseline_compiler_str;
 
 /* Mode in which mCompiler is working */
 compiler_mode mCompiler_mode = mode_FULL_PASS;

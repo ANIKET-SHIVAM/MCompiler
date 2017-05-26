@@ -1,9 +1,93 @@
 #include "driver.h"
 
+// Check present compilers in the system to find possible candidates for optimizing
+void Driver::checkCompilerCandidates(){
+	compiler_candidate = {
+		{ compiler_ICC,    false  },
+		{ compiler_GCC,    false  },
+		{ compiler_LLVM,   false  },
+		{ compiler_PGI,    false  },
+		{ compiler_Pluto,  false  },
+		{ compiler_Polly,  false  }
+	};
+	string result_compiler_found;
+	
+	result_compiler_found = executeCommand( "icc" );
+	if( result_compiler_found.find("not found") == string::npos ){
+		compiler_candidate[compiler_ICC] = true;	
+		cout << "Found in PATH: icc" << endl;
+	} else {
+		cout << "Couldn't find in PATH: icc" << endl;
+	}
+
+	result_compiler_found = executeCommand( "gcc" );
+	if( result_compiler_found.find("not found") == string::npos ){
+		compiler_candidate[compiler_GCC] = true;	
+		cout << "Found in PATH: gcc" << endl;
+	} else {
+		cout << "Couldn't find in PATH: gcc" << endl;
+	}
+
+	result_compiler_found = executeCommand( "clang" );
+	if( result_compiler_found.find("not found") == string::npos ){
+		compiler_candidate[compiler_LLVM] = true;	
+		cout << "Found in PATH: clang (LLVM)" << endl;
+	} else {
+		cout << "Couldn't find in PATH: clang (LLVM)" << endl;
+	}
+
+	result_compiler_found = executeCommand( "pgcc" );
+	if( result_compiler_found.find("not found") == string::npos ){
+		compiler_candidate[compiler_PGI] = true;	
+		cout << "Found in PATH: pgcc (PGI)" << endl;
+	} else {
+		cout << "Couldn't find in PATH: pgcc (PGI)" << endl;
+	}
+	
+	/* Disabling PLuTo for now */	
+	/*
+	result_compiler_found = executeCommand( "polycc" );
+	if( result_compiler_found.find("not found") == string::npos ){
+		compiler_candidate[compiler_Pluto] = true;	
+		cout << "Found in PATH: polycc (Pluto)" << endl;
+	} else {
+		cout << "Couldn't find in PATH: polycc (Pluto)" << endl;
+	}
+	*/
+
+	result_compiler_found = executeCommand( "clang -O3 -mllvm -polly" );
+	if( result_compiler_found.find("not found") == string::npos ){
+		compiler_candidate[compiler_Polly] = true;	
+		cout << "Found in PATH: clang -O3 -mllvm -polly (Polly+LLVM)" << endl;
+	} else {
+		cout << "Couldn't find in PATH: clang -O3 -mllvm -polly (Polly+LLVM)" << endl;
+	}
+	
+	/* Set baseline compiler as per the order in the map above */	
+	for( auto const &candidate : compiler_candidate ){
+		if( candidate.second ){
+			baseline_compiler_str = compiler_keyword[candidate.first];
+			cout << "Baseline Compiler: " << compiler_keyword[candidate.first] << endl;
+			break;
+		}
+	}
+
+	/* If no compiler found in path */
+	if( baseline_compiler_str.empty() ){
+		cerr << "Couldn't find any compiler in PATH" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	/* In common.h */
+	addOptimizationFlags();
+	addLinkerFlags();
+	addPostLinkerFlags();
+}
+
 void Driver::setMCompilerMode(){
 	/* Check if CL had neither object file nor source files */
 	if( mCompiler_object_file.empty() && mCompiler_input_file.empty() ){
-		cerr << "Driver: Neither source files nor object files provided" << endl;
+		cerr << "Driver: Neither source files nor object files provided. See -help." << endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -126,31 +210,11 @@ void Driver::initiateExtractor( string file_name ){
 }
 
 void Driver::initiateProfiler( bool parallel ){
-	src_lang src_type = extr->getSrcType();
-	if( src_type == src_lang_C ){
-		prof = new ProfilerC( parallel );
-	}else if( src_type == src_lang_C ){
-		//ProfilerCPP( string data_folder_path );
-	} else if( src_type == src_lang_FORTRAN ){
-		//ProfilerFortran( string data_folder_path );
-	} else {
-		cerr << "Unknown source extention" << endl;
-		exit(EXIT_FAILURE);
-	}
+	prof = new ProfilerC( parallel );
 }
 
 void Driver::initiateSynthesizer( bool parallel){
-	src_lang src_type = extr->getSrcType();
-	if( src_type == src_lang_C ){
-		synth = new SynthesizerC( parallel );
-	}else if( src_type == src_lang_C ){
-		//SynthesizerCPP( string data_folder_path );
-	} else if( src_type == src_lang_FORTRAN ){
-		//SynthesizerFortran( string data_folder_path );
-	} else {
-		cerr << "Unknown source extention" << endl;
-		exit(EXIT_FAILURE);
-	}
+	synth = new SynthesizerC( parallel );
 }
 
 int main( int argc, char* argv[] ){
@@ -161,6 +225,7 @@ int main( int argc, char* argv[] ){
 	
 	set_mCompiler_options( argc, argv );
 
+	driver->checkCompilerCandidates();
 	driver->setMCompilerMode();
 	
 	/* Send all files in the command line for extraction */

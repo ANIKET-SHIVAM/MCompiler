@@ -1,74 +1,5 @@
 #include "profilerC.h"
 
-// Check present compilers in the system to find possible candidates for optimizing
-void ProfilerC::checkCompilerCandidates(){
-	compiler_candidate = {
-		{ compiler_ICC,    false  },
-		{ compiler_GCC,    false  },
-		{ compiler_LLVM,   false  },
-		{ compiler_PGI,    false  },
-		{ compiler_Pluto,  false  },
-		{ compiler_Polly,  false  }
-	};
-	string result_compiler_found;
-	// Can be written better, maybe later!
-	result_compiler_found = executeCommand( "icc" );
-	if( result_compiler_found.find("not found") == string::npos ){
-		compiler_candidate[compiler_ICC] = true;	
-		cout << "Found in PATH: icc" << endl;
-	} else {
-		cout << "Couldn't find in PATH: icc" << endl;
-	}
-
-	result_compiler_found = executeCommand( "gcc" );
-	if( result_compiler_found.find("not found") == string::npos ){
-		compiler_candidate[compiler_GCC] = true;	
-		cout << "Found in PATH: gcc" << endl;
-	} else {
-		cout << "Couldn't find in PATH: gcc" << endl;
-	}
-
-	result_compiler_found = executeCommand( "clang" );
-	if( result_compiler_found.find("not found") == string::npos ){
-		compiler_candidate[compiler_LLVM] = true;	
-		cout << "Found in PATH: clang (LLVM)" << endl;
-	} else {
-		cout << "Couldn't find in PATH: clang (LLVM)" << endl;
-	}
-
-	result_compiler_found = executeCommand( "pgcc" );
-	if( result_compiler_found.find("not found") == string::npos ){
-		compiler_candidate[compiler_PGI] = true;	
-		cout << "Found in PATH: pgcc (PGI)" << endl;
-	} else {
-		cout << "Couldn't find in PATH: pgcc (PGI)" << endl;
-	}
-	
-	/* Disabling PLuTo for now */	
-	/*
-	result_compiler_found = executeCommand( "polycc" );
-	if( result_compiler_found.find("not found") == string::npos ){
-		compiler_candidate[compiler_Pluto] = true;	
-		cout << "Found in PATH: polycc (Pluto)" << endl;
-	} else {
-		cout << "Couldn't find in PATH: polycc (Pluto)" << endl;
-	}
-	*/
-
-	result_compiler_found = executeCommand( "clang -O3 -mllvm -polly" );
-	if( result_compiler_found.find("not found") == string::npos ){
-		compiler_candidate[compiler_Polly] = true;	
-		cout << "Found in PATH: clang -O3 -mllvm -polly (Polly+LLVM)" << endl;
-	} else {
-		cout << "Couldn't find in PATH: clang -O3 -mllvm -polly (Polly+LLVM)" << endl;
-	}
-
-	/* In common.h */
-	addOptimizationFlags();
-	addLinkerFlags();
-	addPostLinkerFlags();
-}
-
 /* 
  * Phase 1 of profiler: Compile all .c files to .o,
  * with available compilers and with appropriate flags (serial/parallel).
@@ -341,19 +272,39 @@ void ProfilerC::Optimize( const map< compiler_type, bool >::iterator &curr_candi
 /* 
  * Phase 2 of profiler: Collect all .o from same compiler,
  * link to create an executable and run multiple times,
- * put timing data for each loop in .csv file for combiner to use.
+ * put timing data for each loop in the profile_data_map & .csv file for synthesizer to use.
  */ 
-void ProfilerC::getObjectFiles( const string& compiler_name ){
+void ProfilerC::getObjectFiles( const string& compiler_str ){
 	DIR *dir;
 	struct dirent *ent;
+	/* If in Complex mode, then also fetch from dir */
 	files_to_link.clear();
+
+	string mCompiler_header_str = mCompiler_header_code_name.substr(0,mCompiler_header_code_name.find_last_of('.'));
 	if ( ( dir = opendir( ( getDataFolderPath() ).c_str() ) ) != NULL) {
 		/* print all the files and directories within directory */
 		while ( ( ent = readdir(dir) ) != NULL ){
 			string filename( ent->d_name );
-			if( filename.at(0) != '.' && isEndingWith(filename,compiler_name+dot_o_str) ){
+			if( filename.at(0) != '.' && 
+				isEndingWith(filename, mCompiler_profile_file_tag + compiler_str + dot_o_str) ){
 				files_to_link.insert( getDataFolderPath() + ent->d_name );
 				cout << "Adding files for Linking: " << ent->d_name << endl;
+			}
+			if( filename.at(0) != '.' && 
+				isEndingWith(filename, mCompiler_header_str + compiler_str + dot_o_str) ){
+				files_to_link.insert( getDataFolderPath() + ent->d_name );
+				cout << "Adding files for Linking: " << ent->d_name << endl;
+			}
+			// Store base obj file for synthesizer
+			if( filename.find(base_str) != string::npos &&
+				filename.find(compiler_str) != string::npos && 
+				filename.find(mCompiler_profile_file_tag) == string::npos ){
+				if( base_obj_path.find( compiler_str ) == base_obj_path.end() ){	
+					vector<string> *temp_vec = new vector<string>();
+					base_obj_path.insert( pair<string,vector<string>* >(compiler_str, temp_vec) );
+				}
+				map< string, vector<string>* >::iterator mIter = base_obj_path.find( compiler_str );
+				(mIter->second)->push_back( getDataFolderPath() + filename );
 			}
 		}
 		closedir (dir);
@@ -384,7 +335,7 @@ void ProfilerC::gatherProfilingData( const string& binary_file, compiler_type cu
 	}
 
 	for( int i = 0; i < mCompiler_profiler_runs; i++ ){
-		cerr << "Profiler: Run " << i << endl; 
+		cerr << "Profiler: Run " << (i+1) << endl; 
 		string result;
 		result = executeCommand( binary_file );
 		
@@ -469,12 +420,6 @@ void ProfilerC::iccProfile( bool asPlutoBackend ){
 		curr_compiler = compiler_Pluto;
 	}
 	
-	/* If mCompiler is started in Profile mode */
-	if( files_to_link.empty() ){
-		cerr << "Profiler: Required object files are not present" << endl;
-		getObjectFiles(compiler_str);
-	}
-
 	/* For gathering object files */
 	set<string>::iterator iters;
 	string object_files;
@@ -500,10 +445,6 @@ void ProfilerC::iccProfile( bool asPlutoBackend ){
 }
 
 void ProfilerC::gccProfile(){
-	if( files_to_link.empty() ){
-		cerr << "Profiler: Required object files are not present" << endl;
-		getObjectFiles(gcc_str);
-	}
 	string CL;
 	
 	vector<string>::iterator iterv;
@@ -545,10 +486,6 @@ void ProfilerC::llvmProfile( bool withPollyPlugin ){
 		compiler_in_action = compiler_Polly;
 		compiler_str = polly_str;
 	}
-	if( files_to_link.empty() ){
-		cerr << "Profiler: Required object files are not present" << endl;
-		getObjectFiles(compiler_str);
-	}
 	
 	/* Since Linker flags for Polly are same as LLVM */
 	string CL;	
@@ -580,10 +517,6 @@ void ProfilerC::llvmProfile( bool withPollyPlugin ){
 }
 
 void ProfilerC::pgiProfile(){
-		if( files_to_link.empty() ){
-		cerr << "Profiler: Required object files are not present" << endl;
-		getObjectFiles(pgi_str);
-	}
 	string CL;
 	
 	vector<string>::iterator iterv;
@@ -628,6 +561,11 @@ void ProfilerC::Profile( const map< compiler_type, bool >::iterator &curr_candid
 	bool asPlutoBackend = false;
 	bool withPollyPlugin = false;
 	if( curr_candidate->second == true ){
+		/* Fetch .o from mCompiler data dir if step or complex compilation */
+		if( mCompiler_mode == mode_FROM_OBJECT || mCompiler_mode == mode_COMPLEX ){
+			getObjectFiles(compiler_keyword[curr_candidate->first]);
+		}
+
 		switch (curr_candidate->first) {
 			case compiler_ICC:
 				iccProfile(asPlutoBackend); break;
@@ -649,7 +587,6 @@ void ProfilerC::Profile( const map< compiler_type, bool >::iterator &curr_candid
 /* Constructor */
 ProfilerC::ProfilerC( bool parallel_enabled ){
 	parallel = parallel_enabled;
-	checkCompilerCandidates();
 	/* Rotate through compiler candidates for optimize and profile */
 	map< compiler_type, bool >::iterator iter;
 	for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
