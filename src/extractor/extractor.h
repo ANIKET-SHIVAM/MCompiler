@@ -29,6 +29,7 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	string mCompiler_file_extn;
 	SgScopeStatement* main_scope = NULL;
 	bool nonVoidMain = false;
+	SgStatement *lastIncludeStmt = NULL;
 	SgGlobal *global_node; // Needed to add the extern calls
 	set<SgNode*> astNodesCollector; //Required to not add loop functions on Ast Post Processing
 	vector<SgStatement*> externLoopFuncDefinitionsAdd;
@@ -47,6 +48,7 @@ public:
 
 	src_lang getSrcType() { return src_type; }
 	SgGlobal* getGlobalNode() { return global_node; }
+	SgStatement* getLastIncludeStatement() { return lastIncludeStmt; }
 	string getDataFolderPath() { return mCompiler_data_folder_path; };
 	string getLoopTimingVarSuffix() { return loopTimingVarSuffix; };
 

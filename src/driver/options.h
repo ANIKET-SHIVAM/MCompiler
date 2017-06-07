@@ -55,7 +55,7 @@ const option::Descriptor usage[] =
 																							  "collect data. Default: 3" },
 	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>       Input to the program."
 																							  "Needed to generate profiling information" },
-	{COMPILE_TO_OBJECT  , 0, "c" , "compile"       ,Arg::Required , "    -c[<arg>]            Compile to object file" },
+	{COMPILE_TO_OBJECT  , 0, "c" , "compile"       ,Arg::None     , "    -c[<arg>]            Compile to object file" },
 	{OUTPUT_BINARY      , 0, "o" , "output"        ,Arg::Required , "    -o[<arg>]            Output object/binary name" },
 	{INCLUDE_PATH       , 0, "I" , "include"       ,Arg::Required , "    -I[<arg>]            Directory to include file search path" },
 	{LINKER_PATH        , 0, "L" , "link"          ,Arg::Required , "    -L[<arg>]            Directory to search for libraries" },
@@ -98,6 +98,18 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		exit(EXIT_FAILURE);
 	}
 	
+	/* After Help option is printed in case no args or -help flag */
+	string pwd_result = executeCommand("pwd");
+	// To skip last \n chracter
+	pwd_result.pop_back();
+
+	if( pwd_result.empty() ){
+		cerr << "Driver: Cannot run command 'pwd'" << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	mCompiler_curr_dir_path    = pwd_result + forward_slash_str;
+	
 	bool postSourceFlags = false;
 
 	for (int i = 0; i < parse.optionsCount(); ++i){
@@ -127,8 +139,6 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		case COMPILE_TO_OBJECT:
 			mCompiler_enabled_options[COMPILE_TO_OBJECT] = true;
-			mCompiler_input_file.push_back(opt.arg);
-			postSourceFlags = true;
 			break;
 		case PROFILE_COUNT:
 			mCompiler_profiler_runs = atoi(opt.arg);

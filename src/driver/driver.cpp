@@ -113,31 +113,35 @@ void Driver::setMCompilerMode(){
 
 void Driver::createMCompilerDataFolder(){
 	// TODO: If -o is provided, then data_folder at that location
-	string pwd_result = executeCommand("pwd");
-	// To skip last \n chracter
-	pwd_result.pop_back();
-
-	if( pwd_result.empty() ){
-		cerr << "Driver: Cannot run command 'pwd'" << endl;
-		exit(EXIT_FAILURE);
-	}
-
-	mCompiler_curr_dir_path    = pwd_result + forward_slash_str;
 	mCompiler_data_folder_path = mCompiler_curr_dir_path + mCompiler_data_folder + forward_slash_str;
 	
-	if (!isDirExist(mCompiler_data_folder_path)) {
+	if (!isDirExist(mCompiler_data_folder_path)){
 		const int dir_err = mkdir(mCompiler_data_folder_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 		if (dir_err == -1) {
 			cout << "Error creating mCompiler data directory:" << mCompiler_data_folder_path << endl;
 			exit(EXIT_FAILURE);
 		}
+	} else {
+		/* Clean existing mCompiler data folder */
+		//executeCommand("rm " + mCompiler_data_folder_path + "*");
 	}
 }
 
 void Driver::generateMCompilerHeaderFile(){
-	/* Create mCompiler header file */
-	header_file_buf.open( (getDataFolderPath()+mCompiler_header_name).c_str(), ofstream::out );
-    header_file_buf << "#ifndef MCOMPILER_H" << endl << "#define MCOMPILER_H" << endl;
+	bool isPresent = false;
+	if( isFileExist(getDataFolderPath()+mCompiler_header_name) )
+		isPresent = true;
+	header_file_buf.close();
+	
+	string temp_str = "void " + printTimingVarFuncName + "();";	
+	if(isPresent)	
+		executeCommand("sed -i '/" + temp_str + "/d;/" + "#endif" + "/d' " + getDataFolderPath()+mCompiler_header_name );
+	
+	/* Create/Append mCompiler header file */
+	header_file_buf.open( (getDataFolderPath()+mCompiler_header_name).c_str(), ofstream::out|ofstream::app );
+	
+	if(!isPresent)
+		header_file_buf << "#ifndef MCOMPILER_H" << endl << "#define MCOMPILER_H" << endl;
 
 	/* add global timing vars to the header */
 	vector<string>::iterator iter;
@@ -145,15 +149,20 @@ void Driver::generateMCompilerHeaderFile(){
 		header_file_buf << "double " << getLoopTimingVarSuffix() + *iter << ";" << endl;
 	}
 
-	header_file_buf << "void " << printTimingVarFuncName << "();" << endl;
+	header_file_buf << temp_str << endl;
 	header_file_buf << "#endif" << endl;
 	
 	header_file_buf.close();
 
-	/* Now open mCompiler header's code file */	
-	header_code_file_buf.open( (getDataFolderPath()+mCompiler_header_code_name).c_str(), ofstream::out );
-	header_code_file_buf << "#include \"" << mCompiler_header_name << "\"" << endl;
-	header_code_file_buf << "void " << printTimingVarFuncName << "(){" << endl;
+	temp_str = "}";
+	if(isPresent)	
+		executeCommand("sed -i '/" + temp_str + "/d' " + getDataFolderPath()+mCompiler_header_code_name );
+	/* Now open/append mCompiler header's code file */	
+	header_code_file_buf.open( (getDataFolderPath()+mCompiler_header_code_name).c_str(), ofstream::out|ofstream::app );
+	if(!isPresent){
+		header_code_file_buf << "#include \"" << mCompiler_header_name << "\"" << endl;
+		header_code_file_buf << "void " << printTimingVarFuncName << "(){" << endl;
+	}
 	
 	for( iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end(); iter++){
 		if( getSrcType() == src_lang_C ){
@@ -162,10 +171,15 @@ void Driver::generateMCompilerHeaderFile(){
 			header_code_file_buf << "std::cout << std::endl \"" << *iter + mCompiler_timing_keyword << " \" << std::setprecision(9) << " <<  getLoopTimingVarSuffix() + *iter << " << std::endl;" << endl;
 		}
 	}
-	header_code_file_buf << "}" << endl;
+	header_code_file_buf << temp_str << endl;
 	header_code_file_buf.close();
 	files_to_compile.insert(getDataFolderPath()+mCompiler_header_code_name);
 
+}
+
+void Driver::copyInFolderHeaders( string folder_path ){
+	string cmd_str = "cp -u " + folder_path + "*.h " + getDataFolderPath();
+	executeCommand(cmd_str);
 }
 
 /* file_name is the relative path to the file to be extracted */
@@ -207,6 +221,9 @@ void Driver::initiateExtractor( string file_name ){
 	if( isLastSrcFile ){
 		generateMCompilerHeaderFile();
 	}
+	/* Copy headers that are in same folder as Source to mC data folder */ 	
+	copyInFolderHeaders(extr->getFilePath());
+	
 }
 
 void Driver::initiateProfiler( bool parallel ){
@@ -220,10 +237,11 @@ void Driver::initiateSynthesizer( bool parallel){
 int main( int argc, char* argv[] ){
 	Driver *driver = new Driver();
 	
-	/* TODO: Clear the mCompiler data folder, if starting from beginning */
+	set_mCompiler_options( argc, argv );
+	
 	driver->createMCompilerDataFolder();
 	
-	set_mCompiler_options( argc, argv );
+	genRandomStr(mCompiler_unique_str, 5);	
 
 	driver->checkCompilerCandidates();
 	driver->setMCompilerMode();

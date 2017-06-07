@@ -63,6 +63,8 @@ extern compiler_mode mCompiler_mode;
 
 extern string mCompiler_timing_keyword;
 
+extern string mCompiler_unique_str;
+
 extern string printTimingVarFuncName; 
 extern string loopTimingVarSuffix;
 extern string mCompiler_profile_file_tag;
@@ -120,4 +122,5 @@ bool isEndingWithCompilerName( string const &fullString );
 double getVectorMean( vector<double>* dataVec );
 double getVectorStdev( vector<double>* dataVec );
 double getVectorMedian( vector<double>* dataVec );
+void genRandomStr( string &str, const int len );
 #endif

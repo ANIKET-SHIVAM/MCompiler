@@ -46,6 +46,9 @@ compiler_mode mCompiler_mode = mode_FULL_PASS;
 /* Used by extractor to differentiate from other stdout */
 string mCompiler_timing_keyword = "_mCompilerInfo:";
 
+/* Each run of mCompiler will have a unique str associated to it */
+string mCompiler_unique_str = "";
+
 string printTimingVarFuncName     = "printAccumulatedTimes";
 string loopTimingVarSuffix        = "accumulatorTime_";
 string mCompiler_profile_file_tag = "_mCProfile_";
@@ -294,4 +297,13 @@ double getVectorMedian( vector<double>* dataVec ){
 	return dataVec->at( dataVec->size() / 2 );
 }
 
+void genRandomStr( string &str, const int len ){
+	static const char alphanum[] =
+		"0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
 
+    for( int i = 0; i < len; ++i ){
+        str += alphanum[ rand() % (sizeof(alphanum) - 1) ];
+    }
+}

@@ -8,7 +8,7 @@
 
 string Extractor::getFilePath( const string &fileNameWithPath ) {
 	int lastSlashPos = fileNameWithPath.find_last_of('/');
-	return ( fileNameWithPath.substr(0, lastSlashPos) ); 
+	return ( fileNameWithPath.substr(0, lastSlashPos+1) ); 
 }
 
 string Extractor::getFileName( const string &fileNameWithPath ) {
@@ -42,7 +42,7 @@ int Extractor::getAstNodeLineNum( SgNode *const &astNode ) {
 
 string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 	string fileNameWithPath = (astNode->get_file_info())->get_filenameString();
-	//string filePath = getFilePath(fileNameWithPath);
+	mCompiler_file_path = getFilePath(fileNameWithPath);
 	mCompiler_file_name = getFileName(fileNameWithPath);
 	mCompiler_file_extn = getFileExtn(fileNameWithPath);
 	int lineNumber = getAstNodeLineNum(astNode);
@@ -114,10 +114,11 @@ void LoopInfo::getVarsInScope(){
 	for( iter = sym_table.begin(); iter != sym_table.end(); iter++ ){
 		SgVariableSymbol *var = (*iter)->get_symbol();
 		SgScopeStatement *var_scope = ( var->get_declaration() )->get_scope();
-		
-		/* Neither globals variables nor variables declared inside the loop body should be passed */ 
-		if( !( isSgGlobal(var_scope) || isDeclaredInInnerScope(var_scope) ) && 
-			find( scope_vars_symbol_vec.begin(), scope_vars_symbol_vec.end(), var ) == scope_vars_symbol_vec.end() ){
+			
+		/* Neither globals variables nor variables declared inside the loop body nor struct members(dirty way - scope name not NULL) should be passed */ 
+		if( !( isSgGlobal(var_scope) || isDeclaredInInnerScope(var_scope) || var_scope->get_qualified_name() != "" ) && 
+				find( scope_vars_symbol_vec.begin(), scope_vars_symbol_vec.end(), var ) == scope_vars_symbol_vec.end() ){
+			//cerr << "Var Scope: "<< var->get_name().getString() << ", " << var_scope->get_qualified_name() << endl;
 			//SgVariableSymbol *var = dynamic_cast<SgVariableSymbol *>(*iter);
 			scope_vars_symbol_vec.push_back( var ); // Needed for function call	
 			scope_vars_initName_vec.push_back( var->get_declaration() ); // Needed for function extern defn	
@@ -128,7 +129,17 @@ void LoopInfo::getVarsInScope(){
 				 * Add '_primitive' after primitive parameter name,
 				 * so that actual name can be used inside the body 
 				 */
-				if( (var->get_type())->variantT() == V_SgArrayType ){
+				//cerr << "Var info: "<<var->get_name().getString() << ", " << (var->get_type())->variantT() << endl;
+				bool isTypedefArray = false;
+				if( (var->get_type())->variantT() == V_SgTypedefType ){
+					SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>(var->get_type());
+					if( (type_def_var->get_base_type())->variantT() == V_SgArrayType ){
+						isTypedefArray = true;
+						var_type_str = (type_def_var->get_base_type())->unparseToString();
+					}
+					//cerr << "Typedef: " << (type_def_var->get_base_type())->variantT() << endl;
+				}		
+				if( (var->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
 					int first_square_brac = var_type_str.find_first_of("[");
 					scope_vars_str_vec.push_back( var_type_str.substr( 0,first_square_brac ) + var->get_name().getString()
 										+ var_type_str.substr( first_square_brac ) );
@@ -189,7 +200,13 @@ void LoopInfo::pushPointersToLocalVars( ofstream& loop_file_buf ){
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++ ){
 		string var_type_str = ((*iter)->get_type())->unparseToString();
 		string var_name_str = ((*iter)->get_name()).getString();
-		if( ((*iter)->get_type())->variantT() != V_SgArrayType ){
+		bool isTypedefArray = false;
+		if( ((*iter)->get_type())->variantT() == V_SgTypedefType ){
+			SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>((*iter)->get_type());
+			if( (type_def_var->get_base_type())->variantT() == V_SgArrayType )
+						isTypedefArray = true;
+		}
+		if( ((*iter)->get_type())->variantT() != V_SgArrayType && !isTypedefArray ){
 			loop_file_buf << var_type_str <<" "<< var_name_str <<" = "<<"*"
 				<< var_name_str <<"_primitive" <<";"<< endl; 		
 		}
@@ -204,7 +221,18 @@ void LoopInfo::popLocalVarsToPointers( ofstream& loop_file_buf ){
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++ ){
 		string var_type_str = ((*iter)->get_type())->unparseToString();
 		string var_name_str = ((*iter)->get_name()).getString();
-		if( ((*iter)->get_type())->variantT() != V_SgArrayType ){
+		bool isTypedefArray = false;
+		if( ((*iter)->get_type())->variantT() == V_SgTypedefType ){
+			SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>((*iter)->get_type());
+			if( (type_def_var->get_base_type())->variantT() == V_SgArrayType )
+						isTypedefArray = true;
+		}
+
+		bool isConst = false;
+		if( SageInterface::isConstType((*iter)->get_type()) )
+			isConst = true;
+		
+		if( ((*iter)->get_type())->variantT() != V_SgArrayType && !isTypedefArray && !isConst ){
 			loop_file_buf <<"*"<< var_name_str <<"_primitive"<<" = "
 				<< var_name_str <<";"<< endl; 		
 		}
@@ -340,7 +368,13 @@ void LoopInfo::addLoopFuncCall(){
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++){
 			if( extr.getSrcType() == src_lang_C ){
 				// 'Address Of' for C except when its an array
-				if( ( (*iter)->get_type() )->variantT() == V_SgArrayType ){
+				bool isTypedefArray = false;
+				if( ((*iter)->get_type())->variantT() == V_SgTypedefType ){
+					SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>((*iter)->get_type());
+					if( (type_def_var->get_base_type())->variantT() == V_SgArrayType )
+								isTypedefArray = true;
+				}
+				if( ( (*iter)->get_type() )->variantT() == V_SgArrayType || isTypedefArray ){
 					expr_list.push_back( SageBuilder::buildVarRefExp( (*iter) ) );
 				} else {
 					expr_list.push_back( SageBuilder::buildAddressOfOp
@@ -486,6 +520,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 					if (directiveTypeName == "CpreprocessorIncludeDeclaration" &&
 						find( header_set.begin(), header_set.end(), headerName ) ==  header_set.end()) {
 						header_set.push_back(headerName);
+						lastIncludeStmt = locatedNode_SgStatement;	
 						//cerr << "Header: " << headerName << endl;	
 					}	
 					// #define
@@ -551,6 +586,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 							if( var_str.find(ignorePrettyFunctionCall) == string::npos )	
 								global_vars.insert( var_type_str + " " + var_str );
 						}
+						lastIncludeStmt = dynamic_cast<SgStatement *>(astNode);	
 					}
 					if (isSgClassDefinition(scope) != NULL)
 					{
@@ -558,6 +594,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 						if (variableDeclaration->get_declarationModifier().get_storageModifier().isStatic() == true){
 							//cerr << "Found a static global var: " << var_type_str + " " + initializedName->get_name().getString() << endl;	
 							global_vars.insert( var_type_str + " " + initializedName->get_name().getString() );
+							lastIncludeStmt = dynamic_cast<SgStatement *>(astNode);	
 						}
 					}
 				}	
@@ -585,7 +622,17 @@ int Extractor::evaluateSynthesizedAttribute( SgNode *astNode, InheritedAttribute
 }
 
 void Extractor::addPostTraversalDefs(){
-	SageInterface::prependStatementList( externLoopFuncDefinitionsAdd, getGlobalNode() );
+	/* LastIncludeStatement point to either last include or global var declr
+	 * Due to bug in rosem insert After on include statement skip the next subtree */
+	if( getLastIncludeStatement() != NULL ){
+		if( isSgVariableDeclaration( getLastIncludeStatement() ) != NULL  )
+			SageInterface::insertStatementListAfter( getLastIncludeStatement(), externLoopFuncDefinitionsAdd );
+		else
+			SageInterface::insertStatementListBefore( getLastIncludeStatement(), externLoopFuncDefinitionsAdd );
+			
+	} else {
+		SageInterface::appendStatementList( externLoopFuncDefinitionsAdd, getGlobalNode() );
+	}
 }
 
 void Extractor::addTimingFuncCallVoidMain(){
@@ -633,8 +680,14 @@ Extractor::Extractor( const vector<string> &argv ){
 	// cp mCompiler_data/filename_base.x mCompiler_data/filename_base_profile_.x
 	executeCommand( "mv rose_"+ getFileName() + "." + getFileExtn() + space_str + base_file );
 	executeCommand( "cp " + base_file + space_str + base_file_profile );
-
+	
+	/* Remove static keyword from variables and functions in both profile and non-profile file */
+	string sed_command1 = "sed -i 's/static //g' " + base_file;
+	executeCommand( sed_command1 );
+	sed_command1 = "sed -i 's/static //g' " + base_file_profile;
+	executeCommand( sed_command1 );
+	
 	/* Remove mCompile header and accumulater timing var print function from non profile base file */
-	string sed_command = "sed -i '/" + mCompiler_header_name + "/d;/" + printTimingVarFuncName + "/d' " + base_file;
-	executeCommand( sed_command );
+	string sed_command2 = "sed -i '/" + mCompiler_header_name + "/d;/" + printTimingVarFuncName + "/d' " + base_file;
+	executeCommand( sed_command2 );
 }
