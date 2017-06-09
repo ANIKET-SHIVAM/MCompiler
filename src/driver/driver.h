@@ -34,6 +34,7 @@ public:
 	void setMCompilerMode();
 	void createMCompilerDataFolder();
 	void generateMCompilerHeaderFile();
+	void fetchProfilerInput();
 	void copyInFolderHeaders( string folder_path );
 	void initiateExtractor( string file_name );
 	void initiateProfiler( bool parallel );

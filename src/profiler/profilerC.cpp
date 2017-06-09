@@ -337,7 +337,7 @@ void ProfilerC::gatherProfilingData( const string& binary_file, compiler_type cu
 	for( int i = 0; i < mCompiler_profiler_runs; i++ ){
 		cerr << "Profiler: Run " << (i+1) << endl; 
 		string result;
-		result = executeCommand( binary_file );
+		result = executeCommand( binary_file + space_str + mCompiler_profiler_input );
 		
 		/* Store result of execution(loops and their running time) */
 		stringstream line_stream(result);

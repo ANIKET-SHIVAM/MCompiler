@@ -26,7 +26,7 @@ void Tester::testCompilerCandidates(){
 
 			CL.clear();
 			CL = "time " + curr_binary;
-			string result_execution = executeCommand(CL);
+			string result_execution = executeCommand(CL + space_str + mCompiler_profiler_input);
 			
 			stringstream line_stream(result_execution);
 			string cell;	

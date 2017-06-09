@@ -112,7 +112,6 @@ void Driver::setMCompilerMode(){
 }
 
 void Driver::createMCompilerDataFolder(){
-	// TODO: If -o is provided, then data_folder at that location
 	mCompiler_data_folder_path = mCompiler_curr_dir_path + mCompiler_data_folder + forward_slash_str;
 	
 	if (!isDirExist(mCompiler_data_folder_path)){
@@ -182,6 +181,29 @@ void Driver::copyInFolderHeaders( string folder_path ){
 	executeCommand(cmd_str);
 }
 
+/* Fetch profiler input args and required data files */
+void Driver::fetchProfilerInput(){
+	if( mCompiler_profiler_input.empty() )
+		return;
+	vector<string> temp_vec;
+	string temp = getAbsolutePath(mCompiler_profiler_input);
+	string line;
+	ifstream input_file(temp);
+	if (input_file.is_open()){
+		while( getline(input_file,line) ){
+			istringstream iss(line);
+			vector<string>tokens{istream_iterator<string>{iss},
+					 istream_iterator<string>{}};
+			temp_vec.insert(temp_vec.end(), tokens.begin(), tokens.end());	
+		}
+		input_file.close();
+	}
+	mCompiler_profiler_input = "";
+	for( auto const &arg : temp_vec ){
+		mCompiler_profiler_input += arg + space_str;
+	}
+}
+
 /* file_name is the relative path to the file to be extracted */
 void Driver::initiateExtractor( string file_name ){
     if (FILE *file = fopen(file_name.c_str(), "r")) {
@@ -236,13 +258,16 @@ void Driver::initiateSynthesizer( bool parallel){
 
 int main( int argc, char* argv[] ){
 	Driver *driver = new Driver();
+	/* Get current working directory path */
+	mCompiler_curr_dir_path = getAbsolutePath(".");
 	
 	set_mCompiler_options( argc, argv );
 	
 	driver->createMCompilerDataFolder();
 	
 	genRandomStr(mCompiler_unique_str, 5);	
-
+	
+	driver->fetchProfilerInput();
 	driver->checkCompilerCandidates();
 	driver->setMCompilerMode();
 	

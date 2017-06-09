@@ -307,3 +307,15 @@ void genRandomStr( string &str, const int len ){
         str += alphanum[ rand() % (sizeof(alphanum) - 1) ];
     }
 }
+
+string getAbsolutePath( string const &fullString ){
+	string result = executeCommand("realpath " + fullString);
+	// To remove \n at the end
+	result.pop_back();
+	if( result.find("No such file or directory") == string::npos ){
+		return result + forward_slash_str;
+	} else {
+		cerr << "Driver: Incorrect Path -> " << fullString << endl;
+		exit(EXIT_FAILURE);
+	}
+}

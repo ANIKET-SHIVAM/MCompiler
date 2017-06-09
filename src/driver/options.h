@@ -92,23 +92,12 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		exit(EXIT_FAILURE);
 	}
 
+	/* After Help option is printed in case no args or -help flag */
 	if (options[HELP] || argc == 0){
 		int columns = getenv("COLUMNS")? atoi(getenv("COLUMNS")) : 120;
 		option::printUsage(fwrite, stdout, usage, columns);
 		exit(EXIT_FAILURE);
 	}
-	
-	/* After Help option is printed in case no args or -help flag */
-	string pwd_result = executeCommand("pwd");
-	// To skip last \n chracter
-	pwd_result.pop_back();
-
-	if( pwd_result.empty() ){
-		cerr << "Driver: Cannot run command 'pwd'" << endl;
-		exit(EXIT_FAILURE);
-	}
-
-	mCompiler_curr_dir_path    = pwd_result + forward_slash_str;
 	
 	bool postSourceFlags = false;
 
@@ -169,7 +158,7 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		if( isEndingWith( str,".c" ) || isEndingWith( str,".cc" ) || isEndingWith( str,".cpp" ) || 
 			isEndingWith( str,".f" ) || isEndingWith( str,".f77" ) || isEndingWith( str,".f90" ) || isEndingWith( str,".f95" ) ){
 		/* Search for source files in the name */
-			mCompiler_input_file.push_back( str );
+			mCompiler_input_file.push_back( getAbsolutePath(str) );
 			postSourceFlags = true;
 		} else if( isEndingWith( str, ".o" ) ){ 
 		/* Search for object files in the name */
