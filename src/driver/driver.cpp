@@ -259,7 +259,7 @@ void Driver::initiateSynthesizer( bool parallel){
 int main( int argc, char* argv[] ){
 	Driver *driver = new Driver();
 	/* Get current working directory path */
-	mCompiler_curr_dir_path = getAbsolutePath(".");
+	mCompiler_curr_dir_path = getAbsolutePath(".") + forward_slash_str;
 	
 	set_mCompiler_options( argc, argv );
 	

@@ -313,7 +313,7 @@ string getAbsolutePath( string const &fullString ){
 	// To remove \n at the end
 	result.pop_back();
 	if( result.find("No such file or directory") == string::npos ){
-		return result + forward_slash_str;
+		return result;
 	} else {
 		cerr << "Driver: Incorrect Path -> " << fullString << endl;
 		exit(EXIT_FAILURE);
