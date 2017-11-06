@@ -130,14 +130,19 @@ void Driver::generateMCompilerHeaderFile(){
 	bool isPresent = false;
 	if( isFileExist(getDataFolderPath()+mCompiler_header_name) )
 		isPresent = true;
-	header_file_buf.close();
+	//header_file_buf.close();
 	
 	string temp_str = "void " + printTimingVarFuncName + "();";	
 	if(isPresent)	
 		executeCommand("sed -i '/" + temp_str + "/d;/" + "#endif" + "/d' " + getDataFolderPath()+mCompiler_header_name );
 	
 	/* Create/Append mCompiler header file */
-	header_file_buf.open( (getDataFolderPath()+mCompiler_header_name).c_str(), ofstream::out|ofstream::app );
+	if( mCompiler_mode == mode_FULL_PASS ){
+		header_file_buf.open( (getDataFolderPath()+mCompiler_header_name).c_str(), ofstream::out );
+		isPresent = false;
+	} else {
+		header_file_buf.open( (getDataFolderPath()+mCompiler_header_name).c_str(), ofstream::app );
+	}
 	
 	if(!isPresent)
 		header_file_buf << "#ifndef MCOMPILER_H" << endl << "#define MCOMPILER_H" << endl;
@@ -157,7 +162,13 @@ void Driver::generateMCompilerHeaderFile(){
 	if(isPresent)	
 		executeCommand("sed -i '/" + temp_str + "/d' " + getDataFolderPath()+mCompiler_header_code_name );
 	/* Now open/append mCompiler header's code file */	
-	header_code_file_buf.open( (getDataFolderPath()+mCompiler_header_code_name).c_str(), ofstream::out|ofstream::app );
+	if( mCompiler_mode == mode_FULL_PASS ){
+		header_code_file_buf.open( (getDataFolderPath()+mCompiler_header_code_name).c_str(), ofstream::out );
+		isPresent = false;
+	} else {
+		header_code_file_buf.open( (getDataFolderPath()+mCompiler_header_code_name).c_str(), ofstream::app );
+	}
+	
 	if(!isPresent){
 		header_code_file_buf << "#include \"" << mCompiler_header_name << "\"" << endl;
 		header_code_file_buf << "void " << printTimingVarFuncName << "(){" << endl;

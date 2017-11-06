@@ -85,12 +85,13 @@ void addOptimizationFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("icc");
 	flag_vec.push_back("-Ofast");
-	flag_vec.push_back("-xhost");
+	flag_vec.push_back("-xHost");
 	flag_vec.push_back("-qopenmp");
-	flag_vec.push_back("-std=c11");
+	//flag_vec.push_back("-std=c11");
 	flag_vec.push_back("-ipo");
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
+	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	optimization_flags[compiler_ICC] = flag_vec;	
@@ -104,6 +105,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-std=c11");
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
+	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	optimization_flags[compiler_GCC] = flag_vec;	
@@ -114,9 +116,10 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-Ofast");
 	flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
-	flag_vec.push_back("-std=c11");
+	//flag_vec.push_back("-std=c11");
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
+	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	optimization_flags[compiler_LLVM] = flag_vec;	
@@ -130,6 +133,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-mp");
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
+	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	optimization_flags[compiler_PGI] = flag_vec;	
@@ -151,6 +155,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-std=c11");
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
+	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	flag_vec.push_back(mCompiler_extraPostSrcFlags);
 	optimization_flags[compiler_Polly] = flag_vec;	

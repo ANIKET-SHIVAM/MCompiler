@@ -76,6 +76,7 @@ void Extractor::printHeaders( ofstream& loop_file_buf ){
 				hasIO = true;
 	}
 	// TODO: if it is a fortran code
+	loop_file_buf << "#include \"mCompiler.h\"" << endl;
 	if( !hasOMP && ( src_type == src_lang_C || src_type == src_lang_CPP ) )
 		loop_file_buf << "#include <omp.h>" << endl;
 	if( src_type == src_lang_C && !hasIO )
@@ -130,19 +131,30 @@ void LoopInfo::getVarsInScope(){
 				 * so that actual name can be used inside the body 
 				 */
 				//cerr << "Var info: "<<var->get_name().getString() << ", " << (var->get_type())->variantT() << endl;
-				bool isTypedefArray = false;
+				bool isTypedefArray  = false;
+				bool isTypedefStruct = false;
 				if( (var->get_type())->variantT() == V_SgTypedefType ){
 					SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>(var->get_type());
 					if( (type_def_var->get_base_type())->variantT() == V_SgArrayType ){
 						isTypedefArray = true;
-						var_type_str = (type_def_var->get_base_type())->unparseToString();
+						//var_type_str = (type_def_var->get_base_type())->unparseToString();
+					} else if( SageInterface::isStructType(type_def_var->get_base_type()) ){
+						isTypedefStruct = true;
+						//var_type_str = "struct " + var_type_str;
 					}
-					//cerr << "Typedef: " << (type_def_var->get_base_type())->variantT() << endl;
+					//cerr << "Typedef: " << (type_def_var->get_base_type())->variantT() << ", isStruct: " << SageInterface::isStructType(type_def_var->get_base_type()) << endl;
 				}		
 				if( (var->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
+					/* To change to var_type var_name[][][] */
 					int first_square_brac = var_type_str.find_first_of("[");
-					scope_vars_str_vec.push_back( var_type_str.substr( 0,first_square_brac ) + var->get_name().getString()
-										+ var_type_str.substr( first_square_brac ) );
+					if( first_square_brac != string::npos )
+						scope_vars_str_vec.push_back( var_type_str.substr( 0,first_square_brac ) + var->get_name().getString()
+													+ var_type_str.substr( first_square_brac ) );
+					else
+						scope_vars_str_vec.push_back( var_type_str + space_str + var->get_name().getString() );
+				} else if( SageInterface::isStructType(var->get_type()) || isTypedefStruct ){
+					scope_vars_str_vec.push_back( var_type_str + "* " + var->get_name().getString() );
+					scope_struct_str_vec.push_back( var->get_name().getString() );
 				} else {
 					scope_vars_str_vec.push_back( var_type_str + "* " + var->get_name().getString() + "_primitive" );
 				}
@@ -200,13 +212,22 @@ void LoopInfo::pushPointersToLocalVars( ofstream& loop_file_buf ){
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++ ){
 		string var_type_str = ((*iter)->get_type())->unparseToString();
 		string var_name_str = ((*iter)->get_name()).getString();
-		bool isTypedefArray = false;
+		bool isTypedefArray  = false;
+		bool isTypedefStruct = false;
 		if( ((*iter)->get_type())->variantT() == V_SgTypedefType ){
 			SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>((*iter)->get_type());
 			if( (type_def_var->get_base_type())->variantT() == V_SgArrayType )
 						isTypedefArray = true;
+			if( SageInterface::isStructType(type_def_var->get_base_type()) )
+						isTypedefStruct = true;
 		}
-		if( ((*iter)->get_type())->variantT() != V_SgArrayType && !isTypedefArray ){
+		bool isPrimitive = true;
+		if( ((*iter)->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
+			isPrimitive = false;	
+		} else if( SageInterface::isStructType( (*iter)->get_type() ) || isTypedefStruct ){
+			isPrimitive = false;	
+		}
+		if( isPrimitive ){
 			loop_file_buf << var_type_str <<" "<< var_name_str <<" = "<<"*"
 				<< var_name_str <<"_primitive" <<";"<< endl; 		
 		}
@@ -221,18 +242,28 @@ void LoopInfo::popLocalVarsToPointers( ofstream& loop_file_buf ){
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++ ){
 		string var_type_str = ((*iter)->get_type())->unparseToString();
 		string var_name_str = ((*iter)->get_name()).getString();
-		bool isTypedefArray = false;
+		bool isTypedefArray  = false;
+		bool isTypedefStruct = false;
 		if( ((*iter)->get_type())->variantT() == V_SgTypedefType ){
 			SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>((*iter)->get_type());
 			if( (type_def_var->get_base_type())->variantT() == V_SgArrayType )
 						isTypedefArray = true;
+			if( SageInterface::isStructType(type_def_var->get_base_type()) )
+						isTypedefStruct = true;
 		}
 
 		bool isConst = false;
 		if( SageInterface::isConstType((*iter)->get_type()) )
 			isConst = true;
 		
-		if( ((*iter)->get_type())->variantT() != V_SgArrayType && !isTypedefArray && !isConst ){
+		bool isPrimitive = true;
+		if( ((*iter)->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
+			isPrimitive = false;	
+		} else if( SageInterface::isStructType( (*iter)->get_type() ) || isTypedefStruct ){
+			isPrimitive = false;	
+		}
+
+		if( isPrimitive && !isConst ){
 			loop_file_buf <<"*"<< var_name_str <<"_primitive"<<" = "
 				<< var_name_str <<";"<< endl; 		
 		}
@@ -311,7 +342,8 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 	/* Collect timing for each run of the loop */
 	if( isProfileFile ){
 		string temp_str = getFuncName();
-		(extr.loop_funcName_vec)->push_back( temp_str );
+		if( find( extr.loop_funcName_vec->begin(), extr.loop_funcName_vec->end(), temp_str ) == extr.loop_funcName_vec->end() )
+			(extr.loop_funcName_vec)->push_back( temp_str );
 		string loopTimingVarStr	= extr.getLoopTimingVarSuffix() + getFuncName();
 		loop_file_buf << loopTimingVarStr << " += " << "loop_timer_end - loop_timer_start;" << endl;
 	}
@@ -432,6 +464,17 @@ void Extractor::extractLoops( SgNode *astNode ){
 	loop_file_buf_profile.close();
 	loop_file_buf_no_profile.close();
 
+	/* Change struct access with pointer to struct */
+	for( auto const &str : curr_loop.scope_struct_str_vec ){
+		/* change struct access: 'st =' to '(*st) =' */ 
+		string sed_command1 = "sed -i 's/" + str + " =/(*" + str + ") =/g' ";
+		executeCommand(sed_command1 + loop_profile_file_name );
+		executeCommand(sed_command1 + loop_no_profile_file_name );
+		/* change struct access: st.member to st->member */ 
+		string sed_command2 = "sed -i 's/" + str + " \\./" + str + " ->/g' ";
+		executeCommand(sed_command2 + loop_profile_file_name );
+		executeCommand(sed_command2 + loop_no_profile_file_name );
+	}
 	/* TODO: Call astyleFormatter here in distant future */
 }
 
@@ -461,12 +504,12 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 				global_node = isSgGlobal(astNode);
 				break;
 			}
-			case V_SgSourceFile: {
+//			case V_SgSourceFile: {
 				/* add mCompiler header file into the source */
-				SgSourceFile *sourceFile = dynamic_cast<SgSourceFile *>(astNode);
-				SageInterface::insertHeader(sourceFile, mCompiler_header_name, false, true);
-				break;
-			}
+//				SgSourceFile *sourceFile = dynamic_cast<SgSourceFile *>(astNode);
+//				SageInterface::insertHeader(sourceFile, mCompiler_header_name, false, false);
+//				break;
+//			}
 			case V_SgFunctionDeclaration: {
 				/* Collect all extern functions in this file */
 				SgFunctionDeclaration *declFunc = dynamic_cast<SgFunctionDeclaration *>(astNode);
@@ -579,8 +622,9 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 						if( variableType->variantT() == V_SgArrayType ){
 							/* To change to var_type var_name[][][] */
 							int first_square_brac = var_type_str.find_first_of("[");
-							global_vars.insert( var_type_str.substr( 0,first_square_brac ) + var_str
-												+ var_type_str.substr( first_square_brac ) );
+							if( first_square_brac != string::npos )
+								global_vars.insert( var_type_str.substr( 0,first_square_brac ) + var_str
+													+ var_type_str.substr( first_square_brac ) );
 						} else {
 							/* Bcoz Rose add wierd stuff like __PRETTY_FUNCTION__ on assert() calls */
 							if( var_str.find(ignorePrettyFunctionCall) == string::npos )	
@@ -649,6 +693,24 @@ void Extractor::addTimingFuncCallNonVoidMain( SgStatement* returnStmt ){
 	}	
 }
 
+void Extractor::modifyExtractedFileText( const string &base_file, const string &base_file_profile ){
+	/* Remove static keyword from variables and functions in both profile and non-profile file */
+	string sed_command1 = "sed -i 's/static //g' " + base_file;
+	executeCommand( sed_command1 );
+	sed_command1 = "sed -i 's/static //g' " + base_file_profile;
+	executeCommand( sed_command1 );
+	
+	/* Remove register keyword from variables and functions in both profile and non-profile file */
+	string sed_command2 = "sed -i 's/register //g' " + base_file;
+	executeCommand( sed_command2 );
+	sed_command2 = "sed -i 's/register //g' " + base_file_profile;
+	executeCommand( sed_command2 );
+	
+	/* Remove mCompile header and accumulater timing var print function from non profile base file */
+	string sed_command3 = "sed -i '/" + mCompiler_header_name + "/d;/" + printTimingVarFuncName + "/d' " + base_file;
+	executeCommand( sed_command3 );
+}
+
 /* Extractor constructor, for initiating via driver */
 Extractor::Extractor( const vector<string> &argv ){
 	SgProject *ast = NULL;
@@ -665,29 +727,22 @@ Extractor::Extractor( const vector<string> &argv ){
 	ast->unparse();
 	delete ast;
 	
-	/* If file doesn't have any loop, then mCompiler_file_name,_file_extn would be empty at this point */
-	if( mCompiler_file_name.empty() ){
-		mCompiler_file_name = getFileName(argv.back());
-		mCompiler_file_extn = getFileExtn(argv.back()); 
-	} 
-	
 	string base_file = getDataFolderPath() + getFileName() + base_str + "." + getFileExtn();
 	string base_file_profile = getDataFolderPath() + getFileName() + base_str + mCompiler_profile_file_tag + "." + getFileExtn();
+	/* If file doesn't have any loop, then mCompiler_file_name,_file_extn would be empty at this point */
+	if( mCompiler_file_name.empty() ){
+		/* copy the base file as it is, since rose preprocessor might have bug */
+		executeCommand( "cp " + argv.back() + space_str + base_file );
+		executeCommand( "cp " + base_file + space_str + base_file_profile );
+	} else { 	
+		/* Move base file to the mCompiler data folder: 
+		 * mv rose_filename.x mCompiler_data/filename_base.x
+		 * cp mCompiler_data/filename_base.x mCompiler_data/filename_base_profile_.x
+		 */
+		executeCommand( "mv rose_"+ getFileName() + "." + getFileExtn() + space_str + base_file );
+		executeCommand( "cp " + base_file + space_str + base_file_profile );
+		modifyExtractedFileText(base_file, base_file_profile);
+	}
 	files_to_compile.insert(base_file);
 	files_to_compile.insert(base_file_profile);
-	// Move base file to the mCompiler data folder: 
-	// mv rose_filename.x mCompiler_data/filename_base.x
-	// cp mCompiler_data/filename_base.x mCompiler_data/filename_base_profile_.x
-	executeCommand( "mv rose_"+ getFileName() + "." + getFileExtn() + space_str + base_file );
-	executeCommand( "cp " + base_file + space_str + base_file_profile );
-	
-	/* Remove static keyword from variables and functions in both profile and non-profile file */
-	string sed_command1 = "sed -i 's/static //g' " + base_file;
-	executeCommand( sed_command1 );
-	sed_command1 = "sed -i 's/static //g' " + base_file_profile;
-	executeCommand( sed_command1 );
-	
-	/* Remove mCompile header and accumulater timing var print function from non profile base file */
-	string sed_command2 = "sed -i '/" + mCompiler_header_name + "/d;/" + printTimingVarFuncName + "/d' " + base_file;
-	executeCommand( sed_command2 );
 }

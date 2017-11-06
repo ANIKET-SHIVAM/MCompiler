@@ -66,6 +66,7 @@ public:
 	void addPostTraversalDefs(); 
 	void addTimingFuncCallVoidMain();
 	void addTimingFuncCallNonVoidMain( SgStatement* returnStmt );
+	void modifyExtractedFileText( const string &base_file, const string &base_file_profile );
 
 	/* Important functions */
 	void extractLoops( SgNode *astNode );
@@ -87,6 +88,8 @@ class LoopInfo {
 	vector<SgVariableSymbol*> scope_vars_symbol_vec;
 	vector<SgInitializedName*> scope_vars_initName_vec;
 	set<SgFunctionDeclaration *> scope_funcCall_vec;
+public:
+	vector<string> scope_struct_str_vec;
 public:
 	LoopInfo( SgNode *astNode, SgForStatement *loop, string func_name, Extractor& e )
 		: extr(e) ,astNode(astNode), loop(loop), func_name(func_name) {}

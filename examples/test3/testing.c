@@ -9,6 +9,7 @@ inline int yo(int x, int y){
 
 int main(){
 	int i,j,k,sum1=0,sum2=0;
+	#pragma omp parallel
 	for(i=0;i<10;i++){
 		for(k=0;k<10;k++)
 			sum1+=i+k;
