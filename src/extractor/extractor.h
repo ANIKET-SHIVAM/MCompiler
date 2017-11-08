@@ -42,6 +42,7 @@ public:
 	bool mainFuncPresent = false;	
 	vector<string> *loop_funcName_vec = new vector<string>;
 	map<SgFunctionDeclaration*,string> inline_func_map;
+  string loopOMPpragma = "";
 public:
 	Extractor() {};
 	Extractor( const vector<string> &argv );
@@ -51,6 +52,7 @@ public:
 	SgStatement* getLastIncludeStatement() { return lastIncludeStmt; }
 	string getDataFolderPath() { return mCompiler_data_folder_path; };
 	string getLoopTimingVarSuffix() { return loopTimingVarSuffix; };
+	string getOMPpragma() { return loopOMPpragma; };
 
 	string getFilePath() { return mCompiler_file_path; };
 	string getFileName() { return mCompiler_file_name; };

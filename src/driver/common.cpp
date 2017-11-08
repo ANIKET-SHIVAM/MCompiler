@@ -57,6 +57,7 @@ string mCompiler_header_code_name = "mCompiler.c";
 string mCompiler_data_folder      = "mCompiler_data";
 string mCompiler_data_folder_path;
 string mCompiler_curr_dir_path;
+string pgi_lib_path               = "/opt/pgi/linux86-64/17.10/lib/";
 
 /*** Parameter that change based on the CL input ***/
 /* For the extractor */
@@ -84,11 +85,13 @@ void addOptimizationFlags(){
 	/* ICC */
 	flag_vec.clear();
 	flag_vec.push_back("icc");
-	flag_vec.push_back("-Ofast");
+	flag_vec.push_back("-O3");
 	flag_vec.push_back("-xHost");
 	flag_vec.push_back("-qopenmp");
-	//flag_vec.push_back("-std=c11");
+	flag_vec.push_back("-std=c11");
 	flag_vec.push_back("-ipo");
+	flag_vec.push_back("-qopt-prefetch");
+	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
@@ -103,6 +106,9 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-std=c11");
+//	flag_vec.push_back("-flto"); Require plugin needed for lto object
+	flag_vec.push_back("-fprefetch-loop-arrays");
+	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
@@ -116,7 +122,10 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-Ofast");
 	flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
-	//flag_vec.push_back("-std=c11");
+	flag_vec.push_back("-std=c11");
+//	flag_vec.push_back("-flto"); Requires LLVMGold binaries
+	flag_vec.push_back("-loop-data-prefetch");
+	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
@@ -129,8 +138,12 @@ void addOptimizationFlags(){
 	flag_vec.push_back("pgcc");
 	flag_vec.push_back("-fast");
 	flag_vec.push_back("-tp=haswell");
-	flag_vec.push_back("-Mipa");
 	flag_vec.push_back("-mp");
+  flag_vec.push_back("-c11");
+	flag_vec.push_back("-Mipa");
+	flag_vec.push_back("-Mprefetch");
+	flag_vec.push_back("-Mprefetch");
+	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
@@ -153,6 +166,9 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-std=c11");
+//	flag_vec.push_back("-flto"); Requires LLVMGold binaries
+	flag_vec.push_back("-loop-data-prefetch");
+	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
@@ -179,6 +195,7 @@ void addLinkerFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("gcc");
 	flag_vec.push_back("-fopenmp");
+//	flag_vec.push_back("-flto"); Require plugin needed for lto object
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -188,6 +205,7 @@ void addLinkerFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("clang");
 	flag_vec.push_back("-fopenmp");
+//	flag_vec.push_back("-flto"); Requires LLVMGold binaries
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);

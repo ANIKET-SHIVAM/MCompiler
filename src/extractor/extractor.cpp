@@ -315,14 +315,23 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 	// TODO: Add SCoP pragma based on tool option 
 	loop_file_buf << "#pragma scop" << endl;
 	
+  //Get OMP pragma for this loop
+  if(extr.getOMPpragma() != "")
+    loop_file_buf << endl << extr.getOMPpragma() << endl;
+	
 	// Entire Loop Body
+  string loop_body_str = "";
 	if( extr.getSrcType() == src_lang_C ){
-		loop_file_buf << loop->unparseToCompleteString() << endl;	
+		loop_body_str = loop->unparseToCompleteString();
 	} else if( extr.getSrcType() == src_lang_CPP ){
-		loop_file_buf << loop->unparseToCompleteString() << endl;	
+		loop_body_str = loop->unparseToCompleteString();
 	}
+  if( loop_body_str.find("#endif") == 0 )
+    loop_body_str.erase(0, loop_body_str.find("\n") + 1);
 
-	loop_file_buf << "#pragma endscop" << endl;
+  loop_file_buf << loop_body_str << endl;	
+	
+  loop_file_buf << "#pragma endscop" << endl;
 	
 	// Add OMP Timer end
 	if( isProfileFile )
@@ -497,19 +506,10 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 				if( inh_attr.loop_nest_depth_ < 2 ){
 					//cerr << "Extracting loop now" << endl;
 					extractLoops( astNode );
+          loopOMPpragma = "";
 				}
 				break;
 			}
-			case V_SgGlobal: {
-				global_node = isSgGlobal(astNode);
-				break;
-			}
-//			case V_SgSourceFile: {
-				/* add mCompiler header file into the source */
-//				SgSourceFile *sourceFile = dynamic_cast<SgSourceFile *>(astNode);
-//				SageInterface::insertHeader(sourceFile, mCompiler_header_name, false, false);
-//				break;
-//			}
 			case V_SgFunctionDeclaration: {
 				/* Collect all extern functions in this file */
 				SgFunctionDeclaration *declFunc = dynamic_cast<SgFunctionDeclaration *>(astNode);
@@ -537,12 +537,31 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 				}
 				break;
 			}
+			case V_SgGlobal: {
+				global_node = isSgGlobal(astNode);
+				break;
+			}
+      case V_SgPragmaDeclaration: {
+				SgPragmaDeclaration *pragmaDecl = dynamic_cast<SgPragmaDeclaration *>(astNode);
+        if(SageInterface::extractPragmaKeyword(pragmaDecl) == "omp") {
+          SgPragma *pragmaNode = pragmaDecl->get_pragma();
+          string pragmaString = pragmaNode->get_pragma();
+          loopOMPpragma = "#pragma " + pragmaString;
+        }
+        break;
+      }
 			case V_SgReturnStmt: {
 				SgStatement *returnstmt = dynamic_cast<SgStatement *>(astNode);
 				if( mainFuncPresent && returnstmt->get_scope() == main_scope && nonVoidMain )
 					addTimingFuncCallNonVoidMain(returnstmt); 
 				break;
 			}
+//			case V_SgSourceFile: {
+				/* add mCompiler header file into the source */
+//				SgSourceFile *sourceFile = dynamic_cast<SgSourceFile *>(astNode);
+//				SageInterface::insertHeader(sourceFile, mCompiler_header_name, false, false);
+//				break;
+//			}
 			default: { 
 					//cerr << "Found node: " << astNode->class_name() << endl;	
 			}
@@ -704,6 +723,12 @@ void Extractor::modifyExtractedFileText( const string &base_file, const string &
 	string sed_command2 = "sed -i 's/register //g' " + base_file;
 	executeCommand( sed_command2 );
 	sed_command2 = "sed -i 's/register //g' " + base_file_profile;
+	executeCommand( sed_command2 );
+	
+	/* Remove OMP pragma from profile and non-profile file bcoz ROSE APIs can't */
+	sed_command2 = "sed -i '/omp parallel for/d' " + base_file;
+	executeCommand( sed_command2 );
+	sed_command2 = "sed -i '/omp parallel for/d' " + base_file_profile;
 	executeCommand( sed_command2 );
 	
 	/* Remove mCompile header and accumulater timing var print function from non profile base file */

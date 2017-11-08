@@ -72,6 +72,9 @@ void SynthesizerC::generateFinalBinary(){
 		CL += *iterv + space_str;
 	}
 
+  /* add object files for PGI compilers objects with OpenMP to be linked. */
+  CL += pgi_lib_path + "trace_init.o" + space_str + pgi_lib_path + "initmp.o" + space_str;
+
 	set<string>::iterator iters;
 	string object_files;
 	for( iters = best_objs_to_link.begin(); iters != best_objs_to_link.end(); iters++){
@@ -86,7 +89,10 @@ void SynthesizerC::generateFinalBinary(){
 	for( iterv = post_CL_flags.begin(); iterv != post_CL_flags.end(); iterv++){
 		CL += *iterv + space_str;
 	}
-	
+	 
+  /* link libraries for PGI compilers objects with OpenMP to be linked. */
+  CL += "-L" + pgi_lib_path + space_str + "-lpgmp -lnuma -lpthread -lpgc -lnspgc";
+
 	executeCommand( CL );
 }
 
