@@ -2,6 +2,8 @@
 #define EXTRACTOR_H_
 
 #include "driver/common.h"
+#include <boost/tokenizer.hpp>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 
@@ -43,6 +45,7 @@ public:
 	vector<string> *loop_funcName_vec = new vector<string>;
 	map<SgFunctionDeclaration*,string> inline_func_map;
   string loopOMPpragma = "";
+	vector<string> func_var_str_vec;
 public:
 	Extractor() {};
 	Extractor( const vector<string> &argv );
@@ -69,9 +72,10 @@ public:
 	void addTimingFuncCallVoidMain();
 	void addTimingFuncCallNonVoidMain( SgStatement* returnStmt );
 	void modifyExtractedFileText( const string &base_file, const string &base_file_profile );
+//  void getVarsInFunction();
 
-	/* Important functions */
 	void extractLoops( SgNode *astNode );
+	void extractFunctions( SgNode *astNode );
 	virtual InheritedAttribute evaluateInheritedAttribute( SgNode *astNode, 
 														   InheritedAttribute inh_attr );
 	virtual int evaluateSynthesizedAttribute( SgNode *astNode, InheritedAttribute inh_attr,
@@ -90,6 +94,9 @@ class LoopInfo {
 	vector<SgVariableSymbol*> scope_vars_symbol_vec;
 	vector<SgInitializedName*> scope_vars_initName_vec;
 	set<SgFunctionDeclaration *> scope_funcCall_vec;
+  vector<string> privateOMP_array_vec;
+  vector<string> OMPscope_symbol_vec;
+	map<string,string> OMParray_type_map;
 public:
 	vector<string> scope_struct_str_vec;
 public:
@@ -104,6 +111,9 @@ public:
 	void printLoopFunc( ofstream& loop_file_buf, bool isProfileFile );
 	void pushPointersToLocalVars( ofstream& loop_file_buf );
 	void popLocalVarsToPointers( ofstream& loop_file_buf );
+  void analyzeOMPprivateArrays( const string &pragmaStr );
+  string printOMPprivateArrays();
+  string sanitizeOMPpragma( const string &pragmaStr );
 	void addLoopFuncAsExtern();	// In Base file
 	void addLoopFuncCall();	// In Base file
 };

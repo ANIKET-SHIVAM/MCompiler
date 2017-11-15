@@ -93,6 +93,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-qopt-prefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
+	flag_vec.push_back("-g");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -110,6 +111,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-fprefetch-loop-arrays");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
+//	flag_vec.push_back("-g");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -127,6 +129,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-loop-data-prefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
+//	flag_vec.push_back("-g");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -145,6 +148,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-Mprefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
+//	flag_vec.push_back("-g");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -170,6 +174,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-loop-data-prefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
+//	flag_vec.push_back("-g");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -187,6 +192,7 @@ void addLinkerFlags(){
 	flag_vec.push_back("-qopenmp");
 	flag_vec.push_back("-ipo");
 	flag_vec.push_back("-w");
+	flag_vec.push_back("-g");
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_ICC] = flag_vec;	
@@ -197,6 +203,7 @@ void addLinkerFlags(){
 	flag_vec.push_back("-fopenmp");
 //	flag_vec.push_back("-flto"); Require plugin needed for lto object
 	flag_vec.push_back("-w");
+//	flag_vec.push_back("-g");
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_GCC] = flag_vec;	
@@ -207,6 +214,7 @@ void addLinkerFlags(){
 	flag_vec.push_back("-fopenmp");
 //	flag_vec.push_back("-flto"); Requires LLVMGold binaries
 	flag_vec.push_back("-w");
+//	flag_vec.push_back("-g");
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_LLVM] = flag_vec;	
@@ -217,6 +225,7 @@ void addLinkerFlags(){
 	flag_vec.push_back("-Mipa");
 	flag_vec.push_back("-mp");
 	flag_vec.push_back("-w");
+	flag_vec.push_back("-g");
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_PGI] = flag_vec;	

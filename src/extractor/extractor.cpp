@@ -109,21 +109,26 @@ bool LoopInfo::isDeclaredInInnerScope( SgScopeStatement *var_scope ){
 void LoopInfo::getVarsInScope(){
 	/* collectVarRefs will collect all variables used in the loop body */
 	vector<SgVarRefExp *> sym_table;
+  vector<string> temp_vec2;
 	SageInterface::collectVarRefs( dynamic_cast<SgLocatedNode *>(astNode), sym_table );
 
+  if(extr.getOMPpragma() != "")
+    analyzeOMPprivateArrays( extr.getOMPpragma() );
+	
 	vector<SgVarRefExp *>::iterator iter;
 	for( iter = sym_table.begin(); iter != sym_table.end(); iter++ ){
 		SgVariableSymbol *var = (*iter)->get_symbol();
 		SgScopeStatement *var_scope = ( var->get_declaration() )->get_scope();
-			
+		
+      /* To clean OMP clauses with non-scope variables */	
+      if(extr.getOMPpragma() != "")
+        OMPscope_symbol_vec.push_back(var->get_name().getString());
 		/* Neither globals variables nor variables declared inside the loop body nor struct members(dirty way - scope name not NULL) should be passed */ 
 		if( !( isSgGlobal(var_scope) || isDeclaredInInnerScope(var_scope) || var_scope->get_qualified_name() != "" ) && 
 				find( scope_vars_symbol_vec.begin(), scope_vars_symbol_vec.end(), var ) == scope_vars_symbol_vec.end() ){
 			//cerr << "Var Scope: "<< var->get_name().getString() << ", " << var_scope->get_qualified_name() << endl;
 			//SgVariableSymbol *var = dynamic_cast<SgVariableSymbol *>(*iter);
-			scope_vars_symbol_vec.push_back( var ); // Needed for function call	
-			scope_vars_initName_vec.push_back( var->get_declaration() ); // Needed for function extern defn	
-
+      string temp_str1; 
 			string var_type_str = (var->get_type())->unparseToString();
 			if( extr.getSrcType() == src_lang_C ){
 				/* 
@@ -143,7 +148,23 @@ void LoopInfo::getVarsInScope(){
 						//var_type_str = "struct " + var_type_str;
 					}
 					//cerr << "Typedef: " << (type_def_var->get_base_type())->variantT() << ", isStruct: " << SageInterface::isStructType(type_def_var->get_base_type()) << endl;
-				}		
+				}	
+        /* Skipping OMP private arrays */
+				if( (var->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
+          temp_str1 = var->get_name().getString();
+          if( find(privateOMP_array_vec.begin(),privateOMP_array_vec.end(),temp_str1) 
+              != privateOMP_array_vec.end() ){
+              temp_vec2.push_back(temp_str1);
+              int first_square_brac = var_type_str.find_first_of("[");
+              if( first_square_brac != string::npos )
+                OMParray_type_map.insert(pair<string,string>(temp_str1, var_type_str.substr( 0,first_square_brac ) 
+                              + var->get_name().getString() + var_type_str.substr( first_square_brac ) ));
+              else
+                OMParray_type_map.insert(pair<string,string>( temp_str1, var_type_str + space_str 
+                              + var->get_name().getString() ));
+              continue;
+          }
+        }
 				if( (var->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
 					/* To change to var_type var_name[][][] */
 					int first_square_brac = var_type_str.find_first_of("[");
@@ -162,8 +183,18 @@ void LoopInfo::getVarsInScope(){
 				scope_vars_str_vec.push_back( var_type_str + "& " + var->get_name().getString() );
 			}		
 			//cerr << "Symbol Table : " << *(scope_vars_str_vec.rbegin()) << endl;
+			scope_vars_symbol_vec.push_back( var ); // Needed for function call	
+			scope_vars_initName_vec.push_back( var->get_declaration() ); // Needed for function extern defn	
 		}
 	}
+  /* Erase vector of all non-array OMP privates */
+	vector<string>::iterator iter2 = privateOMP_array_vec.begin();
+  while(iter2 != privateOMP_array_vec.end()){
+    if(find(temp_vec2.begin(),temp_vec2.end(),*iter2) == temp_vec2.end())
+      iter2 = privateOMP_array_vec.erase(iter2);
+    else
+      ++iter2;
+  }
 }
 
 bool LoopInfo::hasFuncCallInScope( ){
@@ -270,6 +301,64 @@ void LoopInfo::popLocalVarsToPointers( ofstream& loop_file_buf ){
 	}
 }
 
+/* Static arrays(local) can be private in OMP region, but cannot be passed to Loop function
+ * Need to (re)declared inside the loop function and Removed from function parameter */ 
+void LoopInfo::analyzeOMPprivateArrays( const string &pragmaStr ){
+  if( pragmaStr.find(" private") != string::npos ){ 
+    int tmp = pragmaStr.find("(", pragmaStr.find(" private") );
+    string privateStr = pragmaStr.substr(tmp + 1, pragmaStr.find(")", tmp) - tmp-1);
+    boost::char_separator<char> sep(",");
+    boost::tokenizer<boost::char_separator<char>> tokens(privateStr, sep);
+    for (const auto& t : tokens) {
+      string s(t);
+      boost::algorithm::trim(s);
+      privateOMP_array_vec.push_back(s);
+    }
+  }
+}
+
+string LoopInfo::printOMPprivateArrays(){
+  string arrays = "";
+	for( auto const &str : privateOMP_array_vec ){
+    if(OMParray_type_map.find(str) != OMParray_type_map.end()){
+      arrays += (OMParray_type_map.find(str))->second;
+      arrays += ";\n";
+    }
+  }
+  return arrays;
+}
+
+/* SPEC write variables, that are not used in OMP loop, inside clauses which extractor doesn't extract */
+string LoopInfo::sanitizeOMPpragma( const string &pragmaStr ){
+  string sanitizedStr(pragmaStr);
+  string tmpStr = "";
+  vector<string> clauseStr = {" private"," lastprivate"," firstprivate"," shared"};
+	for( auto const &str : clauseStr ){
+    tmpStr = sanitizedStr;
+    if( sanitizedStr.find(str) != string::npos ){ 
+      string vars = "";
+      int tmp1 = sanitizedStr.find("(", sanitizedStr.find(str) );
+      int tmp2 = sanitizedStr.find(")", tmp1);
+      string privateStr = sanitizedStr.substr(tmp1 + 1, tmp2 - tmp1 - 1);
+      boost::char_separator<char> sep(",");
+      boost::tokenizer<boost::char_separator<char>> tokens(privateStr, sep);
+      for (const auto& t : tokens) {
+        string s(t);
+        boost::algorithm::trim(s);
+        if( find(OMPscope_symbol_vec.begin(), OMPscope_symbol_vec.end(), s) != OMPscope_symbol_vec.end())
+          vars += s + ",";
+      }
+      if(vars != "")
+        tmpStr = sanitizedStr.substr(0,tmp1+1) + vars.substr(0,vars.length()-1) + sanitizedStr.substr(tmp2);
+      else
+        tmpStr = sanitizedStr.substr(0,sanitizedStr.find(str)) + sanitizedStr.substr(tmp2+1);
+    }
+    sanitizedStr = tmpStr;
+  }
+  return sanitizedStr; 
+  
+}
+
 /* 
  * Take cares of print complete loop function and adding func calls
  * and extern loop func to the base file.
@@ -290,9 +379,10 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 		loop_file_buf << externFuncStr;
 	}
 
-	getVarsInScope();
-	//getParamatersInFunc	
-	
+	//getParamatersInFunc - Dont need same analysis twice	
+	if( isProfileFile )
+    getVarsInScope();
+  
 	// Function definition 
 	loop_file_buf << endl << "void " << getFuncName() << "( ";
 	if( !scope_vars_str_vec.empty() ){
@@ -307,6 +397,9 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 	//Required only for C, since C++ is passed through reference(&) 
 	if( extr.getSrcType() == src_lang_C )
 		pushPointersToLocalVars( loop_file_buf );
+
+  if(extr.getOMPpragma() != "")
+    loop_file_buf << printOMPprivateArrays() << endl;
 	
 	// Add OMP Timer start
 	if( isProfileFile )
@@ -317,7 +410,7 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 	
   //Get OMP pragma for this loop
   if(extr.getOMPpragma() != "")
-    loop_file_buf << endl << extr.getOMPpragma() << endl;
+    loop_file_buf << endl << sanitizeOMPpragma( extr.getOMPpragma() ) << endl;
 	
 	// Entire Loop Body
   string loop_body_str = "";
@@ -432,6 +525,24 @@ void LoopInfo::addLoopFuncCall(){
 	SageInterface::replaceStatement( loop, SageBuilder::buildExprStatement( call_expr ), true);
 }
 
+/* Intended to get rid of variable mentioned in OpenMP clauses that are not required for the loop */
+//void Extractor::getVarsInFunction( SgNode *astNode ){
+//	/* collectVarRefs will collect all variables used in the function body */
+//	vector<SgVarRefExp *> sym_table;
+//	SageInterface::collectVarRefs( dynamic_cast<SgLocatedNode *>(astNode), sym_table );
+//
+//	vector<SgVarRefExp *>::iterator iter;
+//	for( iter = sym_table.begin(); iter != sym_table.end(); iter++ ){
+//		SgVariableSymbol *var = (*iter)->get_symbol();
+//		SgScopeStatement *var_scope = ( var->get_declaration() )->get_scope();
+//			
+//		/* Neither globals variables nor variables declared inside the loop body nor struct members(dirty way - scope name not NULL) should be passed */ 
+//		if( !( isSgGlobal(var_scope) || isDeclaredInInnerScope(var_scope) || var_scope->get_qualified_name() != "" ) ){
+//      func_var_str_vec.push_back(var->get_name().getString()); 
+//    }
+//  }
+//}
+
 void Extractor::extractLoops( SgNode *astNode ){
 	SgForStatement *loop = dynamic_cast<SgForStatement *>(astNode);
 	string loop_profile_file_name    = getExtractionFileName(astNode, true);
@@ -487,6 +598,14 @@ void Extractor::extractLoops( SgNode *astNode ){
 	/* TODO: Call astyleFormatter here in distant future */
 }
 
+
+void Extractor::extractFunctions( SgNode *astNode ){
+  
+
+
+
+}
+
 /* Required for Top Down parsing */
 InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 															  InheritedAttribute inh_attr ){
@@ -535,6 +654,8 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 					else
 						nonVoidMain = true;
 				}
+        //getVarsInFunction(astNode);
+    
 				break;
 			}
 			case V_SgGlobal: {
