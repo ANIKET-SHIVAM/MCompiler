@@ -91,7 +91,7 @@ void SynthesizerC::generateFinalBinary(){
 	}
 	 
   /* link libraries for PGI compilers objects with OpenMP to be linked. */
-  CL += "-L" + pgi_lib_path + space_str + "-lpgmp -lnuma -lpthread -lpgc -lnspgc";
+  CL += "-L" + pgi_lib_path + space_str + "-lpgmp -lnuma -lpthread -lpgc -lnspgc -lgomp";
 
 	executeCommand( CL );
 }

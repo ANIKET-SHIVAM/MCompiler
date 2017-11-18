@@ -14,6 +14,19 @@ string Extractor::getFilePath( const string &fileNameWithPath ) {
 string Extractor::getFileName( const string &fileNameWithPath ) {
 	int lastSlashPos = fileNameWithPath.find_last_of('/');
 	int lastDotPos   = fileNameWithPath.find_last_of('.');
+	string fileStr = ( fileNameWithPath.substr(lastSlashPos + 1, lastDotPos-lastSlashPos-1) );
+	/* Since you cannot start Function name with a digit */ 
+	if( isdigit(fileStr[0]) )	
+		fileStr.insert(0,1,'_');
+	/* Since you cannot have '-' in Function name */ 
+	while( fileStr.find('-') != string::npos )	
+		fileStr.replace(fileStr.find('-'),1,string("_"));
+  return fileStr;
+}
+
+string Extractor::getOrigFileName( const string &fileNameWithPath ) {
+	int lastSlashPos = fileNameWithPath.find_last_of('/');
+	int lastDotPos   = fileNameWithPath.find_last_of('.');
 	return ( fileNameWithPath.substr(lastSlashPos + 1, lastDotPos-lastSlashPos-1) );
 }
 
@@ -44,6 +57,7 @@ string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 	string fileNameWithPath = (astNode->get_file_info())->get_filenameString();
 	mCompiler_file_path = getFilePath(fileNameWithPath);
 	mCompiler_file_name = getFileName(fileNameWithPath);
+	mCompiler_original_file_name = getOrigFileName(fileNameWithPath);
 	mCompiler_file_extn = getFileExtn(fileNameWithPath);
 	int lineNumber = getAstNodeLineNum(astNode);
 
@@ -165,7 +179,7 @@ void LoopInfo::getVarsInScope(){
               continue;
           }
         }
-				if( (var->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
+				if( (var->get_type())->variantT() == V_SgArrayType || isTypedefArray ){ 
 					/* To change to var_type var_name[][][] */
 					int first_square_brac = var_type_str.find_first_of("[");
 					if( first_square_brac != string::npos )
@@ -176,7 +190,19 @@ void LoopInfo::getVarsInScope(){
 				} else if( SageInterface::isStructType(var->get_type()) || isTypedefStruct ){
 					scope_vars_str_vec.push_back( var_type_str + "* " + var->get_name().getString() );
 					scope_struct_str_vec.push_back( var->get_name().getString() );
-				} else {
+				} else if( (var->get_type())->variantT() == V_SgPointerType ){
+          /* Strip var type hidden under pointer to check if array */
+          if( var->get_type()->stripType(1<<2)->variantT() == V_SgArrayType ){
+            /* To change to var_type var_name[][][] */
+            int first_endparan = var_type_str.find_first_of(")");
+            if( first_endparan != string::npos )
+              scope_vars_str_vec.push_back( var_type_str.insert( first_endparan, var->get_name().getString() ) );
+            else
+              scope_vars_str_vec.push_back( var_type_str + space_str + var->get_name().getString() );
+          } else {
+            scope_vars_str_vec.push_back( var_type_str + space_str + var->get_name().getString() );
+          }
+        } else {
 					scope_vars_str_vec.push_back( var_type_str + "* " + var->get_name().getString() + "_primitive" );
 				}
 			} else if( extr.getSrcType() == src_lang_CPP ){
@@ -257,7 +283,10 @@ void LoopInfo::pushPointersToLocalVars( ofstream& loop_file_buf ){
 			isPrimitive = false;	
 		} else if( SageInterface::isStructType( (*iter)->get_type() ) || isTypedefStruct ){
 			isPrimitive = false;	
-		}
+		} else if( ((*iter)->get_type())->variantT() == V_SgPointerType ){
+			isPrimitive = false;	
+    }
+
 		if( isPrimitive ){
 			loop_file_buf << var_type_str <<" "<< var_name_str <<" = "<<"*"
 				<< var_name_str <<"_primitive" <<";"<< endl; 		
@@ -291,6 +320,8 @@ void LoopInfo::popLocalVarsToPointers( ofstream& loop_file_buf ){
 		if( ((*iter)->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
 			isPrimitive = false;	
 		} else if( SageInterface::isStructType( (*iter)->get_type() ) || isTypedefStruct ){
+			isPrimitive = false;	
+		} else if( ((*iter)->get_type())->variantT() == V_SgPointerType ){
 			isPrimitive = false;	
 		}
 
@@ -471,9 +502,20 @@ void LoopInfo::addLoopFuncAsExtern(){
 			SgInitializedName *arg_init_name;
 			if( extr.getSrcType() == src_lang_C ){
 				// Pointers for C
-				SgPointerType *arg_type =
-					SageBuilder::buildPointerType( (*iter)->get_type() );
-				arg_init_name = SageBuilder::buildInitializedName(arg_name, arg_type);
+				bool isTypedefArray = false;
+				if( ((*iter)->get_type())->variantT() == V_SgTypedefType ){
+					SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>((*iter)->get_type());
+					if( (type_def_var->get_base_type())->variantT() == V_SgArrayType )
+								isTypedefArray = true;
+        }
+				if( ( (*iter)->get_type() )->variantT() == V_SgArrayType || isTypedefArray ||
+            ( (*iter)->get_type() )->variantT() == V_SgPointerType ){
+          arg_init_name = SageBuilder::buildInitializedName(arg_name, (*iter)->get_type());
+        } else {
+          SgPointerType *arg_type =
+            SageBuilder::buildPointerType( (*iter)->get_type() );
+          arg_init_name = SageBuilder::buildInitializedName(arg_name, arg_type);
+        }
 			} else if( extr.getSrcType() == src_lang_CPP ){
 				// Reference for C++
 				SgReferenceType *arg_type =
@@ -508,7 +550,8 @@ void LoopInfo::addLoopFuncCall(){
 					if( (type_def_var->get_base_type())->variantT() == V_SgArrayType )
 								isTypedefArray = true;
 				}
-				if( ( (*iter)->get_type() )->variantT() == V_SgArrayType || isTypedefArray ){
+				if( ( (*iter)->get_type() )->variantT() == V_SgArrayType || isTypedefArray ||
+            ( (*iter)->get_type() )->variantT() == V_SgPointerType ){
 					expr_list.push_back( SageBuilder::buildVarRefExp( (*iter) ) );
 				} else {
 					expr_list.push_back( SageBuilder::buildAddressOfOp
@@ -558,9 +601,6 @@ void Extractor::extractLoops( SgNode *astNode ){
 	
 	string nameForNextLoop = getFileName( (astNode->get_file_info())->get_filenameString() ) +
 										  "_line" + to_string( getAstNodeLineNum(astNode) );
-	/* Since you cannot start Function name with a digit */ 
-	if( isdigit(nameForNextLoop[0]) )	
-		nameForNextLoop.insert(0,1,'_');
 
 	// Create loop object
 	LoopInfo curr_loop( astNode, loop, nameForNextLoop, *this); 
@@ -885,7 +925,7 @@ Extractor::Extractor( const vector<string> &argv ){
 		 * mv rose_filename.x mCompiler_data/filename_base.x
 		 * cp mCompiler_data/filename_base.x mCompiler_data/filename_base_profile_.x
 		 */
-		executeCommand( "mv rose_"+ getFileName() + "." + getFileExtn() + space_str + base_file );
+		executeCommand( "mv rose_"+ getOrigFileName() + "." + getFileExtn() + space_str + base_file );
 		executeCommand( "cp " + base_file + space_str + base_file_profile );
 		modifyExtractedFileText(base_file, base_file_profile);
 	}

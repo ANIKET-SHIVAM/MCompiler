@@ -44,6 +44,12 @@ typedef enum{
 	mode_FULL_PASS   = 3  // full mCompiler pass
 }compiler_mode;
 
+typedef enum{ EXTRACT, PROFILE, SYNTHESIZE, TEST, REPORT, PARALLEL, COMPILE_TO_OBJECT,
+			  PROFILE_COUNT, INPUT_PROFILE, OUTPUT_BINARY, OUTPUT_OBJECT,
+			  INCLUDE_PATH, LINKER_PATH, LIBS_PATH, MACRO_DEFS,
+			  HELP, UNKNOWN 
+			} mCompiler_options;
+
 extern string space_str;
 extern string forward_slash_str;
 extern string minus_c_str;
@@ -94,6 +100,7 @@ extern string mCompiler_libraries;
 extern string mCompiler_extraPreSrcFlags;
 extern string mCompiler_extraPostSrcFlags;
 
+extern map< mCompiler_options, bool > mCompiler_enabled_options;
 extern map< compiler_type, bool > compiler_candidate;
 extern map< compiler_type, string > compiler_keyword;
 extern map< compiler_type, vector<string> > optimization_flags;

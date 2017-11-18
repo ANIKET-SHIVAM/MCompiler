@@ -1,9 +1,11 @@
 #include "common.h"
 
+map< mCompiler_options, bool > mCompiler_enabled_options;
 map< compiler_type, bool > compiler_candidate;
 map< compiler_type, vector<string> > optimization_flags;
 map< compiler_type, vector<string> > linker_flags;
 map< compiler_type, vector<string> > post_linker_flags;
+
 
 /* Profiler to Synthesizer */
 set<string> hotspot_name_set;
@@ -85,7 +87,7 @@ void addOptimizationFlags(){
 	/* ICC */
 	flag_vec.clear();
 	flag_vec.push_back("icc");
-	flag_vec.push_back("-O3");
+	flag_vec.push_back("-Ofast");
 	flag_vec.push_back("-xHost");
 	flag_vec.push_back("-qopenmp");
 	flag_vec.push_back("-std=c11");
@@ -93,12 +95,13 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-qopt-prefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
-	flag_vec.push_back("-g");
+  if(mCompiler_enabled_options[PARALLEL])
+    flag_vec.push_back("-parallel");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	flag_vec.push_back(mCompiler_extraPostSrcFlags);
-	optimization_flags[compiler_ICC] = flag_vec;	
+	optimization_flags[compiler_ICC] = flag_vec;
 
 	/* GCC */
 	flag_vec.clear();
@@ -111,7 +114,8 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-fprefetch-loop-arrays");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
-//	flag_vec.push_back("-g");
+  if(mCompiler_enabled_options[PARALLEL])
+    ;//flag_vec.push_back("-parallel");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -129,7 +133,8 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-loop-data-prefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
-//	flag_vec.push_back("-g");
+  if(mCompiler_enabled_options[PARALLEL])
+    ;//flag_vec.push_back("-parallel");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -148,7 +153,8 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-Mprefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
-//	flag_vec.push_back("-g");
+  if(mCompiler_enabled_options[PARALLEL])
+    flag_vec.push_back("-Mconcur");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -170,11 +176,12 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-std=c11");
+  if(mCompiler_enabled_options[PARALLEL])
+    flag_vec.push_back("-mllvm -polly-parallel");
 //	flag_vec.push_back("-flto"); Requires LLVMGold binaries
 	flag_vec.push_back("-loop-data-prefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
-//	flag_vec.push_back("-g");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -192,7 +199,8 @@ void addLinkerFlags(){
 	flag_vec.push_back("-qopenmp");
 	flag_vec.push_back("-ipo");
 	flag_vec.push_back("-w");
-	flag_vec.push_back("-g");
+  if(mCompiler_enabled_options[PARALLEL])
+    flag_vec.push_back("-parallel");
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_ICC] = flag_vec;	
@@ -203,7 +211,8 @@ void addLinkerFlags(){
 	flag_vec.push_back("-fopenmp");
 //	flag_vec.push_back("-flto"); Require plugin needed for lto object
 	flag_vec.push_back("-w");
-//	flag_vec.push_back("-g");
+  if(mCompiler_enabled_options[PARALLEL])
+    ;//flag_vec.push_back("-parallel");
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_GCC] = flag_vec;	
@@ -214,7 +223,9 @@ void addLinkerFlags(){
 	flag_vec.push_back("-fopenmp");
 //	flag_vec.push_back("-flto"); Requires LLVMGold binaries
 	flag_vec.push_back("-w");
-//	flag_vec.push_back("-g");
+  /* For Polly Parallel */
+  if(mCompiler_enabled_options[PARALLEL])
+    flag_vec.push_back("-lgomp");
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_LLVM] = flag_vec;	
@@ -225,7 +236,8 @@ void addLinkerFlags(){
 	flag_vec.push_back("-Mipa");
 	flag_vec.push_back("-mp");
 	flag_vec.push_back("-w");
-	flag_vec.push_back("-g");
+  if(mCompiler_enabled_options[PARALLEL])
+    flag_vec.push_back("-Mconcur");
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_PGI] = flag_vec;	

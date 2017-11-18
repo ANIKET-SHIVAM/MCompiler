@@ -27,6 +27,7 @@ public:
 
 class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	string mCompiler_file_path; 
+	string mCompiler_original_file_name; 
 	string mCompiler_file_name; 
 	string mCompiler_file_extn;
 	SgScopeStatement* main_scope = NULL;
@@ -59,9 +60,11 @@ public:
 
 	string getFilePath() { return mCompiler_file_path; };
 	string getFileName() { return mCompiler_file_name; };
+	string getOrigFileName() { return mCompiler_original_file_name; };
 	string getFileExtn() { return mCompiler_file_extn; };
 	string getFilePath( const string &fileNameWithPath );
 	string getFileName( const string &fileNameWithPath );
+	string getOrigFileName( const string &fileNameWithPath );
 	string getFileExtn( const string &fileNameWithPath );
 	int getAstNodeLineNum( SgNode *const &astNode );
 	string getExtractionFileName( SgNode *astNode, bool isProfileFile );

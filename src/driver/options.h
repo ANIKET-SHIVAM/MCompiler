@@ -31,14 +31,6 @@ struct Arg: public option::Arg{
 };
 
 
-typedef enum{ EXTRACT, PROFILE, SYNTHESIZE, TEST, REPORT, PARALLEL, COMPILE_TO_OBJECT,
-			  PROFILE_COUNT, INPUT_PROFILE, OUTPUT_BINARY, OUTPUT_OBJECT,
-			  INCLUDE_PATH, LINKER_PATH, LIBS_PATH, MACRO_DEFS,
-			  HELP, UNKNOWN 
-			} mCompiler_options;
-
-map< mCompiler_options, bool > mCompiler_enabled_options;
-
 const option::Descriptor usage[] =
 {
 	{UNKNOWN            , 0, ""  , ""              ,Arg::None     , "Usage:  mCompiler <input_files> [options] [-o output]\nOptions:" },
