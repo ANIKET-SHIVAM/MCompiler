@@ -96,8 +96,7 @@ void SynthesizerC::generateFinalBinary(){
 	executeCommand( CL );
 }
 
-SynthesizerC::SynthesizerC( bool parallel_enabled ){
-	parallel = parallel_enabled;
+SynthesizerC::SynthesizerC(){
 	binary_name = mCompiler_curr_dir_path + mCompiler_binary_name;
 
 	analyzeHotspotProfileData();

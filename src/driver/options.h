@@ -39,14 +39,14 @@ const option::Descriptor usage[] =
 	{PROFILE            , 0, ""  , "noprofile"     ,Arg::None     , "    --[no]profile        Profile extracted hotspots" },
 	{SYNTHESIZE         , 0, ""  , "nosynthesize"  ,Arg::None     , "    --[no]synthesize     Combine best performing hotspots to generate binary" },
 	{TEST               , 0, ""  , "test"          ,Arg::None     , "    --test               Test performance compared to other compilers"
-																							  "optimized code (MUST run with Synthesis)" },
+																							                                              " optimized code" },
 	{REPORT             , 0, ""  , "report"        ,Arg::None     , "    --report             Generate mCompiler performance report" },
 	{PARALLEL           , 0, ""  , "parallel"      ,Arg::None     , "    --parallel           Auto-parallelize the hotspots."
-																							  "Default: Serial code generation (with vectorization)" },
+																							                                              " Default: Serial code generation (with vectorization)" },
 	{PROFILE_COUNT      , 0, ""  , "profile-runs"  ,Arg::Numeric  , "    --profile-runs=<num> Number of time profiler should run the program to"
-																							  "collect data. Default: 3" },
+																							                                              " collect data. Default: 3" },
 	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>       Input to the program."
-																							  "Needed to generate profiling information" },
+																							                                              " Needed to generate profiling information" },
 	{COMPILE_TO_OBJECT  , 0, "c" , "compile"       ,Arg::None     , "    -c[<arg>]            Compile to object file" },
 	{OUTPUT_BINARY      , 0, "o" , "output"        ,Arg::Required , "    -o[<arg>]            Output object/binary name" },
 	{INCLUDE_PATH       , 0, "I" , "include"       ,Arg::Required , "    -I[<arg>]            Directory to include file search path" },
@@ -148,7 +148,7 @@ void set_mCompiler_options( int argc, char* argv[] ){
 	for (int i = 0; i < parse.nonOptionsCount(); ++i){
 		string str = parse.nonOption(i);
 		if( isEndingWith( str,".c" ) || isEndingWith( str,".cc" ) || isEndingWith( str,".cpp" ) || 
-			isEndingWith( str,".f" ) || isEndingWith( str,".f77" ) || isEndingWith( str,".f90" ) || isEndingWith( str,".f95" ) ){
+   			isEndingWith( str,".f" ) || isEndingWith( str,".f77" ) || isEndingWith( str,".f90" ) || isEndingWith( str,".f95" ) ){
 		/* Search for source files in the name */
 			mCompiler_input_file.push_back( getAbsolutePath(str) );
 			postSourceFlags = true;

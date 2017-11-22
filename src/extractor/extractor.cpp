@@ -62,7 +62,10 @@ string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 	int lineNumber = getAstNodeLineNum(astNode);
 
 	string output_path = getDataFolderPath();
-	string file_name = mCompiler_file_name;
+	string file_name = mCompiler_original_file_name;
+	/* Since you cannot have '-' in Function name */ 
+	while( file_name.find('-') != string::npos )	
+		file_name.replace(file_name.find('-'),1,string("_"));
 	string file_extn = mCompiler_file_extn;
 	
 	file_name += "_line" + to_string(lineNumber);

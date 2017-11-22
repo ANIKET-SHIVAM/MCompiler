@@ -335,7 +335,7 @@ void ProfilerC::gatherProfilingData( const string& binary_file, compiler_type cu
 	}
 
 	for( int i = 0; i < mCompiler_profiler_runs; i++ ){
-		cerr << "Profiler: Run " << (i+1) << endl; 
+		cerr << "Profiler: " << compiler_str  <<  " -> Run " << (i+1) << endl; 
 		string result;
 		result = executeCommand( binary_file + space_str + mCompiler_profiler_input );
 		
@@ -585,8 +585,7 @@ void ProfilerC::Profile( const map< compiler_type, bool >::iterator &curr_candid
 }
 
 /* Constructor */
-ProfilerC::ProfilerC( bool parallel_enabled ){
-	parallel = parallel_enabled;
+ProfilerC::ProfilerC(){
 	/* Rotate through compiler candidates for optimize and profile */
 	map< compiler_type, bool >::iterator iter;
 	for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){

@@ -65,7 +65,7 @@ void Tester::printCompilerTimings(){
 		cout << "mCompiler -> " << mCompiler_timing << endl; 	
 }
 
-Tester::Tester( bool parallel_enabled ){
+Tester::Tester(){
 	
 	binary_name = mCompiler_binary_name;
 

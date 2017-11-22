@@ -91,7 +91,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-xHost");
 	flag_vec.push_back("-qopenmp");
 	flag_vec.push_back("-std=c11");
-	flag_vec.push_back("-ipo");
+//	flag_vec.push_back("-ipo");
 	flag_vec.push_back("-qopt-prefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
@@ -148,7 +148,7 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-tp=haswell");
 	flag_vec.push_back("-mp");
   flag_vec.push_back("-c11");
-	flag_vec.push_back("-Mipa");
+//	flag_vec.push_back("-Mipa");
 	flag_vec.push_back("-Mprefetch");
 	flag_vec.push_back("-Mprefetch");
 	flag_vec.push_back("-m64");
@@ -197,7 +197,7 @@ void addLinkerFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("icc");
 	flag_vec.push_back("-qopenmp");
-	flag_vec.push_back("-ipo");
+//	flag_vec.push_back("-ipo");
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[PARALLEL])
     flag_vec.push_back("-parallel");
@@ -212,7 +212,7 @@ void addLinkerFlags(){
 //	flag_vec.push_back("-flto"); Require plugin needed for lto object
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[PARALLEL])
-    ;//flag_vec.push_back("-parallel");
+    ;//flag_vec.push_back("-floop-parallelize-all -ftree-parallelize-loops=4");
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_GCC] = flag_vec;	
@@ -233,7 +233,7 @@ void addLinkerFlags(){
 	/* PGI */
 	flag_vec.clear();
 	flag_vec.push_back("pgcc");
-	flag_vec.push_back("-Mipa");
+//	flag_vec.push_back("-Mipa");
 	flag_vec.push_back("-mp");
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[PARALLEL])
@@ -262,8 +262,7 @@ string executeCommand( string cmd_str ){
 	const char *cmd_char_ptr = cmd_str.c_str();
 	array<char, 128> buffer;
     string result;
-
-	cerr << "Executing command:" << endl << cmd_str << endl;
+  	//cerr << "Executing command:" << endl << cmd_str << endl;
     shared_ptr<FILE> pipe(popen(cmd_char_ptr, "r"), pclose);
 
     if (!pipe) throw runtime_error("popen() while executing command failed!");
@@ -273,7 +272,7 @@ string executeCommand( string cmd_str ){
             result += buffer.data();
     }
 	if( !result.empty() ){
-		cerr << "Result of the previous command:" << endl << result << endl;
+		//cerr << "Result of the previous command:" << endl << result << endl;
 		//if( result.find("error") == string::npos )
 		//	exit(EXIT_FAILURE);
 	}

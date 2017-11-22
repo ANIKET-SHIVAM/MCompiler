@@ -14,7 +14,6 @@ struct less_than_cmp_set{
 
 class SynthesizerC {
 private:
-	bool parallel;
 	string binary_name;
 	//set<string> candidate_binaries; -- task moved to Profiler
 	multimap< pair<string,string>, double > hotspot_compiler_timing_map;
@@ -22,8 +21,7 @@ private:
 	set<string> best_objs_to_link;
 
 public:
-	SynthesizerC( bool parallel );
-	bool isParallelEnabled()   { return parallel; };
+	SynthesizerC();
 	string getDataFolderPath() { return mCompiler_data_folder_path; };
 
 	//void findCandidateBinaries(); -- task moved to Profiler

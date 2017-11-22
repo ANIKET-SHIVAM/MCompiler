@@ -8,7 +8,6 @@ using namespace std;
 class ProfilerC { 
 private:
 	string data_folder_path;
-	bool parallel;
 	set<string> files_to_link;
 	set<string> mCompiler_header_obj;
 	set<string> *pluto_files_to_compile = new set<string>();
@@ -29,9 +28,8 @@ private:
 	void pollyProfile(); 
 
 public:
-	ProfilerC( bool parallel_enabled );
+	ProfilerC();
 	string getDataFolderPath() { return mCompiler_data_folder_path; };
-	bool isParallelEnabled()   { return parallel; };
 
 	// Phase 1
 	void Optimize( const map< compiler_type, bool >::iterator &curr_candidate );

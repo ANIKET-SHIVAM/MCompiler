@@ -37,8 +37,8 @@ public:
 	void fetchProfilerInput();
 	void copyInFolderHeaders( string folder_path );
 	void initiateExtractor( string file_name );
-	void initiateProfiler( bool parallel );
-	void initiateSynthesizer( bool parallel );
+	void initiateProfiler();
+	void initiateSynthesizer();
 
 };
 

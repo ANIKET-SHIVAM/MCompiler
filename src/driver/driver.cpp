@@ -19,23 +19,23 @@ void Driver::checkCompilerCandidates(){
 	} else {
 		cout << "Couldn't find in PATH: icc" << endl;
 	}
+  if(!mCompiler_enabled_options[PARALLEL]){
+    result_compiler_found = executeCommand( "gcc" );
+    if( result_compiler_found.find("not found") == string::npos ){
+      compiler_candidate[compiler_GCC] = true;	
+      cout << "Found in PATH: gcc" << endl;
+    } else {
+      cout << "Couldn't find in PATH: gcc" << endl;
+    }
 
-	result_compiler_found = executeCommand( "gcc" );
-	if( result_compiler_found.find("not found") == string::npos ){
-		compiler_candidate[compiler_GCC] = true;	
-		cout << "Found in PATH: gcc" << endl;
-	} else {
-		cout << "Couldn't find in PATH: gcc" << endl;
-	}
-
-	result_compiler_found = executeCommand( "clang" );
-	if( result_compiler_found.find("not found") == string::npos ){
-		compiler_candidate[compiler_LLVM] = true;	
-		cout << "Found in PATH: clang (LLVM)" << endl;
-	} else {
+    result_compiler_found = executeCommand( "clang" );
+    if( result_compiler_found.find("not found") == string::npos ){
+      compiler_candidate[compiler_LLVM] = true;	
+      cout << "Found in PATH: clang (LLVM)" << endl;
+    } else {
 		cout << "Couldn't find in PATH: clang (LLVM)" << endl;
-	}
-
+    }
+  }
 	result_compiler_found = executeCommand( "pgcc" );
 	if( result_compiler_found.find("not found") == string::npos ){
 		compiler_candidate[compiler_PGI] = true;	
@@ -259,12 +259,12 @@ void Driver::initiateExtractor( string file_name ){
 	
 }
 
-void Driver::initiateProfiler( bool parallel ){
-	prof = new ProfilerC( parallel );
+void Driver::initiateProfiler(){
+	prof = new ProfilerC();
 }
 
-void Driver::initiateSynthesizer( bool parallel){
-	synth = new SynthesizerC( parallel );
+void Driver::initiateSynthesizer(){
+	synth = new SynthesizerC();
 }
 
 int main( int argc, char* argv[] ){
@@ -298,7 +298,7 @@ int main( int argc, char* argv[] ){
 			cerr << "Driver: Couldn't find the folder to profile hotspots" << endl;	
 			exit(EXIT_FAILURE);
 		}
-		driver->initiateProfiler( mCompiler_enabled_options[PARALLEL] );
+		driver->initiateProfiler();
 	}
 
 	if( mCompiler_enabled_options[SYNTHESIZE] && 
@@ -307,11 +307,11 @@ int main( int argc, char* argv[] ){
 			cerr << "Driver: Couldn't find the folder to synthesize hotspots" << endl;	
 			exit(EXIT_FAILURE);
 		}	
-		driver->initiateSynthesizer( mCompiler_enabled_options[PARALLEL] );
+		driver->initiateSynthesizer();
 	}
 
 	if( mCompiler_enabled_options[TEST] ){
-		Tester test( mCompiler_enabled_options[PARALLEL] );
+		Tester tester();
 	}
 
 	delete driver;

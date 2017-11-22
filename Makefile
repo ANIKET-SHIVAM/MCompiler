@@ -1,4 +1,4 @@
-CC = g++
+CC = g++-4.9
 FLAGS = -std=c++11 -g
 
 EXTRACTOR_PATH    = src/extractor
