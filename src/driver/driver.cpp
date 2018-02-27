@@ -44,8 +44,6 @@ void Driver::checkCompilerCandidates(){
 		cout << "Couldn't find in PATH: pgcc (PGI)" << endl;
 	}
 	
-	/* Disabling PLuTo for now */	
-	/*
 	result_compiler_found = executeCommand( "polycc" );
 	if( result_compiler_found.find("not found") == string::npos ){
 		compiler_candidate[compiler_Pluto] = true;	
@@ -53,7 +51,6 @@ void Driver::checkCompilerCandidates(){
 	} else {
 		cout << "Couldn't find in PATH: polycc (Pluto)" << endl;
 	}
-	*/
 
 	result_compiler_found = executeCommand( "clang -O3 -mllvm -polly" );
 	if( result_compiler_found.find("not found") == string::npos ){
@@ -226,18 +223,21 @@ void Driver::initiateExtractor( string file_name ){
 	vector<string> filename_vec;
 	string dummy_arg_for_extractor_frontend = "Rose, please let me run the extractor!";
 	filename_vec.push_back(dummy_arg_for_extractor_frontend);
+  // TODO: Do this only for CentOS
+	dummy_arg_for_extractor_frontend = "-I"+ rose_install_path +"include/edg/gcc_HEADERS/";
+	filename_vec.push_back(dummy_arg_for_extractor_frontend);
 
 	/* Rose frontend needs each include path in different vector entry */
 	istringstream bufI(mCompiler_include_path);
-    istream_iterator<string> begI(bufI), endI;
-    vector<string> tokensI(begI, endI);
+  istream_iterator<string> begI(bufI), endI;
+  vector<string> tokensI(begI, endI);
 	for(auto& sI: tokensI)
 		filename_vec.push_back(sI);
 
 	/* Rose frontend needs each Macro definition in different vector entry */
 	istringstream bufM(mCompiler_macro_defs);
-    istream_iterator<string> begM(bufM), endM;
-    vector<string> tokensM(begM, endM);
+  istream_iterator<string> begM(bufM), endM;
+  vector<string> tokensM(begM, endM);
 	for(auto& sM: tokensM)
 		filename_vec.push_back(sM);
 	
@@ -269,10 +269,10 @@ void Driver::initiateSynthesizer(){
 
 int main( int argc, char* argv[] ){
 	Driver *driver = new Driver();
+	set_mCompiler_options( argc, argv );
+	
 	/* Get current working directory path */
 	mCompiler_curr_dir_path = getAbsolutePath(".") + forward_slash_str;
-	
-	set_mCompiler_options( argc, argv );
 	
 	driver->createMCompilerDataFolder();
 	

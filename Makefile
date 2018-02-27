@@ -1,33 +1,35 @@
-CC = g++-4.9
+CC = g++
 FLAGS = -std=c++11 -g
+
+ROSE_PATH=${CURDIR}/tools/rose_install
+BOOST_PATH=${CURDIR}/tools/boost_1_61_0
 
 EXTRACTOR_PATH    = src/extractor
 PROFILER_PATH     = src/profiler
 SYNTHESIZER_PATH  = src/synthesizer
 TESTER_PATH       = src/tester
 DRIVER_PATH       = src/driver
-
-OBJS = objs
-BIN  = bin
 OBJ_COMMON = $(OBJS)/common.o
 
-ROSE_INCLUDE = -I/home/aniket/meta_compiler/tools/rose/boost_1_61_0/include \
-	-I/home/aniket/meta_compiler/tools/rose/rose_build/include/rose
+OBJS = obj
+BIN  = bin
 
-
-all: extractor profiler synthesizer tester driver
+all: dirs extractor profiler synthesizer tester driver
+	
+dirs:
+	mkdir -p ${CURDIR}/$(OBJS)
+	mkdir -p ${CURDIR}/$(BIN)
 
 $(OBJ_COMMON): src/driver/common.cpp
 	$(CC) $(FLAGS) src/driver/common.cpp $(ROSE_INCLUDE) -c -o $@
 
 
 ##### EXTRACTOR #####
-
-EXTRACTOR_COMPILE_FLAGS = -I/home/aniket/meta_compiler/src \
-	$(ROSE_INCLUDE)
-EXTRACTOR_LD_FLAGS = -L/home/aniket/meta_compiler/tools/rose/rose_build/lib/ \
-	-L/home/aniket/meta_compiler/tools/rose/boost_1_61_0/lib/ \
-	-lrose -lboost_iostreams -lboost_system
+ROSE_INCLUDE = -I${ROSE_PATH}/include/ -I${BOOST_PATH}/include/
+EXTRACTOR_COMPILE_FLAGS = -I${CURDIR}/src $(ROSE_INCLUDE)
+EXTRACTOR_LD_FLAGS = -L${ROSE_PATH}/lib \
+	-L${BOOST_PATH}/lib \
+	-lROSE_DLL -lboost_iostreams -lboost_system
 
 OBJ_EXTRACTOR = $(OBJS)/extractor.o
 SRC_EXTRACTOR  = $(EXTRACTOR_PATH)/extractor.cpp 
@@ -43,7 +45,7 @@ $(OBJ_EXTRACTOR): $(SRC_EXTRACTOR)
 
 ##### PROFILER #####
 
-PROFILER_COMPILE_FLAGS = -I/home/aniket/meta_compiler/src \
+PROFILER_COMPILE_FLAGS = -I${CURDIR}/src \
 	$(EXTRACTOR_COMPILE_FLAGS)
 PROFILER_LD_FLAGS = 
 
@@ -62,7 +64,7 @@ just_profiler: $(SRC_PROFILER)
 
 ##### SYNTHESIZER #####
 
-SYNTHESIZER_COMPILE_FLAGS = -I/home/aniket/meta_compiler/src \
+SYNTHESIZER_COMPILE_FLAGS = -I${CURDIR}/src \
 	$(EXTRACTOR_COMPILE_FLAGS)
 SYNTHESIZER_LD_FLAGS = 
 
@@ -88,7 +90,7 @@ $(OBJ_TESTER): $(SRC_TESTER)
 
 ##### DRIVER #####
 
-DRIVER_COMPILE_FLAGS = -I/home/aniket/meta_compiler/src \
+DRIVER_COMPILE_FLAGS = -I${CURDIR}/src \
 	$(EXTRACTOR_COMPILE_FLAGS)
 DRIVER_LD_FLAGS = $(EXTRACTOR_LD_FLAGS)
 

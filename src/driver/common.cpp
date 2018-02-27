@@ -59,7 +59,9 @@ string mCompiler_header_code_name = "mCompiler.c";
 string mCompiler_data_folder      = "mCompiler_data";
 string mCompiler_data_folder_path;
 string mCompiler_curr_dir_path;
+// TODO: Fetch paths from env variables
 string pgi_lib_path               = "/opt/pgi/linux86-64/17.10/lib/";
+string rose_install_path          = "/home/aniket/mcompiler/tools/rose_install/";
 
 /*** Parameter that change based on the CL input ***/
 /* For the extractor */
@@ -261,23 +263,26 @@ string executeCommand( string cmd_str ){
 	cmd_str = cmd_str + " 2>&1";
 	const char *cmd_char_ptr = cmd_str.c_str();
 	array<char, 128> buffer;
-    string result;
-  	//cerr << "Executing command:" << endl << cmd_str << endl;
-    shared_ptr<FILE> pipe(popen(cmd_char_ptr, "r"), pclose);
+  string result;
+  if( mCompiler_enabled_options[MC_DEBUG] == true )
+    cerr << "Executing command:" << endl << cmd_str << endl;
+  shared_ptr<FILE> pipe(popen(cmd_char_ptr, "r"), pclose);
 
-    if (!pipe) throw runtime_error("popen() while executing command failed!");
+  if (!pipe) throw runtime_error("popen() while executing command failed!");
 
-    while (!feof(pipe.get())) {
-        if (fgets(buffer.data(), 128, pipe.get()) != NULL)
-            result += buffer.data();
+  while (!feof(pipe.get())) {
+      if (fgets(buffer.data(), 128, pipe.get()) != NULL)
+          result += buffer.data();
+  }
+  if( mCompiler_enabled_options[MC_DEBUG] == true ){
+    if( !result.empty() ){
+      cerr << "Result of the previous command:" << endl << result << endl;
+      //if( result.find("error") == string::npos )
+      //	exit(EXIT_FAILURE);
     }
-	if( !result.empty() ){
-		//cerr << "Result of the previous command:" << endl << result << endl;
-		//if( result.find("error") == string::npos )
-		//	exit(EXIT_FAILURE);
-	}
+  }
 
-    return result;
+  return result;
 }
 
 bool isDirExist( const string &path ){

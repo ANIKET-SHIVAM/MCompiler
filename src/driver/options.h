@@ -53,6 +53,7 @@ const option::Descriptor usage[] =
 	{LINKER_PATH        , 0, "L" , "link"          ,Arg::Required , "    -L[<arg>]            Directory to search for libraries" },
 	{LIBS_PATH          , 0, "l" , "libs"          ,Arg::Required , "    -l[<arg>]            Instruct the linker to link in the -l<string> library" },
 	{MACRO_DEFS         , 0, "D" , "DEFS"          ,Arg::Required , "    -D[<arg>]            Macro definition" },
+	{MC_DEBUG           , 0, ""  , "debug"         ,Arg::None     , "    --debug              Output mCompiler workflow" },
 	{0,0,0,0,0,0}
 };
 
@@ -65,6 +66,7 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		{ REPORT,     false },
 		{ PARALLEL,   false },
 		{ COMPILE_TO_OBJECT, false },
+		{ MC_DEBUG,   false },
 	};
 	argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
 	option::Stats stats(usage, argc, argv);
@@ -141,6 +143,9 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		case MACRO_DEFS:
 			mCompiler_macro_defs += space_str + "-D" + string(opt.arg) + space_str;
+			break;
+		case MC_DEBUG:
+			mCompiler_enabled_options[MC_DEBUG] = true;
 			break;
 		}
 	}

@@ -46,7 +46,7 @@ typedef enum{
 
 typedef enum{ EXTRACT, PROFILE, SYNTHESIZE, TEST, REPORT, PARALLEL, COMPILE_TO_OBJECT,
 			  PROFILE_COUNT, INPUT_PROFILE, OUTPUT_BINARY, OUTPUT_OBJECT,
-			  INCLUDE_PATH, LINKER_PATH, LIBS_PATH, MACRO_DEFS,
+			  INCLUDE_PATH, LINKER_PATH, LIBS_PATH, MACRO_DEFS, MC_DEBUG,
 			  HELP, UNKNOWN 
 			} mCompiler_options;
 
@@ -81,6 +81,7 @@ extern string mCompiler_data_folder;
 extern string mCompiler_data_folder_path;
 extern string mCompiler_curr_dir_path;
 extern string pgi_lib_path;
+extern string rose_install_path;
 
 /* For the extractor */
 extern vector<string> mCompiler_input_file;
