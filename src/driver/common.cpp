@@ -167,6 +167,9 @@ void addOptimizationFlags(){
 	flag_vec.clear();
 	/* Tiling and parallel code option are off by default */
 	flag_vec.push_back("polycc");
+	flag_vec.push_back("--tile");
+  if(mCompiler_enabled_options[PARALLEL])
+    flag_vec.push_back("--parallel");
 	optimization_flags[compiler_Pluto] = flag_vec;	
 
 	/* Polly */
