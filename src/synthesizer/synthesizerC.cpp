@@ -99,7 +99,7 @@ void SynthesizerC::generateFinalBinary(){
 }
 
 SynthesizerC::SynthesizerC(){
-	binary_name = mCompiler_curr_dir_path + mCompiler_binary_name;
+	binary_name = mCompiler_binary_path + mCompiler_binary_name;
 
 	analyzeHotspotProfileData();
 	generateFinalBinary();

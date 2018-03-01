@@ -182,11 +182,14 @@ void LoopInfo::getVarsInScope(){
               continue;
           }
         }
-				if( (var->get_type())->variantT() == V_SgArrayType || isTypedefArray ){ 
-					/* To change to var_type var_name[][][] */
+				if( (var->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
 					int first_square_brac = var_type_str.find_first_of("[");
+          string var_base_type = var_type_str.substr( 0,first_square_brac );
+//          if(!isTypedefArray && var_type_str.find(var->get_type()->findBaseType()->unparseToString()) == string::npos)
+//            var_base_type = var->get_type()->findBaseType()->unparseToString() + space_str;
+					/* To change to var_type var_name[][][] */
 					if( first_square_brac != string::npos )
-						scope_vars_str_vec.push_back( var_type_str.substr( 0,first_square_brac ) + var->get_name().getString()
+						scope_vars_str_vec.push_back( var_base_type + var->get_name().getString()
 													+ var_type_str.substr( first_square_brac ) );
 					else
 						scope_vars_str_vec.push_back( var_type_str + space_str + var->get_name().getString() );
@@ -720,6 +723,10 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 					addTimingFuncCallNonVoidMain(returnstmt); 
 				break;
 			}
+      case V_SgTypedefDeclaration: {
+        header_set.push_back(astNode->unparseToString()+"\n");
+        break;
+      }
 //			case V_SgSourceFile: {
 				/* add mCompiler header file into the source */
 //				SgSourceFile *sourceFile = dynamic_cast<SgSourceFile *>(astNode);
@@ -852,7 +859,7 @@ void Extractor::addPostTraversalDefs(){
 	/* LastIncludeStatement point to either last include or global var declr
 	 * Due to bug in rosem insert After on include statement skip the next subtree */
 	if( getLastIncludeStatement() != NULL ){
-		if( isSgVariableDeclaration( getLastIncludeStatement() ) != NULL  )
+		if( isSgVariableDeclaration( getLastIncludeStatement() ) != NULL || isSgTypedefDeclaration( getLastIncludeStatement() ) != NULL )
 			SageInterface::insertStatementListAfter( getLastIncludeStatement(), externLoopFuncDefinitionsAdd );
 		else
 			SageInterface::insertStatementListBefore( getLastIncludeStatement(), externLoopFuncDefinitionsAdd );
@@ -916,8 +923,8 @@ Extractor::Extractor( const vector<string> &argv ){
 	ast->unparse();
 	delete ast;
 	
-	string base_file = getDataFolderPath() + getFileName() + base_str + "." + getFileExtn();
-	string base_file_profile = getDataFolderPath() + getFileName() + base_str + mCompiler_profile_file_tag + "." + getFileExtn();
+	string base_file = getDataFolderPath() + getOrigFileName() + base_str + "." + getFileExtn();
+	string base_file_profile = getDataFolderPath() + getOrigFileName() + base_str + mCompiler_profile_file_tag + "." + getFileExtn();
 	/* If file doesn't have any loop, then mCompiler_file_name,_file_extn would be empty at this point */
 	if( mCompiler_file_name.empty() ){
 		/* copy the base file as it is, since rose preprocessor might have bug */

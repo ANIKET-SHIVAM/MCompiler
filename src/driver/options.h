@@ -94,6 +94,7 @@ void set_mCompiler_options( int argc, char* argv[] ){
 	}
 	
 	bool postSourceFlags = false;
+  string tmpstr = "";
 
 	for (int i = 0; i < parse.optionsCount(); ++i){
 		option::Option& opt = buffer[i];
@@ -130,7 +131,9 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			mCompiler_profiler_input = opt.arg;
 			break;
 		case OUTPUT_BINARY:
-			mCompiler_binary_name = opt.arg;
+      tmpstr = opt.arg;
+			mCompiler_binary_path = tmpstr.substr(0, tmpstr.find_last_of('/')+1);
+			mCompiler_binary_name = tmpstr.substr(tmpstr.find_last_of('/')+1);
 			break;
 		case INCLUDE_PATH:
 			mCompiler_include_path += space_str + "-I" + mCompiler_curr_dir_path + string(opt.arg) + space_str;

@@ -52,8 +52,8 @@ void Driver::checkCompilerCandidates(){
 		cout << "Couldn't find in PATH: polycc (Pluto)" << endl;
 	}
 
-	result_compiler_found = executeCommand( "clang -O3 -mllvm -polly" );
-	if( result_compiler_found.find("not found") == string::npos ){
+	result_compiler_found = executeCommand( "opt -help | grep \"Polly Options\"" );
+	if( result_compiler_found.find("Polly Options") != string::npos ){
 		compiler_candidate[compiler_Polly] = true;	
 		cout << "Found in PATH: clang -O3 -mllvm -polly (Polly+LLVM)" << endl;
 	} else {
@@ -224,8 +224,8 @@ void Driver::initiateExtractor( string file_name ){
 	string dummy_arg_for_extractor_frontend = "Rose, please let me run the extractor!";
 	filename_vec.push_back(dummy_arg_for_extractor_frontend);
   // TODO: Do this only for CentOS
-	dummy_arg_for_extractor_frontend = "-I"+ rose_install_path +"include/edg/gcc_HEADERS/";
-	filename_vec.push_back(dummy_arg_for_extractor_frontend);
+//	dummy_arg_for_extractor_frontend = "-I"+ rose_install_path +"include/edg/gcc_HEADERS/";
+//	filename_vec.push_back(dummy_arg_for_extractor_frontend);
 
 	/* Rose frontend needs each include path in different vector entry */
 	istringstream bufI(mCompiler_include_path);
@@ -273,7 +273,8 @@ int main( int argc, char* argv[] ){
 	
 	/* Get current working directory path */
 	mCompiler_curr_dir_path = getAbsolutePath(".") + forward_slash_str;
-	
+  if(mCompiler_binary_path.empty())
+	  mCompiler_binary_path = mCompiler_curr_dir_path;
 	driver->createMCompilerDataFolder();
 	
 	genRandomStr(mCompiler_unique_str, 5);	

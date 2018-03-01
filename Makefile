@@ -1,8 +1,8 @@
 CC = g++
 FLAGS = -std=c++11 -g
 
-ROSE_PATH=${CURDIR}/tools/rose_install
-BOOST_PATH=${CURDIR}/tools/boost_1_61_0
+ROSE_PATH=${CURDIR}/tools/rose_build
+BOOST_PATH=${CURDIR}/tools/boost_build
 
 EXTRACTOR_PATH    = src/extractor
 PROFILER_PATH     = src/profiler
@@ -25,11 +25,11 @@ $(OBJ_COMMON): src/driver/common.cpp
 
 
 ##### EXTRACTOR #####
-ROSE_INCLUDE = -I${ROSE_PATH}/include/ -I${BOOST_PATH}/include/
+ROSE_INCLUDE = -I${ROSE_PATH}/include/rose -I${BOOST_PATH}/include/
 EXTRACTOR_COMPILE_FLAGS = -I${CURDIR}/src $(ROSE_INCLUDE)
 EXTRACTOR_LD_FLAGS = -L${ROSE_PATH}/lib \
 	-L${BOOST_PATH}/lib \
-	-lROSE_DLL -lboost_iostreams -lboost_system
+	-lrose -lboost_iostreams -lboost_system
 
 OBJ_EXTRACTOR = $(OBJS)/extractor.o
 SRC_EXTRACTOR  = $(EXTRACTOR_PATH)/extractor.cpp 

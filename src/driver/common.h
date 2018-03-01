@@ -76,12 +76,12 @@ extern string loopTimingVarSuffix;
 extern string mCompiler_profile_file_tag;
 extern string mCompiler_header_name;
 extern string mCompiler_header_code_name;
+extern string mCompiler_binary_path;
 extern string mCompiler_binary_name;
 extern string mCompiler_data_folder;
 extern string mCompiler_data_folder_path;
 extern string mCompiler_curr_dir_path;
 extern string pgi_lib_path;
-extern string rose_install_path;
 
 /* For the extractor */
 extern vector<string> mCompiler_input_file;

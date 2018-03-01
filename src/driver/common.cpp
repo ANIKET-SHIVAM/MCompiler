@@ -61,12 +61,12 @@ string mCompiler_data_folder_path;
 string mCompiler_curr_dir_path;
 // TODO: Fetch paths from env variables
 string pgi_lib_path               = "/opt/pgi/linux86-64/17.10/lib/";
-string rose_install_path          = "/home/aniket/mcompiler/tools/rose_install/";
 
 /*** Parameter that change based on the CL input ***/
 /* For the extractor */
 vector<string> mCompiler_input_file = vector<string>();
 vector<string> mCompiler_object_file;
+string mCompiler_binary_path       = ""; 
 string mCompiler_binary_name       = "a_mc.out"; //Default: If CL provided then replaced with that name
 /* Extractor passes to Profiler */
 set<string> files_to_compile;
