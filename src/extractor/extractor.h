@@ -47,6 +47,8 @@ public:
 	map<SgFunctionDeclaration*,string> inline_func_map;
   string loopOMPpragma = "";
 	vector<string> func_var_str_vec;
+  SgScopeStatement* loopParentFuncScope = NULL;
+  map<SgStatement*,SgStatement*> externFuncDef;
 public:
 	Extractor() {};
 	Extractor( const vector<string> &argv );
@@ -75,8 +77,10 @@ public:
 	void addTimingFuncCallVoidMain();
 	void addTimingFuncCallNonVoidMain( SgStatement* returnStmt );
 	void modifyExtractedFileText( const string &base_file, const string &base_file_profile );
+  void collectAdjoiningLoops( SgStatement *loop);
 //  void getVarsInFunction();
 
+  bool skipLoop( SgNode *astNode );
 	void extractLoops( SgNode *astNode );
 	void extractFunctions( SgNode *astNode );
 	virtual InheritedAttribute evaluateInheritedAttribute( SgNode *astNode, 

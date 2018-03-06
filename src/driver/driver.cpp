@@ -15,9 +15,9 @@ void Driver::checkCompilerCandidates(){
 	result_compiler_found = executeCommand( "icc" );
 	if( result_compiler_found.find("not found") == string::npos ){
 		compiler_candidate[compiler_ICC] = true;	
-		cout << "Found in PATH: icc" << endl;
+		cout << "Found in PATH: icc (Intel)" << endl;
 	} else {
-		cout << "Couldn't find in PATH: icc" << endl;
+		cout << "Couldn't find in PATH: icc (Intel)" << endl;
 	}
   if(!mCompiler_enabled_options[PARALLEL]){
     result_compiler_found = executeCommand( "gcc" );
@@ -55,7 +55,7 @@ void Driver::checkCompilerCandidates(){
 	result_compiler_found = executeCommand( "opt -help | grep \"Polly Options\"" );
 	if( result_compiler_found.find("Polly Options") != string::npos ){
 		compiler_candidate[compiler_Polly] = true;	
-		cout << "Found in PATH: clang -O3 -mllvm -polly (Polly+LLVM)" << endl;
+		cout << "Found in PATH: Polly+LLVM" << endl;
 	} else {
 		cout << "Couldn't find in PATH: clang -O3 -mllvm -polly (Polly+LLVM)" << endl;
 	}

@@ -205,6 +205,9 @@ void LoopInfo::getVarsInScope(){
               scope_vars_str_vec.push_back( var_type_str.insert( first_endparan, var->get_name().getString() ) );
             else
               scope_vars_str_vec.push_back( var_type_str + space_str + var->get_name().getString() );
+          } else if ( var->get_type()->stripType(1<<2)->variantT() == V_SgFunctionType ) {
+            /* If function pointer, then return_type (*var_name)(params) */
+            scope_vars_str_vec.push_back( var_type_str.insert(var_type_str.find("(*") +2, var->get_name().getString()) );
           } else {
             scope_vars_str_vec.push_back( var_type_str + space_str + var->get_name().getString() );
           }
@@ -259,7 +262,6 @@ void LoopInfo::addScopeFuncAsExtern( string &externFuncStr ){
 			if( SageInterface::isSameFunction( declFunc, inlineFunc.first ) ){
 				externFuncStr += inlineFunc.second;
 				consider_as_Extern = false;
-				break;
 			}
 		}
 		if( consider_as_Extern )
@@ -494,7 +496,7 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 }
 
 void Extractor::addExternDefs( SgFunctionDeclaration *func ){
-	externLoopFuncDefinitionsAdd.push_back( dynamic_cast<SgStatement *>(func) );
+	externFuncDef.insert(pair<SgStatement*,SgStatement*>( dynamic_cast<SgStatement *>(func), SageInterface::getFirstStatement(loopParentFuncScope) ));
 }
 
 /* Add loop function call as extern in the base source file */
@@ -571,7 +573,7 @@ void LoopInfo::addLoopFuncCall(){
 	SgName func_name = getFuncName();
 	SgFunctionCallExp* call_expr = SageBuilder::buildFunctionCallExp
 		( func_name, SageBuilder::buildVoidType(), SageBuilder::buildExprListExp( expr_list ),loop_scope );
-	SageInterface::replaceStatement( loop, SageBuilder::buildExprStatement( call_expr ), true);
+  SageInterface::replaceStatement( loop, SageBuilder::buildExprStatement( call_expr ), true);
 }
 
 /* Intended to get rid of variable mentioned in OpenMP clauses that are not required for the loop */
@@ -591,6 +593,20 @@ void LoopInfo::addLoopFuncCall(){
 //    }
 //  }
 //}
+
+bool Extractor::skipLoop( SgNode *astNode ){
+	SgForStatement *loop = dynamic_cast<SgForStatement *>(astNode);
+  SgScopeStatement *scope = ( loop->get_loop_body() )->get_scope();
+  Rose_STL_Container<SgNode *> returnStmt = NodeQuery::querySubTree(scope, V_SgReturnStmt);
+  if(returnStmt.begin() != returnStmt.end())
+    return true;
+
+  Rose_STL_Container<SgNode *> gotoStmt = NodeQuery::querySubTree(scope, V_SgGotoStatement);
+  if(gotoStmt.begin() != gotoStmt.end())
+    return true;
+
+  return false; 
+}
 
 void Extractor::extractLoops( SgNode *astNode ){
 	SgForStatement *loop = dynamic_cast<SgForStatement *>(astNode);
@@ -624,8 +640,8 @@ void Extractor::extractLoops( SgNode *astNode ){
 	 */
 	curr_loop.printLoopFunc( loop_file_buf_profile, true );	
 	curr_loop.printLoopFunc( loop_file_buf_no_profile, false );	
-	curr_loop.addLoopFuncAsExtern();
 	curr_loop.addLoopFuncCall();
+	curr_loop.addLoopFuncAsExtern();
 
 	loop_file_buf_profile.close();
 	loop_file_buf_no_profile.close();
@@ -644,12 +660,20 @@ void Extractor::extractLoops( SgNode *astNode ){
 	/* TODO: Call astyleFormatter here in distant future */
 }
 
+void Extractor::collectAdjoiningLoops(SgStatement *loop){
+  if (loop == NULL)
+    return;
+  if( SageInterface::getNextStatement(loop)->variantT() && SageInterface::getNextStatement(loop)->variantT() == V_SgForStatement ){
+    cout << loop->unparseToCompleteString() << endl;
+    collectAdjoiningLoops(SageInterface::getNextStatement(loop));
+  }
+  else {
+    cout << loop->unparseToCompleteString() << endl;
+    return;
+  }
+}
 
 void Extractor::extractFunctions( SgNode *astNode ){
-  
-
-
-
 }
 
 /* Required for Top Down parsing */
@@ -670,7 +694,10 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 				// TODO: Upto what loop depth to extract as tool option
 				if( inh_attr.loop_nest_depth_ < 2 ){
 					//cerr << "Extracting loop now" << endl;
-					extractLoops( astNode );
+          //if( SageInterface::getNextStatement(loop)->variantT() != NULL && SageInterface::getNextStatement(loop)->variantT() == V_SgForStatement )
+          //  collectAdjoiningLoops(dynamic_cast<SgStatement *>(astNode));
+          if(!skipLoop(astNode))
+					  extractLoops( astNode );
           loopOMPpragma = "";
 				}
 				break;
@@ -704,6 +731,10 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
     
 				break;
 			}
+      case V_SgFunctionDefinition: {
+        loopParentFuncScope = dynamic_cast<SgScopeStatement *>(astNode);
+        break;
+      }
 			case V_SgGlobal: {
 				global_node = isSgGlobal(astNode);
 				break;
@@ -820,7 +851,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 							if( var_str.find(ignorePrettyFunctionCall) == string::npos )	
 								global_vars.insert( var_type_str + " " + var_str );
 						}
-						lastIncludeStmt = dynamic_cast<SgStatement *>(astNode);	
+						//lastIncludeStmt = dynamic_cast<SgStatement *>(astNode);	
 					}
 					if (isSgClassDefinition(scope) != NULL)
 					{
@@ -828,7 +859,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 						if (variableDeclaration->get_declarationModifier().get_storageModifier().isStatic() == true){
 							//cerr << "Found a static global var: " << var_type_str + " " + initializedName->get_name().getString() << endl;	
 							global_vars.insert( var_type_str + " " + initializedName->get_name().getString() );
-							lastIncludeStmt = dynamic_cast<SgStatement *>(astNode);	
+							//lastIncludeStmt = dynamic_cast<SgStatement *>(astNode);	
 						}
 					}
 				}	
@@ -856,9 +887,12 @@ int Extractor::evaluateSynthesizedAttribute( SgNode *astNode, InheritedAttribute
 }
 
 void Extractor::addPostTraversalDefs(){
+  //SageInterface::insertStatementListBeforeFirstNonDeclaration ( externLoopFuncDefinitionsAdd, getLastIncludeStatement()->get_scope() );
+  for (std::map<SgStatement*,SgStatement*>::iterator it=externFuncDef.begin(); it!=externFuncDef.end(); ++it)
+    SageInterface::insertStatementBefore(it->second, it->first,true);
 	/* LastIncludeStatement point to either last include or global var declr
 	 * Due to bug in rosem insert After on include statement skip the next subtree */
-	if( getLastIncludeStatement() != NULL ){
+	/*if( getLastIncludeStatement() != NULL ){
 		if( isSgVariableDeclaration( getLastIncludeStatement() ) != NULL || isSgTypedefDeclaration( getLastIncludeStatement() ) != NULL )
 			SageInterface::insertStatementListAfter( getLastIncludeStatement(), externLoopFuncDefinitionsAdd );
 		else
@@ -866,7 +900,7 @@ void Extractor::addPostTraversalDefs(){
 			
 	} else {
 		SageInterface::appendStatementList( externLoopFuncDefinitionsAdd, getGlobalNode() );
-	}
+	}*/
 }
 
 void Extractor::addTimingFuncCallVoidMain(){
@@ -923,22 +957,21 @@ Extractor::Extractor( const vector<string> &argv ){
 	ast->unparse();
 	delete ast;
 	
-	string base_file = getDataFolderPath() + getOrigFileName() + base_str + "." + getFileExtn();
-	string base_file_profile = getDataFolderPath() + getOrigFileName() + base_str + mCompiler_profile_file_tag + "." + getFileExtn();
 	/* If file doesn't have any loop, then mCompiler_file_name,_file_extn would be empty at this point */
 	if( mCompiler_file_name.empty() ){
-		/* copy the base file as it is, since rose preprocessor might have bug */
-		executeCommand( "cp " + argv.back() + space_str + base_file );
-		executeCommand( "cp " + base_file + space_str + base_file_profile );
-	} else { 	
-		/* Move base file to the mCompiler data folder: 
-		 * mv rose_filename.x mCompiler_data/filename_base.x
-		 * cp mCompiler_data/filename_base.x mCompiler_data/filename_base_profile_.x
-		 */
-		executeCommand( "mv rose_"+ getOrigFileName() + "." + getFileExtn() + space_str + base_file );
-		executeCommand( "cp " + base_file + space_str + base_file_profile );
-		modifyExtractedFileText(base_file, base_file_profile);
-	}
+    mCompiler_original_file_name = getOrigFileName(argv.back());
+    mCompiler_file_extn          = getFileExtn(argv.back());
+  }
+	string base_file = getDataFolderPath() + getOrigFileName() + base_str + "." + getFileExtn();
+	string base_file_profile = getDataFolderPath() + getOrigFileName() + base_str + mCompiler_profile_file_tag + "." + getFileExtn();
+  /* Move base file to the mCompiler data folder: 
+   * mv rose_filename.x mCompiler_data/filename_base.x
+   * cp mCompiler_data/filename_base.x mCompiler_data/filename_base_profile_.x
+   */
+  executeCommand( "mv rose_"+ getOrigFileName() + "." + getFileExtn() + space_str + base_file );
+  executeCommand( "cp " + base_file + space_str + base_file_profile );
+  modifyExtractedFileText(base_file, base_file_profile);
+	
 	files_to_compile.insert(base_file);
 	files_to_compile.insert(base_file_profile);
 }
