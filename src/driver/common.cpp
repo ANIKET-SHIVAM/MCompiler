@@ -90,6 +90,7 @@ void addOptimizationFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("icc");
 	flag_vec.push_back("-Ofast");
+//	flag_vec.push_back("-O0");
 	flag_vec.push_back("-xHost");
 	flag_vec.push_back("-qopenmp");
 	flag_vec.push_back("-std=c11");
@@ -202,7 +203,7 @@ void addLinkerFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("icc");
 	flag_vec.push_back("-qopenmp");
-//	flag_vec.push_back("-ipo");
+	flag_vec.push_back("-ipo");
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[PARALLEL])
     flag_vec.push_back("-parallel");

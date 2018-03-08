@@ -194,20 +194,31 @@ void LoopInfo::getVarsInScope(){
 					else
 						scope_vars_str_vec.push_back( var_type_str + space_str + var->get_name().getString() );
 				} else if( SageInterface::isStructType(var->get_type()) || isTypedefStruct ){
-					scope_vars_str_vec.push_back( var_type_str + "* " + var->get_name().getString() );
+					scope_vars_str_vec.push_back( var_type_str + "* " + var->get_name().getString() + "_primitive" );
 					scope_struct_str_vec.push_back( var->get_name().getString() );
 				} else if( (var->get_type())->variantT() == V_SgPointerType ){
+          SgType *var_pointer_type = var->get_type()->stripType(1<<2);
+          if( var_pointer_type->variantT() == V_SgTypedefType ){
+            SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>(var_pointer_type);
+            var_pointer_type = type_def_var->get_base_type();
+          }
           /* Strip var type hidden under pointer to check if array */
-          if( var->get_type()->stripType(1<<2)->variantT() == V_SgArrayType ){
+          if( var_pointer_type->variantT() == V_SgArrayType ){
             /* To change to var_type var_name[][][] */
             int first_endparan = var_type_str.find_first_of(")");
             if( first_endparan != string::npos )
               scope_vars_str_vec.push_back( var_type_str.insert( first_endparan, var->get_name().getString() ) );
             else
               scope_vars_str_vec.push_back( var_type_str + space_str + var->get_name().getString() );
-          } else if ( var->get_type()->stripType(1<<2)->variantT() == V_SgFunctionType ) {
+          } else if ( var_pointer_type->variantT() == V_SgFunctionType ) {
             /* If function pointer, then return_type (*var_name)(params) */
-            scope_vars_str_vec.push_back( var_type_str.insert(var_type_str.find("(*") +2, var->get_name().getString()) );
+            if( var_type_str.find("(*") != string::npos )
+              scope_vars_str_vec.push_back( var_type_str.insert(var_type_str.find("(*") +2, var->get_name().getString()) );
+            else //might be a typedef function ptr
+              scope_vars_str_vec.push_back( var_type_str + space_str + var->get_name().getString() );
+          } else if( SageInterface::isStructType(var_pointer_type) ){
+            scope_vars_str_vec.push_back( var_type_str + "* " + var->get_name().getString() + "_primitive" );
+            scope_struct_str_vec.push_back( var->get_name().getString() );
           } else {
             scope_vars_str_vec.push_back( var_type_str + space_str + var->get_name().getString() );
           }
@@ -275,24 +286,32 @@ void LoopInfo::pushPointersToLocalVars( ofstream& loop_file_buf ){
 	
 	vector<SgVariableSymbol*>::iterator iter;
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++ ){
-		string var_type_str = ((*iter)->get_type())->unparseToString();
-		string var_name_str = ((*iter)->get_name()).getString();
+		SgVariableSymbol *var = (*iter);
+		string var_type_str = (var->get_type())->unparseToString();
+		string var_name_str = (var->get_name()).getString();
 		bool isTypedefArray  = false;
 		bool isTypedefStruct = false;
-		if( ((*iter)->get_type())->variantT() == V_SgTypedefType ){
-			SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>((*iter)->get_type());
+		if( (var->get_type())->variantT() == V_SgTypedefType ){
+			SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>(var->get_type());
 			if( (type_def_var->get_base_type())->variantT() == V_SgArrayType )
 						isTypedefArray = true;
 			if( SageInterface::isStructType(type_def_var->get_base_type()) )
 						isTypedefStruct = true;
 		}
 		bool isPrimitive = true;
-		if( ((*iter)->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
+		if( (var->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
 			isPrimitive = false;	
-		} else if( SageInterface::isStructType( (*iter)->get_type() ) || isTypedefStruct ){
+		} else if( SageInterface::isStructType( var->get_type() ) || isTypedefStruct ){
+			isPrimitive = true;	
+		} else if( (var->get_type())->variantT() == V_SgPointerType ){
 			isPrimitive = false;	
-		} else if( ((*iter)->get_type())->variantT() == V_SgPointerType ){
-			isPrimitive = false;	
+      SgType *var_pointer_type = var->get_type()->stripType(1<<2);
+      if( var_pointer_type->variantT() == V_SgTypedefType ){
+        SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>(var_pointer_type);
+        var_pointer_type = type_def_var->get_base_type();
+      }
+      if( SageInterface::isStructType(var_pointer_type) )
+        isPrimitive = true;
     }
 
 		if( isPrimitive ){
@@ -308,12 +327,13 @@ void LoopInfo::popLocalVarsToPointers( ofstream& loop_file_buf ){
 	
 	vector<SgVariableSymbol*>::iterator iter;
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++ ){
-		string var_type_str = ((*iter)->get_type())->unparseToString();
-		string var_name_str = ((*iter)->get_name()).getString();
+		SgVariableSymbol *var = (*iter);
+		string var_type_str = (var->get_type())->unparseToString();
+		string var_name_str = (var->get_name()).getString();
 		bool isTypedefArray  = false;
 		bool isTypedefStruct = false;
-		if( ((*iter)->get_type())->variantT() == V_SgTypedefType ){
-			SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>((*iter)->get_type());
+		if( (var->get_type())->variantT() == V_SgTypedefType ){
+			SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>(var->get_type());
 			if( (type_def_var->get_base_type())->variantT() == V_SgArrayType )
 						isTypedefArray = true;
 			if( SageInterface::isStructType(type_def_var->get_base_type()) )
@@ -321,16 +341,23 @@ void LoopInfo::popLocalVarsToPointers( ofstream& loop_file_buf ){
 		}
 
 		bool isConst = false;
-		if( SageInterface::isConstType((*iter)->get_type()) )
+		if( SageInterface::isConstType(var->get_type()) )
 			isConst = true;
 		
 		bool isPrimitive = true;
-		if( ((*iter)->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
+		if( (var->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
 			isPrimitive = false;	
-		} else if( SageInterface::isStructType( (*iter)->get_type() ) || isTypedefStruct ){
+		} else if( SageInterface::isStructType( var->get_type() ) || isTypedefStruct ){
 			isPrimitive = false;	
-		} else if( ((*iter)->get_type())->variantT() == V_SgPointerType ){
+		} else if( (var->get_type())->variantT() == V_SgPointerType ){
 			isPrimitive = false;	
+      SgType *var_pointer_type = var->get_type()->stripType(1<<2);
+      if( var_pointer_type->variantT() == V_SgTypedefType ){
+        SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>(var_pointer_type);
+        var_pointer_type = type_def_var->get_base_type();
+      }
+      if( SageInterface::isStructType(var_pointer_type) )
+        isPrimitive = true;
 		}
 
 		if( isPrimitive && !isConst ){
@@ -510,16 +537,31 @@ void LoopInfo::addLoopFuncAsExtern(){
 			SgInitializedName *arg_init_name;
 			if( extr.getSrcType() == src_lang_C ){
 				// Pointers for C
-				bool isTypedefArray = false;
+				bool isTypedefArray  = false;
+				bool isTypedefStruct = false;
 				if( ((*iter)->get_type())->variantT() == V_SgTypedefType ){
 					SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>((*iter)->get_type());
 					if( (type_def_var->get_base_type())->variantT() == V_SgArrayType )
-								isTypedefArray = true;
+					  isTypedefArray = true;
+					else if( SageInterface::isStructType(type_def_var->get_base_type()) )
+						isTypedefStruct = true;
         }
-				if( ( (*iter)->get_type() )->variantT() == V_SgArrayType || isTypedefArray ||
-            ( (*iter)->get_type() )->variantT() == V_SgPointerType ){
+				if( ( (*iter)->get_type() )->variantT() == V_SgArrayType || isTypedefArray){
           arg_init_name = SageBuilder::buildInitializedName(arg_name, (*iter)->get_type());
-        } else {
+        } else if (( (*iter)->get_type() )->variantT() == V_SgPointerType ){
+          SgType *var_pointer_type = (*iter)->get_type()->stripType(1<<2);
+          if( var_pointer_type->variantT() == V_SgTypedefType ){
+            SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>(var_pointer_type);
+            var_pointer_type = type_def_var->get_base_type();
+          }
+          if( SageInterface::isStructType(var_pointer_type) ){
+            SgPointerType *arg_type =
+              SageBuilder::buildPointerType( (*iter)->get_type() );
+            arg_init_name = SageBuilder::buildInitializedName(arg_name, arg_type);
+          } else {
+            arg_init_name = SageBuilder::buildInitializedName(arg_name, (*iter)->get_type());
+          }
+        } else { //TypedefStruct will be handled here
           SgPointerType *arg_type =
             SageBuilder::buildPointerType( (*iter)->get_type() );
           arg_init_name = SageBuilder::buildInitializedName(arg_name, arg_type);
@@ -552,16 +594,30 @@ void LoopInfo::addLoopFuncCall(){
 	for( iter = scope_vars_symbol_vec.begin(); iter != scope_vars_symbol_vec.end(); iter++){
 			if( extr.getSrcType() == src_lang_C ){
 				// 'Address Of' for C except when its an array
-				bool isTypedefArray = false;
+				bool isTypedefArray  = false;
+				bool isTypedefStruct = false;
 				if( ((*iter)->get_type())->variantT() == V_SgTypedefType ){
 					SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>((*iter)->get_type());
 					if( (type_def_var->get_base_type())->variantT() == V_SgArrayType )
-								isTypedefArray = true;
+            isTypedefArray = true;
+					else if( SageInterface::isStructType(type_def_var->get_base_type()) )
+						isTypedefStruct = true;
 				}
-				if( ( (*iter)->get_type() )->variantT() == V_SgArrayType || isTypedefArray ||
-            ( (*iter)->get_type() )->variantT() == V_SgPointerType ){
+				if( ( (*iter)->get_type() )->variantT() == V_SgArrayType || isTypedefArray ){
 					expr_list.push_back( SageBuilder::buildVarRefExp( (*iter) ) );
-				} else {
+        } else if (( (*iter)->get_type() )->variantT() == V_SgPointerType ){
+          SgType *var_pointer_type = (*iter)->get_type()->stripType(1<<2);
+          if( var_pointer_type->variantT() == V_SgTypedefType ){
+            SgTypedefType *type_def_var = dynamic_cast<SgTypedefType *>(var_pointer_type);
+            var_pointer_type = type_def_var->get_base_type();
+          }
+          if( SageInterface::isStructType(var_pointer_type) ){
+            expr_list.push_back( SageBuilder::buildAddressOfOp
+                        ( SageBuilder::buildVarRefExp( (*iter) ) ) );
+          } else {
+            expr_list.push_back( SageBuilder::buildVarRefExp( (*iter) ) );
+          }
+				} else { //typedef struct handled here
 					expr_list.push_back( SageBuilder::buildAddressOfOp
 											( SageBuilder::buildVarRefExp( (*iter) ) ) );
 				}
@@ -647,16 +703,16 @@ void Extractor::extractLoops( SgNode *astNode ){
 	loop_file_buf_no_profile.close();
 
 	/* Change struct access with pointer to struct */
-	for( auto const &str : curr_loop.scope_struct_str_vec ){
-		/* change struct access: 'st =' to '(*st) =' */ 
-		string sed_command1 = "sed -i 's/" + str + " =/(*" + str + ") =/g' ";
-		executeCommand(sed_command1 + loop_profile_file_name );
-		executeCommand(sed_command1 + loop_no_profile_file_name );
-		/* change struct access: st.member to st->member */ 
-		string sed_command2 = "sed -i 's/" + str + " \\./" + str + " ->/g' ";
-		executeCommand(sed_command2 + loop_profile_file_name );
-		executeCommand(sed_command2 + loop_no_profile_file_name );
-	}
+//	for( auto const &str : curr_loop.scope_struct_str_vec ){
+//		/* change struct access: 'st =' to '(*st) =' */ 
+//		string sed_command1 = "sed -i 's/" + str + " =/(*" + str + ") =/g' ";
+//		executeCommand(sed_command1 + loop_profile_file_name );
+//		executeCommand(sed_command1 + loop_no_profile_file_name );
+//		/* change struct access: st.member to st->member */ 
+//		string sed_command2 = "sed -i 's/" + str + " \\./" + str + " ->/g' ";
+//		executeCommand(sed_command2 + loop_profile_file_name );
+//		executeCommand(sed_command2 + loop_no_profile_file_name );
+//	} 
 	/* TODO: Call astyleFormatter here in distant future */
 }
 
@@ -922,6 +978,10 @@ void Extractor::modifyExtractedFileText( const string &base_file, const string &
 	string sed_command1 = "sed -i 's/static //g' " + base_file;
 	executeCommand( sed_command1 );
 	sed_command1 = "sed -i 's/static //g' " + base_file_profile;
+	executeCommand( sed_command1 );
+	sed_command1 = "sed -i 's/inline //g' " + base_file;
+	executeCommand( sed_command1 );
+	sed_command1 = "sed -i 's/inline //g' " + base_file_profile;
 	executeCommand( sed_command1 );
 	
 	/* Remove register keyword from variables and functions in both profile and non-profile file */
