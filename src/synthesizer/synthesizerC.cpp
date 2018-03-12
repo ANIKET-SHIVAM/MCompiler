@@ -26,8 +26,10 @@ void SynthesizerC::selectOptimalOptimizedCandidate( string hotspot_name ){
 	string best_compiler_option = ( hotspot_timing_set.begin() )->first;
 	string best_option_path = ( profiler_hotspot_obj_path.find( pair<string,string>(hotspot_name, best_compiler_option ) ) )->second;
 	best_objs_to_link.insert(best_option_path);
-	
-	cout << "mCompiler chose: " << hotspot_name << " + " << best_compiler_option << endl;
+  if(( hotspot_timing_set.begin() )->second != 0 )	
+    cout << "mCompiler chose: " << hotspot_name << " + " << best_compiler_option << endl;
+  else
+    cout << "mCompiler chose: " << hotspot_name << " + " << "baseline (lacks profile info)" << endl;
 		
 }
 
