@@ -235,6 +235,8 @@ void Driver::initiateExtractor( string file_name ){
 		filename_vec.push_back(sI);
 
 	/* Rose frontend needs each Macro definition in different vector entry */
+  if(mCompiler_enabled_options[PARALLEL])
+		filename_vec.push_back("-D_OPENMP");
 	istringstream bufM(mCompiler_macro_defs);
   istream_iterator<string> begM(bufM), endM;
   vector<string> tokensM(begM, endM);

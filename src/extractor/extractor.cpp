@@ -464,7 +464,7 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 	if( extr.getSrcType() == src_lang_C )
 		pushPointersToLocalVars( loop_file_buf );
 
-  if(extr.getOMPpragma() != "")
+  if(mCompiler_enabled_options[PARALLEL] && extr.getOMPpragma() != "")
     loop_file_buf << printOMPprivateArrays() << endl;
 	
 	// Add OMP Timer start
@@ -475,7 +475,8 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 	loop_file_buf << "#pragma scop" << endl;
 	
   //Get OMP pragma for this loop
-  if(extr.getOMPpragma() != "")
+  if(mCompiler_enabled_options[PARALLEL] && extr.getOMPpragma() != "" &&
+     extr.getOMPpragma().find("threadprivate") == string::npos )
     loop_file_buf << endl << sanitizeOMPpragma( extr.getOMPpragma() ) << endl;
 	
 	// Entire Loop Body
@@ -830,7 +831,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 		if (locatedNode != NULL ) {
 			SgStatement *locatedNode_SgStatement = dynamic_cast<SgStatement *>(astNode);
 			AttachedPreprocessingInfoType *directives = locatedNode->getAttachedPreprocessingInfo();
-			if (directives != NULL && isSgGlobal(locatedNode_SgStatement->get_scope()) ) {
+			if (directives != NULL && locatedNode_SgStatement && isSgGlobal(locatedNode_SgStatement->get_scope()) ) {
 				AttachedPreprocessingInfoType::iterator i;
 				for (i = directives->begin(); i != directives->end(); i++) {
 					string directiveTypeName = PreprocessingInfo::directiveTypeName((*i)->getTypeOfDirective()).c_str();
@@ -994,6 +995,10 @@ void Extractor::modifyExtractedFileText( const string &base_file, const string &
 	sed_command2 = "sed -i '/omp parallel for/d' " + base_file;
 	executeCommand( sed_command2 );
 	sed_command2 = "sed -i '/omp parallel for/d' " + base_file_profile;
+	executeCommand( sed_command2 );
+	sed_command2 = "sed -i '/omp for/d' " + base_file;
+	executeCommand( sed_command2 );
+	sed_command2 = "sed -i '/omp for/d' " + base_file_profile;
 	executeCommand( sed_command2 );
 	
 	/* Remove mCompile header and accumulater timing var print function from non profile base file */

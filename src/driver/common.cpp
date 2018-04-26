@@ -89,8 +89,10 @@ void addOptimizationFlags(){
 	/* ICC */
 	flag_vec.clear();
 	flag_vec.push_back("icc");
-	flag_vec.push_back("-Ofast");
-//	flag_vec.push_back("-O0");
+  if( !mCompiler_enabled_options[MC_DEBUG] )
+    flag_vec.push_back("-Ofast");
+  else
+  	flag_vec.push_back("-O0 -g");
 	flag_vec.push_back("-xHost");
 	flag_vec.push_back("-qopenmp");
 	flag_vec.push_back("-std=c11");
