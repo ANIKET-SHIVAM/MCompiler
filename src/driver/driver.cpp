@@ -81,6 +81,20 @@ void Driver::checkCompilerCandidates(){
 	addPostLinkerFlags();
 }
 
+bool Driver::checkAdvProfileCandidate(){
+	string result_compiler_found = executeCommand( "perf stat" );
+	if( result_compiler_found.find("not found") != string::npos ){
+		cout << "Perf not found" << endl;
+    return false;
+  } else if( result_compiler_found.find("Error") != string::npos ){
+		cout << "Perf may be have permissions: check perf stat" << endl;
+    return false;
+	} else {
+		return true;
+	}
+  
+}
+
 void Driver::setMCompilerMode(){
 	/* Check if CL had neither object file nor source files */
 	if( mCompiler_object_file.empty() && mCompiler_input_file.empty() ){
@@ -265,6 +279,10 @@ void Driver::initiateProfiler(){
 	prof = new ProfilerC();
 }
 
+void Driver::initiateAdvProfiler(){
+	adv_prof = new AdvProfiler();
+}
+
 void Driver::initiateSynthesizer(){
 	synth = new SynthesizerC();
 }
@@ -284,6 +302,13 @@ int main( int argc, char* argv[] ){
 	driver->fetchProfilerInput();
 	driver->checkCompilerCandidates();
 	driver->setMCompilerMode();
+
+  if( mCompiler_enabled_options[ADV_PROFILE] ){
+    if( !driver->checkAdvProfileCandidate() ){
+      cerr << "Driver: Check unsuccesful for the Advanced Profiling Tool" << endl;
+      mCompiler_enabled_options[ADV_PROFILE] = false;
+    } 
+  }
 	
 	/* Send all files in the command line for extraction */
 	if( mCompiler_enabled_options[EXTRACT] ){
@@ -303,6 +328,10 @@ int main( int argc, char* argv[] ){
 		}
 		driver->initiateProfiler();
 	}
+
+	if( mCompiler_enabled_options[PROFILE] ){
+    driver->initiateAdvProfiler();
+  }
 
 	if( mCompiler_enabled_options[SYNTHESIZE] && 
 			!(mCompiler_enabled_options[COMPILE_TO_OBJECT]) ){

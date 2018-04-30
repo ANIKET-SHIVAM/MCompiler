@@ -60,7 +60,7 @@ string mCompiler_data_folder      = "mCompiler_data";
 string mCompiler_data_folder_path;
 string mCompiler_curr_dir_path;
 // TODO: Fetch paths from env variables
-string pgi_lib_path               = "/opt/pgi/linux86-64/17.10/lib/";
+string pgi_lib_path               = "/opt/pgi/linux86-64/2018/lib/";
 
 /*** Parameter that change based on the CL input ***/
 /* For the extractor */
@@ -96,8 +96,8 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-xHost");
 	flag_vec.push_back("-qopenmp");
 	flag_vec.push_back("-std=c11");
-//	flag_vec.push_back("-ipo");
-	flag_vec.push_back("-qopt-prefetch");
+  if(mCompiler_enabled_options[PREFETCH])
+  	flag_vec.push_back("-qopt-prefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[PARALLEL])
@@ -115,12 +115,11 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-std=c11");
-//	flag_vec.push_back("-flto"); Require plugin needed for lto object
-	flag_vec.push_back("-fprefetch-loop-arrays");
+  if(mCompiler_enabled_options[PREFETCH])
+  	flag_vec.push_back("-fprefetch-loop-arrays");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
-  if(mCompiler_enabled_options[PARALLEL])
-    ;//flag_vec.push_back("-parallel");
+  if(mCompiler_enabled_options[PARALLEL]);
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -134,12 +133,11 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-std=c11");
-//	flag_vec.push_back("-flto"); Requires LLVMGold binaries
-	flag_vec.push_back("-loop-data-prefetch");
+  if(mCompiler_enabled_options[PREFETCH])
+  	flag_vec.push_back("-loop-data-prefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
-  if(mCompiler_enabled_options[PARALLEL])
-    ;//flag_vec.push_back("-parallel");
+  if(mCompiler_enabled_options[PARALLEL]);
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -153,9 +151,8 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-tp=haswell");
 	flag_vec.push_back("-mp");
   flag_vec.push_back("-c11");
-//	flag_vec.push_back("-Mipa");
-	flag_vec.push_back("-Mprefetch");
-	flag_vec.push_back("-Mprefetch");
+  if(mCompiler_enabled_options[PREFETCH])
+	  flag_vec.push_back("-Mprefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[PARALLEL])
@@ -186,8 +183,6 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-std=c11");
   if(mCompiler_enabled_options[PARALLEL])
     flag_vec.push_back("-mllvm -polly-parallel");
-//	flag_vec.push_back("-flto"); Requires LLVMGold binaries
-	flag_vec.push_back("-loop-data-prefetch");
 	flag_vec.push_back("-m64");
 	flag_vec.push_back("-w");
 	flag_vec.push_back(mCompiler_include_path);
@@ -205,7 +200,6 @@ void addLinkerFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("icc");
 	flag_vec.push_back("-qopenmp");
-	flag_vec.push_back("-ipo");
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[PARALLEL])
     flag_vec.push_back("-parallel");
@@ -217,10 +211,8 @@ void addLinkerFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("gcc");
 	flag_vec.push_back("-fopenmp");
-//	flag_vec.push_back("-flto"); Require plugin needed for lto object
 	flag_vec.push_back("-w");
-  if(mCompiler_enabled_options[PARALLEL])
-    ;//flag_vec.push_back("-floop-parallelize-all -ftree-parallelize-loops=4");
+  if(mCompiler_enabled_options[PARALLEL]);
 	flag_vec.push_back(mCompiler_link_path);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
 	linker_flags[compiler_GCC] = flag_vec;	
@@ -229,7 +221,6 @@ void addLinkerFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("clang");
 	flag_vec.push_back("-fopenmp");
-//	flag_vec.push_back("-flto"); Requires LLVMGold binaries
 	flag_vec.push_back("-w");
   /* For Polly Parallel */
   if(mCompiler_enabled_options[PARALLEL])
@@ -241,7 +232,6 @@ void addLinkerFlags(){
 	/* PGI */
 	flag_vec.clear();
 	flag_vec.push_back("pgcc");
-//	flag_vec.push_back("-Mipa");
 	flag_vec.push_back("-mp");
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[PARALLEL])

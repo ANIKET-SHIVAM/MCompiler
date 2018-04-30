@@ -43,8 +43,10 @@ const option::Descriptor usage[] =
 	{REPORT             , 0, ""  , "report"        ,Arg::None     , "    --report             Generate mCompiler performance report" },
 	{PARALLEL           , 0, ""  , "parallel"      ,Arg::None     , "    --parallel           Auto-parallelize the hotspots."
 																							                                              " Default: Serial code generation (with vectorization)" },
+	{PREFETCH           , 0, ""  , "prefetch"      ,Arg::None     , "    --prefetch           Enable software data prefetching" },
 	{PROFILE_COUNT      , 0, ""  , "profile-runs"  ,Arg::Numeric  , "    --profile-runs=<num> Number of time profiler should run the program to"
 																							                                              " collect data. Default: 3" },
+	{ADV_PROFILE        , 0, ""  , "adv-profile"   ,Arg::None     , "    --adv-profile        Advanced Profiling with Perf tool" },
 	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>       Input to the program."
 																							                                              " Needed to generate profiling information" },
 	{COMPILE_TO_OBJECT  , 0, "c" , "compile"       ,Arg::None     , "    -c[<arg>]            Compile to object file" },
@@ -65,6 +67,8 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		{ TEST,       false },
 		{ REPORT,     false },
 		{ PARALLEL,   false },
+		{ PREFETCH,   false },
+		{ ADV_PROFILE,false },
 		{ COMPILE_TO_OBJECT, false },
 		{ MC_DEBUG,   false },
 	};
@@ -121,6 +125,9 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		case PARALLEL:
 			mCompiler_enabled_options[PARALLEL] = true;
 			break;
+		case PREFETCH:
+			mCompiler_enabled_options[PREFETCH] = true;
+			break;
 		case COMPILE_TO_OBJECT:
 			mCompiler_enabled_options[COMPILE_TO_OBJECT] = true;
 			break;
@@ -129,6 +136,9 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		case INPUT_PROFILE:
 			mCompiler_profiler_input = opt.arg;
+			break;
+		case ADV_PROFILE:
+			mCompiler_enabled_options[ADV_PROFILE] = true;
 			break;
 		case OUTPUT_BINARY:
       tmpstr = opt.arg;

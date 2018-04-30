@@ -5,6 +5,7 @@
 #include "options.h"
 #include "extractor/extractor.h"
 #include "profiler/profilerC.h"
+#include "profiler/adv_profiler.h"
 #include "synthesizer/synthesizerC.h"
 #include "tester/tester.h"
 //#include "profiler/profilerCPP.h"
@@ -21,6 +22,7 @@ class Driver {
 
 	Extractor *extr;
 	ProfilerC *prof;
+	AdvProfiler *adv_prof;
 	SynthesizerC *synth;
 public:
 	bool mainFuncPresent = false;
@@ -31,6 +33,7 @@ public:
 	src_lang getSrcType() { return src_type; }
 	string getDataFolderPath() { return mCompiler_data_folder_path; };
 	void checkCompilerCandidates();
+	bool checkAdvProfileCandidate();
 	void setMCompilerMode();
 	void createMCompilerDataFolder();
 	void generateMCompilerHeaderFile();
@@ -38,6 +41,7 @@ public:
 	void copyInFolderHeaders( string folder_path );
 	void initiateExtractor( string file_name );
 	void initiateProfiler();
+	void initiateAdvProfiler();
 	void initiateSynthesizer();
 
 };

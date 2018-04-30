@@ -14,7 +14,8 @@ void ProfilerC::getHotspotFiles(){
 			string filename( ent->d_name );
 			if( filename.at(0) != '.' && isEndingWith(filename, ".c") ){
 				files_to_compile.insert( getDataFolderPath() + ent->d_name );
-				cout << "Adding files for compiling: " << ent->d_name << endl;
+        if( mCompiler_enabled_options[MC_DEBUG] )
+          cout << "Adding files for compiling: " << ent->d_name << endl;
 			}
 		}
 		closedir (dir);
