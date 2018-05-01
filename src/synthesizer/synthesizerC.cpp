@@ -74,9 +74,9 @@ void SynthesizerC::generateFinalBinary(){
 		CL += *iterv + space_str;
 	}
 
-  /* add object files for PGI compilers objects with OpenMP to be linked. */
-  if( compiler_candidate[compiler_PGI] == true )
-    CL += pgi_lib_path + "trace_init.o" + space_str + pgi_lib_path + "initmp.o" + space_str;
+  /* NOT NEEDED WITH PGI-LLVM BACKEND (USING KMPC RUNTIME) - add object files for PGI compilers objects with OpenMP to be linked. */
+//  if( compiler_candidate[compiler_PGI] == true )
+//    CL += pgi_lib_path + "trace_init.o" + space_str + pgi_lib_path + "initmp.o" + space_str;
 
 	set<string>::iterator iters;
 	string object_files;
@@ -93,9 +93,9 @@ void SynthesizerC::generateFinalBinary(){
 		CL += *iterv + space_str;
 	}
 	 
-  /* link libraries for PGI compilers objects with OpenMP to be linked. */
-  if( compiler_candidate[compiler_PGI] == true )
-    CL += "-L" + pgi_lib_path + space_str + "-lpgmp -lnuma -lpthread -lpgc -lnspgc -lgomp";
+  /* NOT NEEDED WITH PGI-LLVM BACKEND (USING KMPC RUNTIME) link libraries for PGI compilers objects with OpenMP to be linked. */
+//  if( compiler_candidate[compiler_PGI] == true )
+//    CL += "-L" + pgi_lib_path + space_str + "-lpgmp -lnuma -lpthread -lpgc -lnspgc -lgomp -lpgmath";
 
 	executeCommand( CL );
 }

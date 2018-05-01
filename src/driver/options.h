@@ -41,8 +41,9 @@ const option::Descriptor usage[] =
 	{TEST               , 0, ""  , "test"          ,Arg::None     , "    --test               Test performance compared to other compilers"
 																							                                              " optimized code" },
 	{REPORT             , 0, ""  , "report"        ,Arg::None     , "    --report             Generate mCompiler performance report" },
-	{PARALLEL           , 0, ""  , "parallel"      ,Arg::None     , "    --parallel           Auto-parallelize the hotspots."
-																							                                              " Default: Serial code generation (with vectorization)" },
+	{PARALLEL           , 0, ""  , "parallel"      ,Arg::None     , "    --parallel           Generate multi-threaded code based on OpenMP directives."
+																							                                              "Default: Serial code generation (with vectorization)" },
+	{AUTO_PARALLEL      , 0, ""  , "auto-parallel" ,Arg::None     , "    --auto-parallel      Auto-parallelize the hotspots." },
 	{PREFETCH           , 0, ""  , "prefetch"      ,Arg::None     , "    --prefetch           Enable software data prefetching" },
 	{PROFILE_COUNT      , 0, ""  , "profile-runs"  ,Arg::Numeric  , "    --profile-runs=<num> Number of time profiler should run the program to"
 																							                                              " collect data. Default: 3" },
@@ -61,16 +62,17 @@ const option::Descriptor usage[] =
 
 void set_mCompiler_options( int argc, char* argv[] ){
 	mCompiler_enabled_options = {
-		{ EXTRACT,    true  },
-		{ PROFILE,    true  },
-		{ SYNTHESIZE, true  },
-		{ TEST,       false },
-		{ REPORT,     false },
-		{ PARALLEL,   false },
-		{ PREFETCH,   false },
-		{ ADV_PROFILE,false },
+		{ EXTRACT,           true  },
+		{ PROFILE,           true  },
+		{ SYNTHESIZE,        true  },
+		{ TEST,              false },
+		{ REPORT,            false },
+		{ PARALLEL,          false },
+		{ AUTO_PARALLEL,     false },
+		{ PREFETCH,          false },
+		{ ADV_PROFILE,       false },
 		{ COMPILE_TO_OBJECT, false },
-		{ MC_DEBUG,   false },
+		{ MC_DEBUG,          false },
 	};
 	argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
 	option::Stats stats(usage, argc, argv);
@@ -123,6 +125,10 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			mCompiler_enabled_options[REPORT]   = true;
 			break;
 		case PARALLEL:
+			mCompiler_enabled_options[PARALLEL] = true;
+			break;
+		case AUTO_PARALLEL:
+			mCompiler_enabled_options[AUTO_PARALLEL] = true;
 			mCompiler_enabled_options[PARALLEL] = true;
 			break;
 		case PREFETCH:

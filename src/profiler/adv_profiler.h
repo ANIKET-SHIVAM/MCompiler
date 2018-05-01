@@ -7,6 +7,11 @@ using namespace std;
 
 class AdvProfiler { 
 private:
+  vector<string> compilerFlags;
+  vector<string> toolFlags;
+
+  void addNoOptCompilerFlags();
+  void addProfileToolOptions();
 
 public:
   AdvProfiler();

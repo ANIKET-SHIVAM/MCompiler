@@ -19,7 +19,7 @@ void Driver::checkCompilerCandidates(){
 	} else {
 		cout << "Couldn't find in PATH: icc (Intel)" << endl;
 	}
-  if(!mCompiler_enabled_options[PARALLEL]){
+  if(!mCompiler_enabled_options[AUTO_PARALLEL]){
     result_compiler_found = executeCommand( "gcc" );
     if( result_compiler_found.find("not found") == string::npos ){
       compiler_candidate[compiler_GCC] = true;	
@@ -82,7 +82,7 @@ void Driver::checkCompilerCandidates(){
 }
 
 bool Driver::checkAdvProfileCandidate(){
-	string result_compiler_found = executeCommand( "perf stat" );
+	string result_compiler_found = executeCommand( "perf stat sleep 0.0001" );
 	if( result_compiler_found.find("not found") != string::npos ){
 		cout << "Perf not found" << endl;
     return false;

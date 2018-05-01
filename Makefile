@@ -14,12 +14,10 @@ OBJ_COMMON = $(OBJS)/common.o
 OBJS = obj
 BIN  = bin
 
-all: dirs extractor profiler synthesizer tester driver
+DIRS := $(shell mkdir -p ${CURDIR}/$(OBJS) &&  mkdir -p ${CURDIR}/$(BIN))
+  
+all: extractor profiler synthesizer tester driver
 	
-dirs:
-	mkdir -p ${CURDIR}/$(OBJS)
-	mkdir -p ${CURDIR}/$(BIN)
-
 $(OBJ_COMMON): src/driver/common.cpp
 	$(CC) $(FLAGS) src/driver/common.cpp $(ROSE_INCLUDE) -c -o $@
 
@@ -121,4 +119,4 @@ clean:
 	rm -f $(OBJS)/* $(BIN)/*
 
 
-.PHONY: all extract driver clean
+.PHONY: all dirs extractor profiler synthesizer tester driver clean
