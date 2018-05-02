@@ -6,6 +6,89 @@ Performs following task:
 3. Later use for inference to chose best candidate using ML
 */
 
-AdvProfiler::AdvProfiler(){
+void AdvProfiler::addNoOptCompilerFlags(){
+  compilerFlags->push_back("icc");
+  compilerFlags->push_back("-O0 -g -no-vec"); //-xHOST generate vector code, even with -no-vec
+  compilerFlags->push_back("-qopenmp");
+  compilerFlags->push_back("-std=c11");
+  compilerFlags->push_back("-w");
+  compilerFlags->push_back(mCompiler_include_path);
+  compilerFlags->push_back(mCompiler_macro_defs);
+  compilerFlags->push_back(mCompiler_extraPreSrcFlags);
+  compilerFlags->push_back(mCompiler_extraPostSrcFlags);
+}
 
+void AdvProfiler::addProfileToolOptions(){
+
+}
+
+void AdvProfiler::compileSource(){
+	string CL;
+	for( vector<string>::iterator iterv = compilerFlags->begin(); iterv != compilerFlags->end(); iterv++)
+		CL += *iterv + space_str;
+  /* Collect all non profile source to compile for Adv Profiling */
+  for( set<string>::iterator iters = files_to_compile.begin(); iters != files_to_compile.end(); iters++){
+    if( (*iters).find(mCompiler_profile_file_tag) != string::npos || (*iters).find(mCompiler_header_code_name) != string::npos )
+      continue;
+    string out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + adv_profile_str + dot_o_str;
+    executeCommand( CL + minus_c_str + space_str + *iters + space_str + minus_o_str + space_str + out_file );
+    files_to_link.insert( out_file );
+  }
+}
+
+void AdvProfiler::linkObjs(){
+  if( mCompiler_mode == mode_FROM_OBJECT || mCompiler_mode == mode_COMPLEX ){
+    DIR *dir;
+    struct dirent *ent;
+    /* If in Complex mode, then also fetch from dir */
+    files_to_link.clear();
+    if ( ( dir = opendir( ( getDataFolderPath() ).c_str() ) ) != NULL) {
+      /* print all the files and directories within directory */
+      while ( ( ent = readdir(dir) ) != NULL ){
+        string filename( ent->d_name );
+        if( filename.at(0) != '.' && 
+          isEndingWith(filename, adv_profile_str + dot_o_str) ){
+          files_to_link.insert( getDataFolderPath() + ent->d_name );
+          if( mCompiler_enabled_options[MC_INFO] )
+            cout << "Adding files for Linking: " << ent->d_name << endl;
+        }
+      }
+      closedir (dir);
+    } else {
+      /* could not open directory */
+      cerr << "Couldn't open data folder: " << getDataFolderPath() << endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+	string CL;
+	for( vector<string>::iterator iterv = compilerFlags->begin(); iterv != compilerFlags->end(); iterv++)
+		CL += *iterv + space_str;
+	string object_files;
+	string out_file;
+	for( set<string>::iterator iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
+		object_files += *iters + space_str;
+		out_file = getDataFolderPath() + mCompiler_binary_name + "_" + adv_profile_str;
+	}
+	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
+	
+	vector<string> post_CL_flags = post_linker_flags[compiler_ICC];
+	for( vector<string>::iterator iterv = post_CL_flags.begin(); iterv != post_CL_flags.end(); iterv++){
+		CL += *iterv + space_str;
+	}
+	
+	executeCommand( CL );
+
+}
+
+AdvProfiler::AdvProfiler(){
+  cout << "Advanced Profiling" << endl;
+  addNoOptCompilerFlags();
+  if( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_TO_OBJECT ||
+    mCompiler_mode == mode_COMPLEX ){
+    compileSource(); // Phase 1
+  }
+  if( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
+    mCompiler_mode == mode_COMPLEX ){
+    linkObjs();  // Phase 2
+  }
 }

@@ -42,6 +42,9 @@ map<compiler_type, string> compiler_keyword = {
 /* Set baseline compiler to come from CL */
 string baseline_compiler_str;
 
+/*TODO: Get from LD_LIBRARY_PATH */
+string pgi_lib_path  = "/opt/pgi/linux86-64-llvm/2018/lib/";
+
 /* Mode in which mCompiler is working */
 compiler_mode mCompiler_mode = mode_FULL_PASS;
 
@@ -87,11 +90,12 @@ void addOptimizationFlags(){
 	/* ICC */
 	flag_vec.clear();
 	flag_vec.push_back("icc");
-  if( !mCompiler_enabled_options[MC_DEBUG] )
+  if( !mCompiler_enabled_options[MC_DEBUG] ){
     flag_vec.push_back("-Ofast");
-  else
+  } else {
   	flag_vec.push_back("-O0 -g");
-	flag_vec.push_back("-xHost");
+  }
+  flag_vec.push_back("-xHost");
 	flag_vec.push_back("-qopenmp");
 	flag_vec.push_back("-std=c11");
   if(mCompiler_enabled_options[PREFETCH])
@@ -255,8 +259,8 @@ string executeCommand( string cmd_str ){
 	const char *cmd_char_ptr = cmd_str.c_str();
 	array<char, 128> buffer;
   string result;
-  if( mCompiler_enabled_options[MC_DEBUG] == true )
-    cerr << "Executing command:" << endl << cmd_str << endl;
+  if( mCompiler_enabled_options[MC_INFO] )
+    cout << "Executing command:" << endl << cmd_str << endl;
   shared_ptr<FILE> pipe(popen(cmd_char_ptr, "r"), pclose);
 
   if (!pipe) throw runtime_error("popen() while executing command failed!");
@@ -265,9 +269,9 @@ string executeCommand( string cmd_str ){
       if (fgets(buffer.data(), 128, pipe.get()) != NULL)
           result += buffer.data();
   }
-  if( mCompiler_enabled_options[MC_DEBUG] == true ){
+  if( mCompiler_enabled_options[MC_INFO] ){
     if( !result.empty() ){
-      cerr << "Result of the previous command:" << endl << result << endl;
+      cout << "Result of the previous command:" << endl << result << endl;
       //if( result.find("error") == string::npos )
       //	exit(EXIT_FAILURE);
     }

@@ -41,14 +41,14 @@ const option::Descriptor usage[] =
 	{TEST               , 0, ""  , "test"          ,Arg::None     , "    --test               Test performance compared to other compilers"
 																							                                              " optimized code" },
 	{REPORT             , 0, ""  , "report"        ,Arg::None     , "    --report             Generate mCompiler performance report" },
-	{PARALLEL           , 0, ""  , "parallel"      ,Arg::None     , "    --parallel           Generate multi-threaded code based on OpenMP directives."
-																							                                              "Default: Serial code generation (with vectorization)" },
-	{AUTO_PARALLEL      , 0, ""  , "auto-parallel" ,Arg::None     , "    --auto-parallel      Auto-parallelize the hotspots." },
+	{PARALLEL           , 0, ""  , "parallel"      ,Arg::None     , "    --parallel           Generate multi-threaded code based on OpenMP directives\n"
+																							                    "                         Default: Serial code generation (with vectorization)" },
+	{AUTO_PARALLEL      , 0, ""  , "auto-parallel" ,Arg::None     , "    --auto-parallel      Auto-parallelize the hotspots" },
 	{PREFETCH           , 0, ""  , "prefetch"      ,Arg::None     , "    --prefetch           Enable software data prefetching" },
 	{PROFILE_COUNT      , 0, ""  , "profile-runs"  ,Arg::Numeric  , "    --profile-runs=<num> Number of time profiler should run the program to"
 																							                                              " collect data. Default: 3" },
 	{ADV_PROFILE        , 0, ""  , "adv-profile"   ,Arg::None     , "    --adv-profile        Advanced Profiling with Perf tool" },
-	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>       Input to the program."
+	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>       Input to the program"
 																							                                              " Needed to generate profiling information" },
 	{COMPILE_TO_OBJECT  , 0, "c" , "compile"       ,Arg::None     , "    -c[<arg>]            Compile to object file" },
 	{OUTPUT_BINARY      , 0, "o" , "output"        ,Arg::Required , "    -o[<arg>]            Output object/binary name" },
@@ -57,6 +57,7 @@ const option::Descriptor usage[] =
 	{LIBS_PATH          , 0, "l" , "libs"          ,Arg::Required , "    -l[<arg>]            Instruct the linker to link in the -l<string> library" },
 	{MACRO_DEFS         , 0, "D" , "DEFS"          ,Arg::Required , "    -D[<arg>]            Macro definition" },
 	{MC_DEBUG           , 0, ""  , "debug"         ,Arg::None     , "    --debug              Output mCompiler workflow" },
+	{MC_INFO            , 0, ""  , "info"          ,Arg::None     , "    --info               Print information for mCompiler workflow" },
 	{0,0,0,0,0,0}
 };
 
@@ -73,6 +74,7 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		{ ADV_PROFILE,       false },
 		{ COMPILE_TO_OBJECT, false },
 		{ MC_DEBUG,          false },
+		{ MC_INFO,           false },
 	};
 	argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
 	option::Stats stats(usage, argc, argv);
@@ -165,6 +167,10 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		case MC_DEBUG:
 			mCompiler_enabled_options[MC_DEBUG] = true;
+			mCompiler_enabled_options[MC_INFO] = true;
+			break;
+		case MC_INFO:
+			mCompiler_enabled_options[MC_INFO] = true;
 			break;
 		}
 	}

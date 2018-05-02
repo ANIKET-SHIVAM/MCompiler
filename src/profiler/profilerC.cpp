@@ -14,7 +14,7 @@ void ProfilerC::getHotspotFiles(){
 			string filename( ent->d_name );
 			if( filename.at(0) != '.' && isEndingWith(filename, ".c") ){
 				files_to_compile.insert( getDataFolderPath() + ent->d_name );
-        if( mCompiler_enabled_options[MC_DEBUG] )
+        if( mCompiler_enabled_options[MC_INFO] )
           cout << "Adding files for compiling: " << ent->d_name << endl;
 			}
 		}
@@ -289,12 +289,14 @@ void ProfilerC::getObjectFiles( const string& compiler_str ){
 			if( filename.at(0) != '.' && 
 				isEndingWith(filename, mCompiler_profile_file_tag + compiler_str + dot_o_str) ){
 				files_to_link.insert( getDataFolderPath() + ent->d_name );
-				cout << "Adding files for Linking: " << ent->d_name << endl;
+        if( mCompiler_enabled_options[MC_INFO] )
+          cout << "Adding files for Linking: " << ent->d_name << endl;
 			}
 			if( filename.at(0) != '.' && 
 				isEndingWith(filename, mCompiler_header_str + compiler_str + dot_o_str) ){
 				files_to_link.insert( getDataFolderPath() + ent->d_name );
-				cout << "Adding files for Linking: " << ent->d_name << endl;
+        if( mCompiler_enabled_options[MC_INFO] )
+          cout << "Adding files for Linking: " << ent->d_name << endl;
 			}
 			// Store base obj file for synthesizer
 			if( filename.find(base_str) != string::npos &&
@@ -336,7 +338,7 @@ void ProfilerC::gatherProfilingData( const string& binary_file, compiler_type cu
 	}
 
 	for( int i = 0; i < mCompiler_profiler_runs; i++ ){
-		cerr << "Profiler: " << compiler_str  <<  " -> Run " << (i+1) << endl; 
+		cout << "Profiler: " << compiler_str  <<  " -> Run " << (i+1) << endl; 
 		string result;
 		result = executeCommand( binary_file + space_str + mCompiler_profiler_input );
 		

@@ -15,9 +15,11 @@ void SynthesizerC::selectOptimalOptimizedCandidate( string hotspot_name ){
 			if( dataIter != profiler_hotspot_data.end() ){
 				hotspot_timing_set.insert( pair<string,double>(compiler_keyword[curr_compiler], 
 											getVectorMean(dataIter->second) ) );
-				cout << "Synthesizer: " << hotspot_name << " + " << 
-						compiler_keyword[curr_compiler] << ":" << 
-						getVectorMean(dataIter->second) << endl;
+				if( mCompiler_enabled_options[MC_INFO] ){
+          cout << "Synthesizer: " << hotspot_name << " + " << 
+              compiler_keyword[curr_compiler] << ":" << 
+              getVectorMean(dataIter->second) << endl;
+        }
 			}
 		}
 	}
@@ -27,7 +29,7 @@ void SynthesizerC::selectOptimalOptimizedCandidate( string hotspot_name ){
 	string best_option_path = ( profiler_hotspot_obj_path.find( pair<string,string>(hotspot_name, best_compiler_option ) ) )->second;
 	best_objs_to_link.insert(best_option_path);
   if(( hotspot_timing_set.begin() )->second != 0 )	
-    cout << "mCompiler chose: " << hotspot_name << " + " << best_compiler_option << endl;
+    cout << "mCompiler chose: " << hotspot_name << " + " << best_compiler_option << " (" << ( hotspot_timing_set.begin() )->second << "s)" << endl;
   else
     cout << "mCompiler chose: " << hotspot_name << " + " << "baseline (lacks profile info)" << endl;
 		
@@ -93,9 +95,10 @@ void SynthesizerC::generateFinalBinary(){
 		CL += *iterv + space_str;
 	}
 	 
-  /* NOT NEEDED WITH PGI-LLVM BACKEND (USING KMPC RUNTIME) link libraries for PGI compilers objects with OpenMP to be linked. */
-//  if( compiler_candidate[compiler_PGI] == true )
-//    CL += "-L" + pgi_lib_path + space_str + "-lpgmp -lnuma -lpthread -lpgc -lnspgc -lgomp -lpgmath";
+  /* NOT NEEDED WITH PGI-LLVM BACKEND (USING KMPC RUNTIME) UNLESS there is a math library function inside hotspot
+   * link libraries for PGI compilers objects with OpenMP to be linked. */
+  if( compiler_candidate[compiler_PGI] == true )
+    CL += "-L" + pgi_lib_path + space_str + " -lpgatm -lomp -lpgmath -lpgc";
 
 	executeCommand( CL );
 }
