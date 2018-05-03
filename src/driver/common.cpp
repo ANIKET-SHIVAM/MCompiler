@@ -43,7 +43,8 @@ map<compiler_type, string> compiler_keyword = {
 string baseline_compiler_str;
 
 /*TODO: Get from LD_LIBRARY_PATH */
-string pgi_lib_path  = "/opt/pgi/linux86-64-llvm/2018/lib/";
+string pgi_lib_path = "/opt/pgi/linux86-64-llvm/2018/lib/";
+string vtune_path   = "/opt/intel/vtune_amplifier/bin64/";
 
 /* Mode in which mCompiler is working */
 compiler_mode mCompiler_mode = mode_FULL_PASS;

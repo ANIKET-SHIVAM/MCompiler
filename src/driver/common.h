@@ -82,6 +82,7 @@ extern string mCompiler_data_folder;
 extern string mCompiler_data_folder_path;
 extern string mCompiler_curr_dir_path;
 extern string pgi_lib_path;
+extern string vtune_path;
 
 /* For the extractor */
 extern vector<string> mCompiler_input_file;

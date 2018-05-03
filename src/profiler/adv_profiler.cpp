@@ -18,10 +18,6 @@ void AdvProfiler::addNoOptCompilerFlags(){
   compilerFlags->push_back(mCompiler_extraPostSrcFlags);
 }
 
-void AdvProfiler::addProfileToolOptions(){
-
-}
-
 void AdvProfiler::compileSource(){
 	string CL;
 	for( vector<string>::iterator iterv = compilerFlags->begin(); iterv != compilerFlags->end(); iterv++)
@@ -67,7 +63,7 @@ void AdvProfiler::linkObjs(){
 	string out_file;
 	for( set<string>::iterator iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
 		object_files += *iters + space_str;
-		out_file = getDataFolderPath() + mCompiler_binary_name + "_" + adv_profile_str;
+		out_file = prof_binary = getDataFolderPath() + mCompiler_binary_name + "_" + adv_profile_str;
 	}
 	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
 	
@@ -77,6 +73,37 @@ void AdvProfiler::linkObjs(){
 	}
 	
 	executeCommand( CL );
+
+}
+
+void AdvProfiler::addProfileToolOptions(){
+  vector<string> counters = {
+    #include "counters.vtune" 
+  };
+  if(counters.empty()) cerr << "Vtune Counter list empty" << endl; 
+  CL_items.push_back(vtune_path + "amplxe-cl" + space_str );
+  CL_items.push_back("-collect-with runsa" + space_str );
+  CL_items.push_back("-knob analyze-openmp=true" + space_str);
+  CL_items.push_back("-knob event-config=");
+  string comma_str = ",";
+  vector<string>::iterator iterv = counters.begin();
+  CL_items.push_back(*iterv);
+  for(; iterv != counters.end(); iterv++ )
+    CL_items.push_back(comma_str + *iterv);
+  CL_items.push_back(space_str + "-app-working-dir" + space_str);
+  CL_items.push_back(getDataFolderPath() + space_str);
+  CL_items.push_back("--" + space_str);
+  CL_items.push_back(prof_binary);
+}
+
+void AdvProfiler::runProfileTool(){
+  string CL; 
+  for( vector<string>::iterator iterv = CL_items.begin(); iterv != CL_items.end(); iterv++ )
+    CL += *iterv;
+  executeCommand(CL);
+}
+
+void AdvProfiler::gatherProfileData(){
 
 }
 
@@ -90,5 +117,8 @@ AdvProfiler::AdvProfiler(){
   if( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
     mCompiler_mode == mode_COMPLEX ){
     linkObjs();  // Phase 2
+    addProfileToolOptions();
+    runProfileTool();
+    gatherProfileData();
   }
 }

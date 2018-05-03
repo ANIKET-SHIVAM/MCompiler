@@ -8,14 +8,18 @@ using namespace std;
 class AdvProfiler { 
 private:
   string adv_profile_str = "prof";
+  vector<string> CL_items;
   vector<string> *compilerFlags = new vector<string>();
   vector<string> *toolFlags = new vector<string>();
 	set<string> files_to_link;
+  string prof_binary = "";  
 
   void addNoOptCompilerFlags();
   void addProfileToolOptions();
   void compileSource();
   void linkObjs();
+  void runProfileTool();
+  void gatherProfileData();
 
 public:
   AdvProfiler();

@@ -82,17 +82,15 @@ void Driver::checkCompilerCandidates(){
 }
 
 bool Driver::checkAdvProfileCandidate(){
-	string result_compiler_found = executeCommand( "perf stat sleep 0.0001" );
+	string result_compiler_found = executeCommand( vtune_path + "amplxe-cl" );
 	if( result_compiler_found.find("not found") != string::npos ){
-		cout << "Perf not found" << endl;
-    return false;
-  } else if( result_compiler_found.find("Error") != string::npos ){
-		cout << "Perf may be have permissions: check perf stat" << endl;
+		cerr << "Intel Vtune not found" << endl;
+    cerr << "Driver: Check unsuccesful for the Advanced Profiling Tool" << endl;
     return false;
 	} else {
+    cout << "Found in PATH: amplxe-cl" << endl;
 		return true;
 	}
-  
 }
 
 void Driver::setMCompilerMode(){
@@ -305,7 +303,6 @@ int main( int argc, char* argv[] ){
 
   if( mCompiler_enabled_options[ADV_PROFILE] ){
     if( !driver->checkAdvProfileCandidate() ){
-      cerr << "Driver: Check unsuccesful for the Advanced Profiling Tool" << endl;
       mCompiler_enabled_options[ADV_PROFILE] = false;
     } 
   }
@@ -329,7 +326,7 @@ int main( int argc, char* argv[] ){
 		driver->initiateProfiler();
 	}
 
-	if( mCompiler_enabled_options[PROFILE] ){
+	if( mCompiler_enabled_options[ADV_PROFILE] ){
     driver->initiateAdvProfiler();
   }
 
