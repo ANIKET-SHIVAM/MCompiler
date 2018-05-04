@@ -8,12 +8,18 @@ using namespace std;
 class AdvProfiler { 
 private:
   string adv_profile_str = "prof";
-  vector<string> CL_items;
-  vector<string> *compilerFlags = new vector<string>();
-  vector<string> *toolFlags = new vector<string>();
+  vector<string> compilerCL;
+  vector<string> toolCL_collect;
+  vector<string> toolCL_report;
 	set<string> files_to_link;
   string prof_binary = "";  
+  string prof_dir = "";
+  string vtune_default_dir_naming = "r@@@runAT";  
 
+  void setProfBinary(const string& str) {prof_binary = str;};
+  string getProfBinary() {return prof_binary;};
+  void setProfDir(const string& str) {prof_dir = str;};
+  string getProfDir() {return prof_dir;};
   void addNoOptCompilerFlags();
   void addProfileToolOptions();
   void compileSource();

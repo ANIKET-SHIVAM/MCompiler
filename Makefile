@@ -4,24 +4,21 @@ FLAGS = -std=c++11 -g
 ROSE_PATH=${CURDIR}/tools/rose_build
 BOOST_PATH=${CURDIR}/tools/boost_build
 
+OBJS = obj
+BIN  = bin
+
 EXTRACTOR_PATH    = src/extractor
 PROFILER_PATH     = src/profiler
 SYNTHESIZER_PATH  = src/synthesizer
 TESTER_PATH       = src/tester
 DRIVER_PATH       = src/driver
-OBJ_COMMON = $(OBJS)/common.o
 
-OBJS = obj
-BIN  = bin
+MC_DATA_FOLDER    = ${CURDIR}/mCompiler_data
 
 DIRS := $(shell mkdir -p ${CURDIR}/$(OBJS) &&  mkdir -p ${CURDIR}/$(BIN))
   
 all: extractor profiler synthesizer tester driver
 	
-$(OBJ_COMMON): src/driver/common.cpp
-	$(CC) $(FLAGS) src/driver/common.cpp $(ROSE_INCLUDE) -c -o $@
-
-
 ##### EXTRACTOR #####
 ROSE_INCLUDE = -I${ROSE_PATH}/include/rose -I${BOOST_PATH}/include/
 EXTRACTOR_COMPILE_FLAGS = -I${CURDIR}/src $(ROSE_INCLUDE)
@@ -104,6 +101,10 @@ DRIVER_LD_FLAGS      = $(EXTRACTOR_LD_FLAGS)
 OBJ_DRIVER = $(OBJS)/driver.o
 SRC_DRIVER = $(DRIVER_PATH)/driver.cpp 
 
+OBJ_COMMON = $(OBJS)/common.o
+$(OBJ_COMMON): src/driver/common.cpp
+	$(CC) $(FLAGS) src/driver/common.cpp $(ROSE_INCLUDE) -c -o $@
+
 driver: $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_ADV_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(OBJ_TESTER)
 	$(CC) $^ $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
 $(OBJ_DRIVER): $(SRC_DRIVER)
@@ -117,6 +118,7 @@ just_driver: $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_ADV_PROFILER) $(OBJ_SYNTHESI
 ##### CLEAN #####
 clean:
 	rm -f $(OBJS)/* $(BIN)/*
-
-
+clean_data_folder:
+	rm -rf $(MC_DATA_FOLDER)
+  
 .PHONY: all dirs extractor profiler synthesizer tester driver clean

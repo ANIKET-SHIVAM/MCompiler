@@ -70,7 +70,7 @@ public:
 	string getFileExtn( const string &fileNameWithPath );
 	int getAstNodeLineNum( SgNode *const &astNode );
 	string getExtractionFileName( SgNode *astNode, bool isProfileFile );
-	void printHeaders( ofstream& loop_file_buf );
+	void printHeaders( ofstream& loop_file_buf, bool isProfileFile );
 	void printGlobalsAsExtern( ofstream& loop_file_buf );
 	void addExternDefs( SgFunctionDeclaration *func );
 	void addPostTraversalDefs(); 

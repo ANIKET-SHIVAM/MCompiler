@@ -78,7 +78,7 @@ string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 	return output_path + file_name;
 }
 
-void Extractor::printHeaders( ofstream& loop_file_buf ){
+void Extractor::printHeaders( ofstream& loop_file_buf, bool isProfileFile ){
 	vector<string>::iterator iter;
 	bool hasOMP = false;
 	bool hasIO = false;
@@ -93,7 +93,8 @@ void Extractor::printHeaders( ofstream& loop_file_buf ){
 				hasIO = true;
 	}
 	// TODO: if it is a fortran code
-	loop_file_buf << "#include \"mCompiler.h\"" << endl;
+  if(isProfileFile)
+	  loop_file_buf << "#include \"" << mCompiler_header_name << "\"" << endl;
 	if( !hasOMP && ( src_type == src_lang_C || src_type == src_lang_CPP ) )
 		loop_file_buf << "#include <omp.h>" << endl;
 	if( src_type == src_lang_C && !hasIO )
@@ -684,10 +685,10 @@ void Extractor::extractLoops( SgNode *astNode ){
 	// Create loop object
 	LoopInfo curr_loop( astNode, loop, nameForNextLoop, *this); 
 
-	printHeaders( loop_file_buf_profile );
+	printHeaders( loop_file_buf_profile, true );
 	printGlobalsAsExtern( loop_file_buf_profile );
 	
-	printHeaders( loop_file_buf_no_profile );
+	printHeaders( loop_file_buf_no_profile, false );
 	printGlobalsAsExtern( loop_file_buf_no_profile );
 	
 	//cerr << "Adding loop to file: " << curr_loop.getFuncName() << endl;

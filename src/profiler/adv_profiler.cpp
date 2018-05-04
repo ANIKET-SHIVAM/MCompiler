@@ -7,20 +7,20 @@ Performs following task:
 */
 
 void AdvProfiler::addNoOptCompilerFlags(){
-  compilerFlags->push_back("icc");
-  compilerFlags->push_back("-O0 -g -no-vec"); //-xHOST generate vector code, even with -no-vec
-  compilerFlags->push_back("-qopenmp");
-  compilerFlags->push_back("-std=c11");
-  compilerFlags->push_back("-w");
-  compilerFlags->push_back(mCompiler_include_path);
-  compilerFlags->push_back(mCompiler_macro_defs);
-  compilerFlags->push_back(mCompiler_extraPreSrcFlags);
-  compilerFlags->push_back(mCompiler_extraPostSrcFlags);
+  compilerCL.push_back("icc");
+  compilerCL.push_back("-O0 -g -no-vec"); //-xHOST generate vector code, even with -no-vec
+  compilerCL.push_back("-qopenmp");
+  compilerCL.push_back("-std=c11");
+  compilerCL.push_back("-w");
+  compilerCL.push_back(mCompiler_include_path);
+  compilerCL.push_back(mCompiler_macro_defs);
+  compilerCL.push_back(mCompiler_extraPreSrcFlags);
+  compilerCL.push_back(mCompiler_extraPostSrcFlags);
 }
 
 void AdvProfiler::compileSource(){
 	string CL;
-	for( vector<string>::iterator iterv = compilerFlags->begin(); iterv != compilerFlags->end(); iterv++)
+	for( vector<string>::iterator iterv = compilerCL.begin(); iterv != compilerCL.end(); iterv++)
 		CL += *iterv + space_str;
   /* Collect all non profile source to compile for Adv Profiling */
   for( set<string>::iterator iters = files_to_compile.begin(); iters != files_to_compile.end(); iters++){
@@ -57,13 +57,14 @@ void AdvProfiler::linkObjs(){
     }
   }
 	string CL;
-	for( vector<string>::iterator iterv = compilerFlags->begin(); iterv != compilerFlags->end(); iterv++)
+	for( vector<string>::iterator iterv = compilerCL.begin(); iterv != compilerCL.end(); iterv++)
 		CL += *iterv + space_str;
 	string object_files;
 	string out_file;
 	for( set<string>::iterator iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
 		object_files += *iters + space_str;
-		out_file = prof_binary = getDataFolderPath() + mCompiler_binary_name + "_" + adv_profile_str;
+		out_file = getDataFolderPath() + mCompiler_binary_name + "_" + adv_profile_str;
+    setProfBinary(out_file);
 	}
 	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
 	
@@ -80,31 +81,52 @@ void AdvProfiler::addProfileToolOptions(){
   vector<string> counters = {
     #include "counters.vtune" 
   };
-  if(counters.empty()) cerr << "Vtune Counter list empty" << endl; 
-  CL_items.push_back(vtune_path + "amplxe-cl" + space_str );
-  CL_items.push_back("-collect-with runsa" + space_str );
-  CL_items.push_back("-knob analyze-openmp=true" + space_str);
-  CL_items.push_back("-knob event-config=");
+  if(counters.empty()) cerr << "Vtune Counter list empty" << endl;
+ 
+  toolCL_collect.push_back(vtune_path + "amplxe-cl" + space_str);
+  toolCL_collect.push_back("-collect-with runsa" + space_str );
+  toolCL_collect.push_back("-knob analyze-openmp=true" + space_str);
+  toolCL_collect.push_back("-knob event-config=");
   string comma_str = ",";
   vector<string>::iterator iterv = counters.begin();
-  CL_items.push_back(*iterv);
+  toolCL_collect.push_back(*iterv);
   for(; iterv != counters.end(); iterv++ )
-    CL_items.push_back(comma_str + *iterv);
-  CL_items.push_back(space_str + "-app-working-dir" + space_str);
-  CL_items.push_back(getDataFolderPath() + space_str);
-  CL_items.push_back("--" + space_str);
-  CL_items.push_back(prof_binary);
+    toolCL_collect.push_back(comma_str + *iterv);
+  toolCL_collect.push_back(space_str + "-app-working-dir" + space_str);
+  toolCL_collect.push_back(getDataFolderPath() + space_str);
+  toolCL_collect.push_back("-user-data-dir=");
+  toolCL_collect.push_back(getDataFolderPath() + space_str);
+  toolCL_collect.push_back("-no-summary" + space_str );
+  toolCL_collect.push_back("--" + space_str);
+  toolCL_collect.push_back(getProfBinary());
 }
 
 void AdvProfiler::runProfileTool(){
   string CL; 
-  for( vector<string>::iterator iterv = CL_items.begin(); iterv != CL_items.end(); iterv++ )
+  for( vector<string>::iterator iterv = toolCL_collect.begin(); iterv != toolCL_collect.end(); iterv++ )
     CL += *iterv;
-  executeCommand(CL);
+  string result = executeCommand(CL);
+  if(result.find(getDataFolderPath()) != string::npos){
+    setProfDir( result.substr(result.find(getDataFolderPath()), getDataFolderPath().length() + vtune_default_dir_naming.length()) );
+    cout << "Profiler Data Folder:" << getProfDir() << endl;
+  } else {
+    cerr << "Couldn't locate the profiler data directory" << endl;
+  }
 }
 
 void AdvProfiler::gatherProfileData(){
-
+  toolCL_report.push_back(vtune_path + "amplxe-cl" + space_str);
+  toolCL_report.push_back("-R hotspots" + space_str);
+  toolCL_report.push_back("-r" + space_str);
+  toolCL_report.push_back(getProfDir() + space_str);
+  toolCL_report.push_back("-format=csv --csv-delimiter=comma" + space_str);
+  toolCL_report.push_back("-report-output=" + getProfDir() + ".csv");
+  string CL; 
+  for( vector<string>::iterator iterv = toolCL_report.begin(); iterv != toolCL_report.end(); iterv++ )
+    CL += *iterv;
+  executeCommand(CL);
+  if(!isFileExist(getProfDir() + ".csv"))
+    cerr << "Couldn't generate the profiler result CSV" << endl;
 }
 
 AdvProfiler::AdvProfiler(){
