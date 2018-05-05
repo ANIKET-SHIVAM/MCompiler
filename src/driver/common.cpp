@@ -70,10 +70,15 @@ vector<string> mCompiler_input_file = vector<string>();
 vector<string> mCompiler_object_file;
 string mCompiler_binary_path       = ""; 
 string mCompiler_binary_name       = "a_mc.out"; //Default: If CL provided then replaced with that name
+
 /* Extractor passes to Profiler */
 set<string> files_to_compile;
+/* Synthesizer to Advanced Profiler */
+map<string,string> hotspot_best_compiler_map;
+
 int    mCompiler_profiler_runs     = 3; //Default: If CL provided then replaced with that number
 string mCompiler_profile_data_csv  = "profile_data.csv";
+string mCompiler_adv_profile_data_csv  = "adv_profile_data.csv";
 string mCompiler_profiler_input    = "";
 string mCompiler_macro_defs        = "";
 string mCompiler_include_path      = "";

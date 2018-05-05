@@ -26,6 +26,7 @@ void SynthesizerC::selectOptimalOptimizedCandidate( string hotspot_name ){
 
 	/* Find the lowest running time compiler and add its hotspot object file to final set for linking */	
 	string best_compiler_option = ( hotspot_timing_set.begin() )->first;
+  hotspot_best_compiler_map.insert(pair<string,string>(hotspot_name, best_compiler_option));
 	string best_option_path = ( profiler_hotspot_obj_path.find( pair<string,string>(hotspot_name, best_compiler_option ) ) )->second;
 	best_objs_to_link.insert(best_option_path);
   if(( hotspot_timing_set.begin() )->second != 0 )	

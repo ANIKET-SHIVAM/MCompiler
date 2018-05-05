@@ -91,9 +91,12 @@ extern vector<string> mCompiler_object_file;
 
 /* Extractor passes to Profiler */
 extern set<string> files_to_compile;
+/* Synthesizer to Advanced Profiler */
+extern map<string,string> hotspot_best_compiler_map;
 
 extern int mCompiler_profiler_runs;
 extern string mCompiler_profile_data_csv;
+extern string mCompiler_adv_profile_data_csv;
 extern string mCompiler_profiler_input;
 extern string mCompiler_macro_defs;
 extern string mCompiler_include_path;

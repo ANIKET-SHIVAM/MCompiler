@@ -326,10 +326,6 @@ int main( int argc, char* argv[] ){
 		driver->initiateProfiler();
 	}
 
-	if( mCompiler_enabled_options[ADV_PROFILE] ){
-    driver->initiateAdvProfiler();
-  }
-
 	if( mCompiler_enabled_options[SYNTHESIZE] && 
 			!(mCompiler_enabled_options[COMPILE_TO_OBJECT]) ){
 		if( mCompiler_data_folder_path.empty() ){
@@ -338,6 +334,10 @@ int main( int argc, char* argv[] ){
 		}	
 		driver->initiateSynthesizer();
 	}
+
+	if( mCompiler_enabled_options[ADV_PROFILE] ){
+    driver->initiateAdvProfiler();
+  }
 
 	if( mCompiler_enabled_options[TEST] ){
 		Tester tester();

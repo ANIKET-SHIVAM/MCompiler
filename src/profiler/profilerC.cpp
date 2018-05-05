@@ -320,8 +320,8 @@ void ProfilerC::getObjectFiles( const string& compiler_str ){
 
 void ProfilerC::gatherProfilingData( const string& binary_file, compiler_type curr_compiler ){
 	// CSV file open for storing profiler data
-	bool writing_file = false;
-	CSV csv_file( getDataFolderPath()+mCompiler_profile_data_csv, writing_file );
+	bool is_reading_file = false;
+	CSV csv_file( getDataFolderPath()+mCompiler_profile_data_csv, is_reading_file );
 
 	string compiler_str = compiler_keyword[curr_compiler];
 

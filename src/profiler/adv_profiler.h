@@ -26,6 +26,7 @@ private:
   void linkObjs();
   void runProfileTool();
   void gatherProfileData();
+  void sanitizeProfileData();
 
 public:
   AdvProfiler();

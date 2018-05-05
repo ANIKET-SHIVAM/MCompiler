@@ -17,7 +17,6 @@ private:
 	string binary_name;
 	//set<string> candidate_binaries; -- task moved to Profiler
 	multimap< pair<string,string>, double > hotspot_compiler_timing_map;
-	map< pair<string,string>, string > hotspot_obj_file_map;
 	set<string> best_objs_to_link;
 
 public:

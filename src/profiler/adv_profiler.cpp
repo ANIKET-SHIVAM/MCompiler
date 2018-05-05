@@ -99,6 +99,7 @@ void AdvProfiler::addProfileToolOptions(){
   toolCL_collect.push_back("-no-summary" + space_str );
   toolCL_collect.push_back("--" + space_str);
   toolCL_collect.push_back(getProfBinary());
+//  TODO: Handle Input file for profiling
 }
 
 void AdvProfiler::runProfileTool(){
@@ -129,6 +130,29 @@ void AdvProfiler::gatherProfileData(){
     cerr << "Couldn't generate the profiler result CSV" << endl;
 }
 
+void AdvProfiler::sanitizeProfileData(){
+  bool is_reading_file = true;
+  CSV csv_file_profiler(getProfDir() + ".csv");
+
+  is_reading_file = false;
+	CSV csv_file_counters( getDataFolderPath()+mCompiler_adv_profile_data_csv, is_reading_file );
+
+  vector<string> func_data;
+  while (csv_file_profiler.readNextRow()){
+    func_data = csv_file_profiler.getRowData();
+    vector<string>::iterator iter = func_data.begin();
+    string hotspot_name = *iter;
+    for(map<string,string>::iterator mIter = hotspot_best_compiler_map.begin(); mIter != hotspot_best_compiler_map.end(); mIter++){
+      if(hotspot_name.find(mIter->first) != string::npos){
+        csv_file_counters << hotspot_name << mIter->second;
+        for(;iter != func_data.end(); iter++)
+          csv_file_counters << *iter;
+        csv_file_counters << endrow;
+      }// if
+    }//for map iter
+  }//while
+}
+
 AdvProfiler::AdvProfiler(){
   cout << "Advanced Profiling" << endl;
   addNoOptCompilerFlags();
@@ -142,5 +166,6 @@ AdvProfiler::AdvProfiler(){
     addProfileToolOptions();
     runProfileTool();
     gatherProfileData();
+    sanitizeProfileData();
   }
 }
