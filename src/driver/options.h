@@ -50,6 +50,7 @@ const option::Descriptor usage[] =
 	{ADV_PROFILE        , 0, ""  , "adv-profile"   ,Arg::None     , "    --adv-profile        Advanced Profiling with Perf tool" },
 	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>       Input to the program"
 																							                                              " Needed to generate profiling information" },
+	{KNL                , 0, ""  , "knl"           ,Arg::None     , "    --knl                Compile for Intel Knights Landing processor" },
 	{COMPILE_TO_OBJECT  , 0, "c" , "compile"       ,Arg::None     , "    -c[<arg>]            Compile to object file" },
 	{OUTPUT_BINARY      , 0, "o" , "output"        ,Arg::Required , "    -o[<arg>]            Output object/binary name" },
 	{INCLUDE_PATH       , 0, "I" , "include"       ,Arg::Required , "    -I[<arg>]            Directory to include file search path" },
@@ -72,6 +73,7 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		{ AUTO_PARALLEL,     false },
 		{ PREFETCH,          false },
 		{ ADV_PROFILE,       false },
+		{ KNL,               false },
 		{ COMPILE_TO_OBJECT, false },
 		{ MC_DEBUG,          false },
 		{ MC_INFO,           false },
@@ -147,6 +149,9 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		case ADV_PROFILE:
 			mCompiler_enabled_options[ADV_PROFILE] = true;
+			break;
+		case KNL:
+			mCompiler_enabled_options[KNL] = true;
 			break;
 		case OUTPUT_BINARY:
       tmpstr = opt.arg;

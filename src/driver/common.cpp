@@ -139,7 +139,10 @@ void addOptimizationFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("clang");
 	flag_vec.push_back("-Ofast");
-	flag_vec.push_back("-march=native");
+  if(mCompiler_enabled_options[KNL])
+  	flag_vec.push_back("-march=knl");
+  else
+    flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-std=c11");
   if(mCompiler_enabled_options[PREFETCH])
@@ -156,7 +159,10 @@ void addOptimizationFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("pgcc");
 	flag_vec.push_back("-fast");
-	flag_vec.push_back("-tp=haswell");
+  if(mCompiler_enabled_options[KNL])
+  	flag_vec.push_back("-tp=knl");
+  else
+    flag_vec.push_back("-tp=haswell");
 	flag_vec.push_back("-Mllvm");
 	flag_vec.push_back("-mp");
   flag_vec.push_back("-c11");
@@ -186,7 +192,10 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-O3");
 	flag_vec.push_back("-mllvm -polly");
 	flag_vec.push_back("-mllvm -polly-vectorizer=stripmine");
-	flag_vec.push_back("-march=native");
+  if(mCompiler_enabled_options[KNL])
+  	flag_vec.push_back("-march=knl");
+  else
+    flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-std=c11");
   if(mCompiler_enabled_options[AUTO_PARALLEL])
@@ -206,6 +215,7 @@ void addLinkerFlags(){
 	/* ICC */
 	flag_vec.clear();
 	flag_vec.push_back("icc");
+  flag_vec.push_back("-xHost");
 	flag_vec.push_back("-qopenmp");
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[AUTO_PARALLEL])
@@ -217,6 +227,7 @@ void addLinkerFlags(){
 	/* GCC */
 	flag_vec.clear();
 	flag_vec.push_back("gcc");
+  flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[AUTO_PARALLEL]);
@@ -227,6 +238,10 @@ void addLinkerFlags(){
 	/* LLVM */
 	flag_vec.clear();
 	flag_vec.push_back("clang");
+  if(mCompiler_enabled_options[KNL])
+  	flag_vec.push_back("-march=knl");
+  else
+    flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
 	flag_vec.push_back("-w");
   /* For Polly Parallel */
@@ -239,8 +254,12 @@ void addLinkerFlags(){
 	/* PGI */
 	flag_vec.clear();
 	flag_vec.push_back("pgcc");
-	flag_vec.push_back("-mp");
+  if(mCompiler_enabled_options[KNL])
+  	flag_vec.push_back("-tp=knl");
+  else
+  	flag_vec.push_back("-tp=haswell");
 	flag_vec.push_back("-Mllvm");
+	flag_vec.push_back("-mp");
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("-Mconcur");
