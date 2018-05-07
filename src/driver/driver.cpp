@@ -235,10 +235,10 @@ void Driver::initiateExtractor( string file_name ){
 	vector<string> filename_vec;
 	string dummy_arg_for_extractor_frontend = "Rose, please let me run the extractor!";
 	filename_vec.push_back(dummy_arg_for_extractor_frontend);
-  // TODO: Do this only for CentOS
-//	dummy_arg_for_extractor_frontend = "-I"+ rose_install_path +"include/edg/gcc_HEADERS/";
-//	filename_vec.push_back(dummy_arg_for_extractor_frontend);
-
+#ifdef OS_CENTOS
+	dummy_arg_for_extractor_frontend = "-I"+ rose_install_path +"include/edg/gcc_HEADERS/";
+	filename_vec.push_back(dummy_arg_for_extractor_frontend);
+#endif
 	/* Rose frontend needs each include path in different vector entry */
 	istringstream bufI(mCompiler_include_path);
   istream_iterator<string> begI(bufI), endI;

@@ -45,6 +45,9 @@ string baseline_compiler_str;
 /*TODO: Get from LD_LIBRARY_PATH */
 string pgi_lib_path = "/opt/pgi/linux86-64-llvm/2018/lib/";
 string vtune_path   = "/opt/intel/vtune_amplifier/bin64/";
+#ifdef OS_CENTOS
+string rose_path    = "/home/aniket/mCompiler/tools/rose_install/";
+#endif
 
 /* Mode in which mCompiler is working */
 compiler_mode mCompiler_mode = mode_FULL_PASS;
@@ -261,9 +264,9 @@ void addPostLinkerFlags(){
 
 string executeCommand( string cmd_str ){
 	// Since, pipe doesn't capture stderr, redirect it to stdout
-	cmd_str = cmd_str + " 2>&1";
-	const char *cmd_char_ptr = cmd_str.c_str();
-	array<char, 128> buffer;
+  cmd_str = cmd_str + " 2>&1";
+  const char *cmd_char_ptr = cmd_str.c_str();
+  array<char, 128> buffer;
   string result;
   if( mCompiler_enabled_options[MC_INFO] )
     cout << "Executing command:" << endl << cmd_str << endl;
@@ -282,7 +285,6 @@ string executeCommand( string cmd_str ){
       //	exit(EXIT_FAILURE);
     }
   }
-
   return result;
 }
 

@@ -83,6 +83,9 @@ extern string mCompiler_data_folder_path;
 extern string mCompiler_curr_dir_path;
 extern string pgi_lib_path;
 extern string vtune_path;
+#ifdef OS_CENTOS
+extern string rose_path;
+#endif
 
 /* For the extractor */
 extern vector<string> mCompiler_input_file;

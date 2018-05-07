@@ -1,8 +1,20 @@
-CC = g++
-FLAGS = -std=c++11 -g
+ifeq ($(OS), centos)
+	CC = g++-4.9
+	FLAGS = -std=c++11 -g -DOS_CENTOS
 
-ROSE_PATH=${CURDIR}/tools/rose_build
-BOOST_PATH=${CURDIR}/tools/boost_build
+	ROSE_PATH = ${CURDIR}/tools/rose_install
+	BOOST_PATH = ${CURDIR}/tools/boost_1_61_0
+	ROSE_INCLUDE = -I${ROSE_PATH}/include/ -I${BOOST_PATH}/include/
+	ROSE_LIB = -lROSE_DLL
+else
+	CC = g++
+	FLAGS = -std=c++11 -g
+
+	ROSE_PATH = ${CURDIR}/tools/rose_build
+	BOOST_PATH = ${CURDIR}/tools/boost_build
+	ROSE_INCLUDE = -I${ROSE_PATH}/include/rose -I${BOOST_PATH}/include/
+	ROSE_LIB = -lrose
+endif
 
 OBJS = obj
 BIN  = bin
@@ -20,11 +32,9 @@ DIRS := $(shell mkdir -p ${CURDIR}/$(OBJS) &&  mkdir -p ${CURDIR}/$(BIN))
 all: extractor profiler synthesizer tester driver
 	
 ##### EXTRACTOR #####
-ROSE_INCLUDE = -I${ROSE_PATH}/include/rose -I${BOOST_PATH}/include/
 EXTRACTOR_COMPILE_FLAGS = -I${CURDIR}/src $(ROSE_INCLUDE)
 EXTRACTOR_LD_FLAGS = -L${ROSE_PATH}/lib \
-	-L${BOOST_PATH}/lib \
-	-lrose -lboost_iostreams -lboost_system
+	-L${BOOST_PATH}/lib $(ROSE_LIB) -lboost_iostreams -lboost_system
 
 OBJ_EXTRACTOR = $(OBJS)/extractor.o
 SRC_EXTRACTOR  = $(EXTRACTOR_PATH)/extractor.cpp 
