@@ -33,8 +33,9 @@ void Tester::testCompilerCandidates(){
 			//TODO: Improve this later
 			while( getline( line_stream, cell ) ){
 				if( cell.find("user") != string::npos ){
-					int pos_user = cell.find("user");
-					binaries_time[curr_compiler] = cell.substr(0,pos_user);
+					int pos_system = cell.find("system");
+					int pos_elapsed = cell.find("elapsed");
+					binaries_time[curr_compiler] = cell.substr(pos_system+ string("system").length()+1, string("h:mm.ss").length());
 				}
 			}
 		}
@@ -47,8 +48,9 @@ void Tester::testCompilerCandidates(){
 	string cell;	
 	while( getline( line_stream, cell ) ){
 		if( cell.find("user") != string::npos ){
-			int pos_user = cell.find("user");
-			mCompiler_timing = cell.substr(0,pos_user);
+      int pos_system = cell.find("system");
+      int pos_elapsed = cell.find("elapsed");
+      mCompiler_timing = cell.substr(pos_system+ string("system").length()+1, string("h:mm.ss").length());
 		}
 	}
 }

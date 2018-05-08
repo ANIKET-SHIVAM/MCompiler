@@ -340,7 +340,7 @@ int main( int argc, char* argv[] ){
   }
 
 	if( mCompiler_enabled_options[TEST] ){
-		Tester tester();
+		Tester *tester = new Tester();
 	}
 
 	delete driver;
