@@ -1,5 +1,7 @@
 using namespace std;
 
+#include <boost/algorithm/string.hpp>
+
 typedef istream_iterator<string> CSVIterator;
 
 class CSV
@@ -70,21 +72,23 @@ public:
     } catch (std::exception& e) {
       return false;
     } 
-    stringstream lineStream(line);
+//    stringstream lineStream;
+//    lineStream.str(line);
     string cell;
 
     row_data.clear();
       
-    char separator_char[1];
-    strcpy( separator_char, separator.c_str() );
-    while(getline(lineStream, cell, separator_char[0] )){
-      row_data.push_back(cell);
-    }
+//    char separator_char[1];
+//    strcpy( separator_char, separator.c_str() );
+    boost::split(row_data, line, [](char c){return c == ',';});
+//    while(getline(lineStream, cell, separator_char[0] )){
+//      row_data.push_back(cell);
+//    }
     // This checks for a trailing comma with no data after it.
-    if (!lineStream && cell.empty()){
+//    if (!lineStream && cell.empty()){
       // If there was a trailing comma then add an empty element.
-      row_data.push_back("");
-    }
+//      row_data.push_back("");
+//    }
     return true;
   }
 

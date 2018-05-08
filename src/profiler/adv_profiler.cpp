@@ -144,7 +144,7 @@ void AdvProfiler::sanitizeProfileData(){
     string hotspot_name = *iter;
     for(map<string,string>::iterator mIter = hotspot_best_compiler_map.begin(); mIter != hotspot_best_compiler_map.end(); mIter++){
       if(hotspot_name.find(mIter->first) != string::npos){
-        csv_file_counters << hotspot_name << mIter->second;
+        csv_file_counters << mIter->first << mIter->second;
         for(;iter != func_data.end(); iter++)
           csv_file_counters << *iter;
         csv_file_counters << endrow;
