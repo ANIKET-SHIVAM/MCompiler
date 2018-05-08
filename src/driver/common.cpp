@@ -106,7 +106,10 @@ void addOptimizationFlags(){
   }
   flag_vec.push_back("-xHost");
 	flag_vec.push_back("-qopenmp");
-	flag_vec.push_back("-std=c11");
+  if(mCompiler_enabled_options[C99])
+  	flag_vec.push_back("-std=c99");
+  else
+    flag_vec.push_back("-std=c11");
   if(mCompiler_enabled_options[PREFETCH])
   	flag_vec.push_back("-qopt-prefetch");
 	flag_vec.push_back("-w");
@@ -124,7 +127,10 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-Ofast");
 	flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
-	flag_vec.push_back("-std=c11");
+  if(mCompiler_enabled_options[C99])
+  	flag_vec.push_back("-std=c99");
+  else
+    flag_vec.push_back("-std=c11");
   if(mCompiler_enabled_options[PREFETCH])
   	flag_vec.push_back("-fprefetch-loop-arrays");
 	flag_vec.push_back("-w");
@@ -144,7 +150,10 @@ void addOptimizationFlags(){
   else
     flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
-	flag_vec.push_back("-std=c11");
+  if(mCompiler_enabled_options[C99])
+  	flag_vec.push_back("-std=c99");
+  else
+    flag_vec.push_back("-std=c11");
   if(mCompiler_enabled_options[PREFETCH])
   	flag_vec.push_back("-loop-data-prefetch");
 	flag_vec.push_back("-w");
@@ -165,7 +174,10 @@ void addOptimizationFlags(){
     flag_vec.push_back("-tp=haswell");
 	flag_vec.push_back("-Mllvm");
 	flag_vec.push_back("-mp");
-  flag_vec.push_back("-c11");
+  if(mCompiler_enabled_options[C99])
+  	flag_vec.push_back("-c99");
+  else
+    flag_vec.push_back("-c11");
   if(mCompiler_enabled_options[PREFETCH])
 	  flag_vec.push_back("-Mprefetch");
 	flag_vec.push_back("-w");
@@ -197,7 +209,10 @@ void addOptimizationFlags(){
   else
     flag_vec.push_back("-march=native");
 	flag_vec.push_back("-fopenmp");
-	flag_vec.push_back("-std=c11");
+  if(mCompiler_enabled_options[C99])
+  	flag_vec.push_back("-std=c99");
+  else
+    flag_vec.push_back("-std=c11");
   if(mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("-mllvm -polly-parallel");
 	flag_vec.push_back("-w");
