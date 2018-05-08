@@ -79,7 +79,11 @@ void AdvProfiler::linkObjs(){
 
 void AdvProfiler::addProfileToolOptions(){
   vector<string> counters = {
-    #include "counters.vtune" 
+#ifdef OS_CENTOS
+    #include "counters_knl.vtune"
+#else
+    #include "counters_skylake.vtune"
+#endif
   };
   if(counters.empty()) cerr << "Vtune Counter list empty" << endl;
  
