@@ -67,7 +67,11 @@ string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 	while( file_name.find('-') != string::npos )	
 		file_name.replace(file_name.find('-'),1,string("_"));
 	string file_extn = mCompiler_file_extn;
-	
+  	
+  string enclosingFuncName = (SageInterface::getEnclosingFunctionDeclaration(astNode)->get_qualified_name()).getString();
+  boost::erase_all(enclosingFuncName, "::");
+
+  file_name += "_" + enclosingFuncName;
 	file_name += "_line" + to_string(lineNumber);
 	
 	if( isProfileFile )
@@ -76,6 +80,13 @@ string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 		file_name += "." + mCompiler_file_extn;
 
 	return output_path + file_name;
+}
+
+string Extractor::getLoopName(SgNode *astNode){
+  string loopName = getExtractionFileName(astNode, false);
+  boost::erase_all(loopName,getDataFolderPath());
+  boost::erase_all(loopName,"."+mCompiler_file_extn);
+  return loopName;
 }
 
 void Extractor::printHeaders( ofstream& loop_file_buf, bool isProfileFile ){
@@ -678,12 +689,10 @@ void Extractor::extractLoops( SgNode *astNode ){
 	
 	files_to_compile.insert( loop_profile_file_name );
 	files_to_compile.insert( loop_no_profile_file_name );
-	
-	string nameForNextLoop = getFileName( (astNode->get_file_info())->get_filenameString() ) +
-										  "_line" + to_string( getAstNodeLineNum(astNode) );
 
+  cout << "Func Name:" << getLoopName(astNode) << endl;
 	// Create loop object
-	LoopInfo curr_loop( astNode, loop, nameForNextLoop, *this); 
+	LoopInfo curr_loop( astNode, loop, getLoopName(astNode), *this); 
 
 	printHeaders( loop_file_buf_profile, true );
 	printGlobalsAsExtern( loop_file_buf_profile );
