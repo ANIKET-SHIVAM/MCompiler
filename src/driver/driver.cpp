@@ -327,7 +327,7 @@ int main( int argc, char* argv[] ){
 	}
 
 	if( mCompiler_enabled_options[SYNTHESIZE] && 
-			!(mCompiler_enabled_options[COMPILE_TO_OBJECT]) ){
+    ( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT || mCompiler_mode == mode_COMPLEX )){
 		if( mCompiler_data_folder_path.empty() ){
 			cerr << "Driver: Couldn't find the folder to synthesize hotspots" << endl;	
 			exit(EXIT_FAILURE);
@@ -339,7 +339,8 @@ int main( int argc, char* argv[] ){
     driver->initiateAdvProfiler();
   }
 
-	if( mCompiler_enabled_options[TEST] ){
+	if( mCompiler_enabled_options[TEST] && 
+    ( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT || mCompiler_mode == mode_COMPLEX )){
 		Tester *tester = new Tester();
 	}
 
