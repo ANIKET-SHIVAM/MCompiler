@@ -287,13 +287,17 @@ void ProfilerC::getObjectFiles( const string& compiler_str ){
 		while ( ( ent = readdir(dir) ) != NULL ){
 			string filename( ent->d_name );
 			if( filename.at(0) != '.' && 
-				isEndingWith(filename, mCompiler_profile_file_tag + compiler_str + dot_o_str) ){
+				filename.find(compiler_str) != string::npos && 
+				filename.find(mCompiler_profile_file_tag) != string::npos &&
+        isEndingWith(filename,dot_o_str) ){
 				files_to_link.insert( getDataFolderPath() + ent->d_name );
         if( mCompiler_enabled_options[MC_INFO] )
           cout << "Adding files for Linking: " << ent->d_name << endl;
 			}
 			if( filename.at(0) != '.' && 
-				isEndingWith(filename, mCompiler_header_str + compiler_str + dot_o_str) ){
+				filename.find(compiler_str) != string::npos && 
+				filename.find(mCompiler_header_str) != string::npos &&
+        isEndingWith(filename,dot_o_str) ){
 				files_to_link.insert( getDataFolderPath() + ent->d_name );
         if( mCompiler_enabled_options[MC_INFO] )
           cout << "Adding files for Linking: " << ent->d_name << endl;
