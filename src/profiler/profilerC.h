@@ -12,6 +12,7 @@ private:
 	set<string> mCompiler_header_obj;
 	set<string> *pluto_files_to_compile = new set<string>();
 	string pluto_success_str = "[Pluto] Output written";	
+	set<string> *pluto_fail_hotspots = new set<string>();
 
 	void iccOptimize( bool asPlutoBackend ); 
 	void gccOptimize(); 

@@ -85,6 +85,9 @@ string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 string Extractor::getLoopName(SgNode *astNode){
   string loopName = getExtractionFileName(astNode, false);
   boost::erase_all(loopName,getDataFolderPath());
+	/* Since you cannot start Function name with a digit */ 
+	if( isdigit(loopName[0]) )	
+		loopName.insert(0,1,'_');
   boost::erase_all(loopName,"."+mCompiler_file_extn);
   return loopName;
 }
@@ -265,6 +268,8 @@ bool LoopInfo::hasFuncCallInScope( ){
 	
 	for (; funcCallIter != funcCallList.end(); funcCallIter++) {
 		SgFunctionCallExp *funcCallExp = isSgFunctionCallExp(*funcCallIter);
+//    bool inliningOK = doInline(funcCallExp);
+//    if(inliningOK) continue;
 		SgFunctionDeclaration *funcDecl = funcCallExp->getAssociatedFunctionDeclaration();
 		if( funcDecl != NULL && !SageInterface::isExtern(funcDecl) ){
 			scope_funcCall_vec.insert( funcDecl );
@@ -690,7 +695,6 @@ void Extractor::extractLoops( SgNode *astNode ){
 	files_to_compile.insert( loop_profile_file_name );
 	files_to_compile.insert( loop_no_profile_file_name );
 
-  cout << "Func Name:" << getLoopName(astNode) << endl;
 	// Create loop object
 	LoopInfo curr_loop( astNode, loop, getLoopName(astNode), *this); 
 

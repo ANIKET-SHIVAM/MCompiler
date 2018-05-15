@@ -27,6 +27,8 @@ string gcc_str     = "_gcc";
 string llvm_str    = "_llvm";
 string pgi_str     = "_pgi";
 string pluto_str   = "_pluto";
+/* Case where PLuTo doesn't recognize the SCoP, so source fed to ICC as it is */
+string XplutoX_str = "_XplutoX"; 
 string polly_str   = "_polly";
 string test_str    = "_test";
 
@@ -193,7 +195,7 @@ void addOptimizationFlags(){
 	flag_vec.clear();
 	/* Tiling and parallel code option are off by default */
 	flag_vec.push_back("polycc");
-	flag_vec.push_back("--tile");
+  flag_vec.push_back("--tile");
   if(mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("--parallel");
 	optimization_flags[compiler_Pluto] = flag_vec;	

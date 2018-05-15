@@ -53,12 +53,12 @@ void ProfilerC::iccOptimize( bool asPlutoBackend ){
 	set<string>::iterator iters;
 	for( iters = files_compile.begin(); iters != files_compile.end(); iters++){
 		string out_file = "";
-		/* _pluto is added for pluto optimized file already */
 		if( !asPlutoBackend ){
 			out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + compiler_str + dot_o_str; 
 		} else {
+      /* _pluto is added for pluto optimized file already, if pluto couldn't then same source compiled just by ICC */
 			if( (*iters).find(compiler_str) == string::npos )
-				out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + compiler_str + dot_o_str; 
+				out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + XplutoX_str + dot_o_str; 
 			else
 				out_file = (*iters).substr( 0, (*iters).find_last_of(".") ) + dot_o_str; 
 		}
@@ -354,7 +354,10 @@ void ProfilerC::gatherProfilingData( const string& binary_file, compiler_type cu
 			if( hotspot_name.substr(0,1) == "_" )
 				hotspot_name = hotspot_name.substr(1,string::npos);
 			double hotspot_time = stod( cell.substr( keyword_colon_pos + 1 ) );
-			
+      /* For hotspots that are Pluto couldn't optimize and used ICC's instead */
+      if(curr_compiler == compiler_Pluto && pluto_fail_hotspots->find(hotspot_name) != pluto_fail_hotspots->end())
+        continue;	
+      	
 			// Check if that loop's profile object file is present
 			string obj_file_path_profile =  getDataFolderPath() + hotspot_name + mCompiler_profile_file_tag + compiler_str + dot_o_str;
 			// This is the file with no profiling code, hence to be finally linked by the synthesizer
@@ -428,6 +431,12 @@ void ProfilerC::iccProfile( bool asPlutoBackend ){
 	string object_files;
 	string out_file;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
+    if( asPlutoBackend && (*iters).find(XplutoX_str) != string::npos ){
+      string hotspot_name = *iters;
+      hotspot_name.erase(0,getDataFolderPath().length());
+      int pos = hotspot_name.find(mCompiler_profile_file_tag);
+      pluto_fail_hotspots->insert(hotspot_name.substr(0,pos)); 
+    }
 		object_files += *iters + space_str;
 		out_file = getDataFolderPath() + mCompiler_binary_name + compiler_str;
 	}
