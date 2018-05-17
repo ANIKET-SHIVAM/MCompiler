@@ -31,6 +31,7 @@ string pluto_str   = "_pluto";
 string XplutoX_str = "_XplutoX"; 
 string polly_str   = "_polly";
 string test_str    = "_test";
+string mCompiler_skiplooppragma_str = "skiploop";
 
 map<compiler_type, string> compiler_keyword = {
 	{ compiler_ICC,   icc_str.substr(1,string::npos)   },

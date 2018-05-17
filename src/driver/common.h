@@ -65,6 +65,7 @@ extern string XplutoX_str;
 extern string polly_str;
 extern string test_str;
 extern string baseline_compiler_str;
+extern string mCompiler_skiplooppragma_str;
 
 extern compiler_mode mCompiler_mode;
 

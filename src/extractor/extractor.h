@@ -46,6 +46,7 @@ public:
 	vector<string> *loop_funcName_vec = new vector<string>;
 	map<SgFunctionDeclaration*,string> inline_func_map;
   string loopOMPpragma = "";
+  string loopSkipPragma = "";
 	vector<string> func_var_str_vec;
   SgScopeStatement* loopParentFuncScope = NULL;
   map<SgStatement*,SgStatement*> externFuncDef;

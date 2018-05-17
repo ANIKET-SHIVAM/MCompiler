@@ -669,6 +669,10 @@ void LoopInfo::addLoopFuncCall(){
 //}
 
 bool Extractor::skipLoop( SgNode *astNode ){
+  if(!loopSkipPragma.empty() && loopSkipPragma.find(mCompiler_skiplooppragma_str) != string::npos){
+    loopSkipPragma = "";
+    return true;
+  }
 	SgForStatement *loop = dynamic_cast<SgForStatement *>(astNode);
   SgScopeStatement *scope = ( loop->get_loop_body() )->get_scope();
   Rose_STL_Container<SgNode *> returnStmt = NodeQuery::querySubTree(scope, V_SgReturnStmt);
@@ -817,6 +821,12 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
           string pragmaString = pragmaNode->get_pragma();
           loopOMPpragma = "#pragma " + pragmaString;
         }
+        if(SageInterface::extractPragmaKeyword(pragmaDecl) == "mC") {
+          SgPragma *pragmaNode = pragmaDecl->get_pragma();
+          string pragmaString = pragmaNode->get_pragma();
+          loopSkipPragma = "#pragma " + pragmaString;
+        }
+        
         break;
       }
 			case V_SgReturnStmt: {
