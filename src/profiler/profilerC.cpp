@@ -221,6 +221,11 @@ void ProfilerC::plutoOptimize(){
 			pluto_files_to_compile->insert(file_to_optimize);
 			continue;
 		}
+		// If a skippluto file just skip
+		if( files_skip_pluto.find(file_to_optimize) != files_skip_pluto.end() ){
+			pluto_files_to_compile->insert(file_to_optimize);
+			continue;
+		}
 		// filename.c to filename_pluto.c
 		int pos_of_dot = file_to_optimize.find_last_of(".");
 		string pluto_opt_file = file_to_optimize.substr( 0, pos_of_dot ) + 

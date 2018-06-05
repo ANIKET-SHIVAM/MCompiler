@@ -32,6 +32,7 @@ string XplutoX_str = "_XplutoX";
 string polly_str   = "_polly";
 string test_str    = "_test";
 string mCompiler_skiplooppragma_str = "skiploop";
+string mCompiler_skipplutopragma_str = "skippluto";
 
 map<compiler_type, string> compiler_keyword = {
 	{ compiler_ICC,   icc_str.substr(1,string::npos)   },
@@ -79,6 +80,7 @@ string mCompiler_binary_name       = "a_mc.out"; //Default: If CL provided then 
 
 /* Extractor passes to Profiler */
 set<string> files_to_compile;
+set<string> files_skip_pluto;
 /* Synthesizer to Advanced Profiler */
 map<string,string> hotspot_best_compiler_map;
 

@@ -66,6 +66,7 @@ extern string polly_str;
 extern string test_str;
 extern string baseline_compiler_str;
 extern string mCompiler_skiplooppragma_str;
+extern string mCompiler_skipplutopragma_str;
 
 extern compiler_mode mCompiler_mode;
 
@@ -96,6 +97,8 @@ extern vector<string> mCompiler_object_file;
 
 /* Extractor passes to Profiler */
 extern set<string> files_to_compile;
+/* Extractor passes to Profiler to skip Pluto */
+extern set<string> files_skip_pluto;
 /* Synthesizer to Advanced Profiler */
 extern map<string,string> hotspot_best_compiler_map;
 

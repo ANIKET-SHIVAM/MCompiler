@@ -699,6 +699,13 @@ void Extractor::extractLoops( SgNode *astNode ){
 	files_to_compile.insert( loop_profile_file_name );
 	files_to_compile.insert( loop_no_profile_file_name );
 
+  /* Handle mC skippluto directive to stop pluto from optimizing hotspot */
+  if(!loopSkipPragma.empty() && loopSkipPragma.find(mCompiler_skipplutopragma_str) != string::npos){
+    loopSkipPragma = "";
+    files_skip_pluto.insert( loop_profile_file_name );
+    files_skip_pluto.insert( loop_no_profile_file_name );
+  }
+
 	// Create loop object
 	LoopInfo curr_loop( astNode, loop, getLoopName(astNode), *this); 
 
