@@ -36,6 +36,7 @@ public:
 	bool checkAdvProfileCandidate();
 	void setMCompilerMode();
 	void createMCompilerDataFolder();
+	void removeMCompilerDataFolder();
 	void generateMCompilerHeaderFile();
 	void fetchProfilerInput();
 	void copyInFolderHeaders( string folder_path );

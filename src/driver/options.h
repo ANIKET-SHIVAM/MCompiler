@@ -46,7 +46,7 @@ const option::Descriptor usage[] =
 	{PREFETCH           , 0, ""  , "prefetch"      ,Arg::None     , "    --prefetch           Enable software data prefetching" },
 	{PROFILE_COUNT      , 0, ""  , "profile-runs"  ,Arg::Numeric  , "    --profile-runs=<num> Number of time profiler should run the program to"
 																							                                              " collect data. Default: 3" },
-	{ADV_PROFILE        , 0, ""  , "adv-profile"   ,Arg::None     , "    --adv-profile        Advanced Profiling with Perf tool" },
+	{ADV_PROFILE        , 0, ""  , "adv-profile"   ,Arg::None     , "    --adv-profile        Advanced Profiling" },
 	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>       Input to the program"
 																							                                              " Needed to generate profiling information" },
 	{KNL                , 0, ""  , "knl"           ,Arg::None     , "    --knl                Compile for Intel Knights Landing processor" },

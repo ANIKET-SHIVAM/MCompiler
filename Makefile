@@ -25,7 +25,7 @@ SYNTHESIZER_PATH  = src/synthesizer
 TESTER_PATH       = src/tester
 DRIVER_PATH       = src/driver
 
-MC_DATA_FOLDER    = ${CURDIR}/mCompiler_data
+MC_DATA_FOLDER    = /tmp/mCompiler_data
 
 DIRS := $(shell mkdir -p ${CURDIR}/$(OBJS) &&  mkdir -p ${CURDIR}/$(BIN))
   

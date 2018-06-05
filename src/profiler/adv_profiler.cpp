@@ -8,7 +8,7 @@ Performs following task:
 
 void AdvProfiler::addNoOptCompilerFlags(){
   compilerCL.push_back("icc");
-  compilerCL.push_back("-O0 -g -no-vec"); //-xHOST generate vector code, even with -no-vec
+  compilerCL.push_back("-O1 -g -no-vec"); //-xHOST generate vector code, even with -no-vec
   compilerCL.push_back("-qopenmp");
   compilerCL.push_back("-std=c11");
   compilerCL.push_back("-w");
@@ -139,7 +139,7 @@ void AdvProfiler::sanitizeProfileData(){
   CSV csv_file_profiler(getProfDir() + ".csv");
 
   is_reading_file = false;
-	CSV csv_file_counters( getDataFolderPath()+mCompiler_adv_profile_data_csv, is_reading_file );
+	CSV csv_file_counters( mCompiler_curr_dir_path + mCompiler_adv_profile_data_csv, is_reading_file );
 
   vector<string> func_data;
   while (csv_file_profiler.readNextRow()){

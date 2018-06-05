@@ -120,19 +120,27 @@ void Driver::setMCompilerMode(){
 	}
 }
 
+/* Create temp folder in /tmp unless DEBUG mode is enabled */
 void Driver::createMCompilerDataFolder(){
-	mCompiler_data_folder_path = mCompiler_curr_dir_path + mCompiler_data_folder + forward_slash_str;
-	
-	if (!isDirExist(mCompiler_data_folder_path)){
-		const int dir_err = mkdir(mCompiler_data_folder_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-		if (dir_err == -1) {
-			cout << "Error creating mCompiler data directory:" << mCompiler_data_folder_path << endl;
-			exit(EXIT_FAILURE);
-		}
-	} else {
-		/* Clean existing mCompiler data folder */
-		//executeCommand("rm " + mCompiler_data_folder_path + "*");
-	}
+	if( mCompiler_enabled_options[MC_DEBUG] ){
+    mCompiler_data_folder_path = mCompiler_curr_dir_path + mCompiler_data_folder + forward_slash_str;
+  } else {
+    mCompiler_data_folder_path = "/tmp/" + mCompiler_data_folder + forward_slash_str;
+  } 
+  if (!isDirExist(mCompiler_data_folder_path)){
+    const int dir_err = mkdir(mCompiler_data_folder_path.c_str(),
+                          S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if (dir_err == -1) {
+      cout << "Error creating mCompiler data directory:" << mCompiler_data_folder_path << endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+}
+
+void Driver::removeMCompilerDataFolder(){
+  string CL = "rm -rf ";
+  CL += mCompiler_data_folder_path;
+  executeCommand(CL);
 }
 
 void Driver::generateMCompilerHeaderFile(){
@@ -343,6 +351,11 @@ int main( int argc, char* argv[] ){
     ( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT || mCompiler_mode == mode_COMPLEX )){
 		Tester *tester = new Tester();
 	}
+
+  if( !mCompiler_enabled_options[MC_DEBUG] &&
+    ( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT || mCompiler_mode == mode_COMPLEX )){
+    driver->removeMCompilerDataFolder();
+  }
 
 	delete driver;
 	return 0;
