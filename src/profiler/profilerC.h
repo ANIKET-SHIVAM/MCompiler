@@ -2,7 +2,7 @@
 #define PROFILERC_H_
 
 #include "driver/common.h"
-
+#include <thread> 
 using namespace std;
 
 class ProfilerC { 
@@ -33,7 +33,7 @@ public:
 	string getDataFolderPath() { return mCompiler_data_folder_path; };
 
 	// Phase 1
-	void Optimize( const map< compiler_type, bool >::iterator &curr_candidate );
+  void Optimize( compiler_type curr_candidate, bool curr_cand_status );
 	void getHotspotFiles();
 
 	// Phase 2

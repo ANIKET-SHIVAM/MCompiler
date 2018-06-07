@@ -51,6 +51,7 @@ const option::Descriptor usage[] =
 																							                                              " Needed to generate profiling information" },
 	{KNL                , 0, ""  , "knl"           ,Arg::None     , "    --knl                Compile for Intel Knights Landing processor" },
 	{C99                , 0, ""  , "c99"           ,Arg::None     , "    --c99                Conforms to ISO C99 standards. Default: C11" },
+	{JOBS               , 0, "j" , "jobs"          ,Arg::None     , "    -j                   Compile hotspots in parallel" },
 	{COMPILE_TO_OBJECT  , 0, "c" , "compile"       ,Arg::None     , "    -c[<arg>]            Compile to object file" },
 	{OUTPUT_BINARY      , 0, "o" , "output"        ,Arg::Required , "    -o[<arg>]            Output object/binary name" },
 	{INCLUDE_PATH       , 0, "I" , "include"       ,Arg::Required , "    -I[<arg>]            Directory to include file search path" },
@@ -74,6 +75,7 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		{ ADV_PROFILE,       false },
 		{ KNL,               false },
 		{ C99,               false },
+		{ JOBS,              false },
 		{ COMPILE_TO_OBJECT, false },
 		{ MC_DEBUG,          false },
 		{ MC_INFO,           false },
@@ -152,6 +154,9 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		case C99:
 			mCompiler_enabled_options[C99] = true;
+			break;
+		case JOBS:
+			mCompiler_enabled_options[JOBS] = true;
 			break;
 		case OUTPUT_BINARY:
       tmpstr = opt.arg;

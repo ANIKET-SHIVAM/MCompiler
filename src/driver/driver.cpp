@@ -103,20 +103,20 @@ void Driver::setMCompilerMode(){
 	/* Enable step compilation flag if -c provided */
 	if( mCompiler_enabled_options[COMPILE_TO_OBJECT] ){
 		mCompiler_mode = mode_TO_OBJECT;	
-		cerr << "Driver: Starting -c phase -> Only source files provided" << endl;
+		cout << "Driver: Starting -c phase -> Only source files provided" << endl;
 	}
 
 	/* Check if CL had object file but no source files -- Linking phase */
 	if( !mCompiler_object_file.empty() && mCompiler_input_file.empty() ){
 		mCompiler_mode = mode_FROM_OBJECT;	
 		mCompiler_enabled_options[EXTRACT] = false;
-		cerr << "Driver: Starting link phase -> Only object files provided" << endl;
+		cout << "Driver: Starting link phase -> Only object files provided" << endl;
 	}
 
 	/* Check if CL have both object and source files - Complex mode */
 	if( !( mCompiler_object_file.empty() || mCompiler_input_file.empty() ) ){
 		mCompiler_mode = mode_FROM_OBJECT;
-		cerr << "Driver: Starting in complex mode -> Both object and source files provided" << endl;
+		cout << "Driver: Starting in complex mode -> Both object and source files provided" << endl;
 	}
 }
 

@@ -253,11 +253,12 @@ void ProfilerC::pollyOptimize(){
 	llvmOptimize(true);
 }
 
-void ProfilerC::Optimize( const map< compiler_type, bool >::iterator &curr_candidate ){
+void ProfilerC::Optimize( compiler_type curr_candidate, bool curr_cand_status ){
 	bool asPlutoBackend = false;
 	bool withPollyPlugin = false;
-	if( curr_candidate->second == true ){
-		switch (curr_candidate->first) {
+
+	if( curr_cand_status == true ){
+		switch (curr_candidate) {
 			case compiler_ICC:
 				iccOptimize(asPlutoBackend); break;
 			case compiler_GCC:
@@ -582,10 +583,8 @@ void ProfilerC::Profile( const map< compiler_type, bool >::iterator &curr_candid
 	bool asPlutoBackend = false;
 	bool withPollyPlugin = false;
 	if( curr_candidate->second == true ){
-		/* Fetch .o from mCompiler data dir if step or complex compilation */
-		if( mCompiler_mode == mode_FROM_OBJECT || mCompiler_mode == mode_COMPLEX ){
+		/* Fetch .o from mCompiler data dir */
 			getObjectFiles(compiler_keyword[curr_candidate->first]);
-		}
 
 		switch (curr_candidate->first) {
 			case compiler_ICC:
@@ -607,16 +606,34 @@ void ProfilerC::Profile( const map< compiler_type, bool >::iterator &curr_candid
 
 /* Constructor */
 ProfilerC::ProfilerC(){
-	/* Rotate through compiler candidates for optimize and profile */
-	map< compiler_type, bool >::iterator iter;
-	for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
-		if( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_TO_OBJECT ||
-			mCompiler_mode == mode_COMPLEX ){
-			Optimize(iter);  // Phase 1
-		}
-		if( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
-			mCompiler_mode == mode_COMPLEX ){
-			Profile(iter);  // Phase 2
-		}
-	}	
+  if( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_TO_OBJECT ||
+      mCompiler_mode == mode_COMPLEX ){
+    if( !mCompiler_enabled_options[JOBS] ){
+      /* Rotate through compiler candidates for optimize */
+      map< compiler_type, bool >::iterator iter;
+      for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
+        Optimize(iter->first, iter->second);  // Phase 1
+      }
+    } else {
+      /* If parallel compilation enabled */
+      vector<thread> threadpool;
+      map< compiler_type, bool >::iterator iter;
+      for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
+        threadpool.push_back( thread(&ProfilerC::Optimize, this, iter->first, iter->second) );  // Phase 1
+      }
+      vector<thread>::iterator t_iter;
+      for( t_iter = threadpool.begin(); t_iter != threadpool.end(); t_iter++ ){
+        thread& curr_thread = const_cast<thread&>(*t_iter);
+        curr_thread.join(); 
+      }
+    }
+  }
+  if( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
+      mCompiler_mode == mode_COMPLEX ){
+    /* Rotate through compiler candidates for profile */
+    map< compiler_type, bool >::iterator iter;
+    for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
+      Profile(iter);  // Phase 2
+    }
+  }
 }
