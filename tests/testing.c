@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <omp.h>
+extern void external();
 int X=55;
 int glob=99;
-extern void external();
 int yo(int x, int y){
 	return x*y;
 }

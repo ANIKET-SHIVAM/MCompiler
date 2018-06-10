@@ -36,8 +36,8 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	SgGlobal *global_node; // Needed to add the extern calls
 	set<SgNode*> astNodesCollector; //Required to not add loop functions on Ast Post Processing
 	vector<SgStatement*> externLoopFuncDefinitionsAdd;
-	/* header_set needs to be vector so that the order of IFDEF,ENDIF,etc. remain same */
-	vector<string> header_set;
+	/* header_vec needs to be vector so that the order of IFDEF,ENDIF,etc. remain same */
+	vector<string> header_vec;
 	set<string> global_vars;
 	src_lang src_type;
 public:

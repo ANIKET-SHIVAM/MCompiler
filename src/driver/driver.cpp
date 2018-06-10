@@ -122,11 +122,7 @@ void Driver::setMCompilerMode(){
 
 /* Create temp folder in /tmp unless DEBUG mode is enabled */
 void Driver::createMCompilerDataFolder(){
-	if( mCompiler_enabled_options[MC_DEBUG] ){
-    mCompiler_data_folder_path = mCompiler_curr_dir_path + mCompiler_data_folder + forward_slash_str;
-  } else {
-    mCompiler_data_folder_path = "/tmp/" + mCompiler_data_folder + forward_slash_str;
-  } 
+  mCompiler_data_folder_path = "/tmp/" + mCompiler_data_folder + forward_slash_str;
   if (!isDirExist(mCompiler_data_folder_path)){
     const int dir_err = mkdir(mCompiler_data_folder_path.c_str(),
                           S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);

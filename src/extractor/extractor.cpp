@@ -96,9 +96,9 @@ void Extractor::printHeaders( ofstream& loop_file_buf, bool isProfileFile ){
 	vector<string>::iterator iter;
 	bool hasOMP = false;
 	bool hasIO = false;
-	for( iter = header_set.begin(); iter != header_set.end(); iter++ ){
+	for( iter = header_vec.begin(); iter != header_vec.end(); iter++ ){
 		string header_str = *iter;
-		loop_file_buf << header_str;  //header_set has space at the end already
+		loop_file_buf << header_str;  //header_vec has space at the end already
 		if( header_str.find("omp.h") != string::npos )
 				hasOMP = true;
 		if( src_type == src_lang_C && header_str.find("stdio.h") != string::npos )
@@ -798,7 +798,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 				}
 				
 				if( SageInterface::isExtern(declFunc) ){
-					header_set.push_back( declFunc->unparseToString() +'\n' );
+					header_vec.push_back( declFunc->unparseToString() +'\n' );
 				} 
 
 				if( SageInterface::isMain(astNode) ){
@@ -843,7 +843,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 				break;
 			}
       case V_SgTypedefDeclaration: {
-        header_set.push_back(astNode->unparseToString()+"\n");
+        header_vec.push_back(astNode->unparseToString()+"\n");
         break;
       }
 //			case V_SgSourceFile: {
@@ -863,6 +863,13 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 			SgStatement *locatedNode_SgStatement = dynamic_cast<SgStatement *>(astNode);
 			AttachedPreprocessingInfoType *directives = locatedNode->getAttachedPreprocessingInfo();
 			if (directives != NULL && locatedNode_SgStatement && isSgGlobal(locatedNode_SgStatement->get_scope()) ) {
+        /* Dirty trick to push a node like extern func after headers,
+         * since control flow get here after the node was pushed already */
+        string vector_top;
+        if( !header_vec.empty() ){
+          vector_top = header_vec.back();
+          header_vec.pop_back();
+        }
 				AttachedPreprocessingInfoType::iterator i;
 				for (i = directives->begin(); i != directives->end(); i++) {
 					string directiveTypeName = PreprocessingInfo::directiveTypeName((*i)->getTypeOfDirective()).c_str();
@@ -870,43 +877,45 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 					//cerr << "Header Type: " << directiveTypeName << endl;	
 					// #include
 					if (directiveTypeName == "CpreprocessorIncludeDeclaration" &&
-						find( header_set.begin(), header_set.end(), headerName ) ==  header_set.end()) {
-						header_set.push_back(headerName);
+						find( header_vec.begin(), header_vec.end(), headerName ) ==  header_vec.end()) {
+						header_vec.push_back(headerName);
 						lastIncludeStmt = locatedNode_SgStatement;	
 						//cerr << "Header: " << headerName << endl;	
 					}	
 					// #define
 					if (directiveTypeName == "CpreprocessorDefineDeclaration" &&
-						find( header_set.begin(), header_set.end(), headerName ) ==  header_set.end()) {
-						header_set.push_back(headerName);
+						find( header_vec.begin(), header_vec.end(), headerName ) ==  header_vec.end()) {
+						header_vec.push_back(headerName);
 						//cerr << "Header: " << headerName << endl;	
 					}	
 					// #ifdef
 					if (directiveTypeName == "CpreprocessorIfdefDeclaration"){
-						header_set.push_back(headerName);
+						header_vec.push_back(headerName);
 						//cerr << "Header: " << headerName << endl;	
 					}	
 					// #ifndef
 					if (directiveTypeName == "CpreprocessorIfndefDeclaration" ){
-						header_set.push_back(headerName);
+						header_vec.push_back(headerName);
 						//cerr << "Header: " << headerName << endl;	
 					}	
 					// #if
 					if (directiveTypeName == "CpreprocessorIfDeclaration"){
-						header_set.push_back(headerName);
+						header_vec.push_back(headerName);
 						//cerr << "Header: " << headerName << endl;	
 					}	
 					// #else
 					if (directiveTypeName == "CpreprocessorElseDeclaration" ){
-						header_set.push_back(headerName);
+						header_vec.push_back(headerName);
 						//cerr << "Header: " << headerName << endl;	
 					}	
 					// #endif
 					if (directiveTypeName == "CpreprocessorEndifDeclaration" ){
-						header_set.push_back(headerName);
+						header_vec.push_back(headerName);
 						//cerr << "Header: " << headerName << endl;	
 					}	
 				}
+        if(!vector_top.empty())
+          header_vec.push_back(vector_top);
 			}
 		}
 		
