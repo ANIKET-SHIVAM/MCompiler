@@ -38,10 +38,30 @@ void AdvProfiler::linkObjs(){
     struct dirent *ent;
     /* If in Complex mode, then also fetch from dir */
     files_to_link.clear();
+    set<string> filename_keyword;
+    for( auto const &str : mCompiler_object_file ){
+      int lastSlashPos = str.find_last_of('/');
+      int lastDotPos   = str.find_last_of('.');
+      filename_keyword.insert( str.substr(lastSlashPos + 1, lastDotPos-lastSlashPos-1) );
+    }
+    for( auto const &str : mCompiler_input_file ){
+      int lastSlashPos = str.find_last_of('/');
+      int lastDotPos   = str.find_last_of('.');
+      filename_keyword.insert( str.substr(lastSlashPos + 1, lastDotPos-lastSlashPos-1) );
+    }
+
     if ( ( dir = opendir( ( getDataFolderPath() ).c_str() ) ) != NULL) {
       /* print all the files and directories within directory */
       while ( ( ent = readdir(dir) ) != NULL ){
         string filename( ent->d_name );
+        bool valid_file_link = false;
+        for( auto const &str : filename_keyword ){
+          if( filename.find(str + "_") == 0 ){
+            valid_file_link = true; break;
+          }
+        }
+        if(!valid_file_link)
+          continue;
         if( filename.at(0) != '.' && 
           isEndingWith(filename, adv_profile_str + dot_o_str) ){
           files_to_link.insert( getDataFolderPath() + ent->d_name );
