@@ -63,9 +63,6 @@ string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 
 	string output_path = getDataFolderPath();
 	string file_name = mCompiler_original_file_name;
-	/* Since you cannot have '-' in Function name */ 
-	while( file_name.find('-') != string::npos )	
-		file_name.replace(file_name.find('-'),1,string("_"));
 	string file_extn = mCompiler_file_extn;
   	
   string enclosingFuncName = (SageInterface::getEnclosingFunctionDeclaration(astNode)->get_qualified_name()).getString();
@@ -84,6 +81,9 @@ string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 
 string Extractor::getLoopName(SgNode *astNode){
   string loopName = getExtractionFileName(astNode, false);
+	/* Since you cannot have '-' in Function name */ 
+	while( loopName.find('-') != string::npos )	
+		loopName.replace(loopName.find('-'),1,string("_"));
   boost::erase_all(loopName,getDataFolderPath());
 	/* Since you cannot start Function name with a digit */ 
 	if( isdigit(loopName[0]) )	

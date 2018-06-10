@@ -287,12 +287,32 @@ void ProfilerC::getObjectFiles( const string& compiler_str ){
 	/* If in Complex mode, then also fetch from dir */
 	files_to_link.clear();
 
+  set<string> filename_keyword;
+  for( auto const &str : mCompiler_object_file ){
+    int lastSlashPos = str.find_last_of('/');
+    int lastDotPos   = str.find_last_of('.');
+    filename_keyword.insert( str.substr(lastSlashPos + 1, lastDotPos-lastSlashPos-1) );
+  }
+  for( auto const &str : mCompiler_input_file ){
+    int lastSlashPos = str.find_last_of('/');
+    int lastDotPos   = str.find_last_of('.');
+    filename_keyword.insert( str.substr(lastSlashPos + 1, lastDotPos-lastSlashPos-1) );
+  }
+
 	string mCompiler_header_str = mCompiler_header_code_name.substr(0,mCompiler_header_code_name.find_last_of('.'));
 	if ( ( dir = opendir( ( getDataFolderPath() ).c_str() ) ) != NULL) {
 		/* print all the files and directories within directory */
 		while ( ( ent = readdir(dir) ) != NULL ){
 			string filename( ent->d_name );
-			if( filename.at(0) != '.' && 
+      bool valid_file_link = false;
+      for( auto const &str : filename_keyword ){
+        if( filename.find(str + "_") == 0 || filename.find(mCompiler_header_str) == 0 ){
+          valid_file_link = true; break;
+        }
+      }
+      if(!valid_file_link)
+        continue;
+			if( filename.at(0) != '.' &&
 				filename.find(compiler_str) != string::npos && 
 				filename.find(mCompiler_profile_file_tag) != string::npos &&
         isEndingWith(filename,dot_o_str) ){
@@ -376,8 +396,9 @@ void ProfilerC::gatherProfilingData( const string& binary_file, compiler_type cu
 			set<string>::iterator iter = files_to_link.find( obj_file_path_profile );
 
 			if ( iter == files_to_link.end() ){
-				cerr << "Profiler: Loops object file not found: " << obj_file_path_profile << endl;
-				exit(EXIT_FAILURE);
+        /* Loop name might be in mCompiler.h from previous step compilations */
+				cerr << "Profiler: Loop's object file not found: " << obj_file_path_profile << endl;
+				continue;
 			}
 			
 			// There's no point of adding it for each run
@@ -584,7 +605,7 @@ void ProfilerC::Profile( const map< compiler_type, bool >::iterator &curr_candid
 	bool withPollyPlugin = false;
 	if( curr_candidate->second == true ){
 		/* Fetch .o from mCompiler data dir */
-			getObjectFiles(compiler_keyword[curr_candidate->first]);
+		getObjectFiles(compiler_keyword[curr_candidate->first]);
 
 		switch (curr_candidate->first) {
 			case compiler_ICC:

@@ -187,7 +187,7 @@ void set_mCompiler_options( int argc, char* argv[] ){
 	
 	for (int i = 0; i < parse.nonOptionsCount(); ++i){
 		string str = parse.nonOption(i);
-		if( isEndingWith( str,".c" ) || isEndingWith( str,".cc" ) || isEndingWith( str,".cpp" ) || 
+		if( isEndingWith( str,".c" ) || isEndingWith( str,".cc" ) || isEndingWith( str,".cpp" ) || isEndingWith( str,".C" ) || 
    			isEndingWith( str,".f" ) || isEndingWith( str,".f77" ) || isEndingWith( str,".f90" ) || isEndingWith( str,".f95" ) ){
 		/* Search for source files in the name */
 			mCompiler_input_file.push_back( getAbsolutePath(str) );

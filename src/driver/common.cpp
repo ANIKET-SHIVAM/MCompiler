@@ -73,7 +73,7 @@ string mCompiler_curr_dir_path;
 
 /*** Parameter that change based on the CL input ***/
 /* For the extractor */
-vector<string> mCompiler_input_file = vector<string>();
+vector<string> mCompiler_input_file;
 vector<string> mCompiler_object_file;
 string mCompiler_binary_path       = ""; 
 string mCompiler_binary_name       = "a_mc.out"; //Default: If CL provided then replaced with that name
