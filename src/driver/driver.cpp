@@ -120,7 +120,7 @@ void Driver::setMCompilerMode(){
 	}
 }
 
-/* Create temp folder in /tmp unless DEBUG mode is enabled */
+/* Create data folder in /tmp */
 void Driver::createMCompilerDataFolder(){
   mCompiler_data_folder_path = "/tmp/" + mCompiler_data_folder + forward_slash_str;
   if (!isDirExist(mCompiler_data_folder_path)){

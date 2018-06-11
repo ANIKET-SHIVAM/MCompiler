@@ -1016,7 +1016,7 @@ void Extractor::addTimingFuncCallNonVoidMain( SgStatement* returnStmt ){
 
 void Extractor::modifyExtractedFileText( const string &base_file, const string &base_file_profile ){
 	/* Remove static keyword from variables and functions in both profile and non-profile file */
-	string sed_command1 = "sed -i 's/static //g' " + base_file;
+/*	string sed_command1 = "sed -i 's/static //g' " + base_file;
 	executeCommand( sed_command1 );
 	sed_command1 = "sed -i 's/static //g' " + base_file_profile;
 	executeCommand( sed_command1 );
@@ -1024,7 +1024,7 @@ void Extractor::modifyExtractedFileText( const string &base_file, const string &
 	executeCommand( sed_command1 );
 	sed_command1 = "sed -i 's/inline //g' " + base_file_profile;
 	executeCommand( sed_command1 );
-	
+*/
 	/* Remove register keyword from variables and functions in both profile and non-profile file */
 	string sed_command2 = "sed -i 's/register //g' " + base_file;
 	executeCommand( sed_command2 );
