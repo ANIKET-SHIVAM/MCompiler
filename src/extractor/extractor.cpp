@@ -119,10 +119,13 @@ void Extractor::printHeaders( ofstream& loop_file_buf, bool isProfileFile ){
 }
 
 void Extractor::printGlobalsAsExtern( ofstream& loop_file_buf ){
-	set<string>::iterator iter;
+	vector<string>::iterator iter;
 	for( iter = global_vars.begin(); iter != global_vars.end(); iter++ ){
 		string var_str = *iter;
-		loop_file_buf << "extern " << var_str << ";" << endl; 
+    if( var_str.find("pragma") != string::npos )
+      loop_file_buf << var_str << endl;
+    else
+      loop_file_buf << "extern " << var_str << ";" << endl;
 	}
 }
 
@@ -492,8 +495,7 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 	loop_file_buf << "#pragma scop" << endl;
 	
   //Get OMP pragma for this loop
-  if(mCompiler_enabled_options[PARALLEL] && extr.getOMPpragma() != "" &&
-     extr.getOMPpragma().find("threadprivate") == string::npos )
+  if(mCompiler_enabled_options[PARALLEL] && extr.getOMPpragma() != "")
     loop_file_buf << endl << sanitizeOMPpragma( extr.getOMPpragma() ) << endl;
 	
 	// Entire Loop Body
@@ -826,7 +828,15 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
         if(SageInterface::extractPragmaKeyword(pragmaDecl) == "omp") {
           SgPragma *pragmaNode = pragmaDecl->get_pragma();
           string pragmaString = pragmaNode->get_pragma();
-          loopOMPpragma = "#pragma " + pragmaString;
+          if( pragmaString.find("parallel") == string::npos && 
+              pragmaString.find("threadprivate") != string::npos ){
+            global_vars.push_back("#pragma " + pragmaString);
+          } else if( pragmaString.find("parallel") != string::npos &&
+                     pragmaString.find("for") == string::npos ){
+            /* Do nothing since it should be covered in a base file or inside the body of loop */ 
+          } else {
+            loopOMPpragma = "#pragma " + pragmaString;
+          }
         }
         if(SageInterface::extractPragmaKeyword(pragmaDecl) == "mC") {
           SgPragma *pragmaNode = pragmaDecl->get_pragma();
@@ -941,12 +951,12 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 							/* To change to var_type var_name[][][] */
 							int first_square_brac = var_type_str.find_first_of("[");
 							if( first_square_brac != string::npos )
-								global_vars.insert( var_type_str.substr( 0,first_square_brac ) + var_str
+								global_vars.push_back( var_type_str.substr( 0,first_square_brac ) + var_str
 													+ var_type_str.substr( first_square_brac ) );
 						} else {
 							/* Bcoz Rose add wierd stuff like __PRETTY_FUNCTION__ on assert() calls */
 							if( var_str.find(ignorePrettyFunctionCall) == string::npos )	
-								global_vars.insert( var_type_str + " " + var_str );
+								global_vars.push_back( var_type_str + " " + var_str );
 						}
 						//lastIncludeStmt = dynamic_cast<SgStatement *>(astNode);	
 					}
@@ -955,7 +965,7 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 						// Now check if it is a static data member
 						if (variableDeclaration->get_declarationModifier().get_storageModifier().isStatic() == true){
 							//cerr << "Found a static global var: " << var_type_str + " " + initializedName->get_name().getString() << endl;	
-							global_vars.insert( var_type_str + " " + initializedName->get_name().getString() );
+							global_vars.push_back( var_type_str + " " + initializedName->get_name().getString() );
 							//lastIncludeStmt = dynamic_cast<SgStatement *>(astNode);	
 						}
 					}

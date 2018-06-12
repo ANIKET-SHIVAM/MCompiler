@@ -38,7 +38,8 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	vector<SgStatement*> externLoopFuncDefinitionsAdd;
 	/* header_vec needs to be vector so that the order of IFDEF,ENDIF,etc. remain same */
 	vector<string> header_vec;
-	set<string> global_vars;
+  /* Global vars and associated OMP threadprivate directives */
+	vector<string> global_vars;
 	src_lang src_type;
 public:
 	string ignorePrettyFunctionCall = "__PRETTY_FUNCTION__";
