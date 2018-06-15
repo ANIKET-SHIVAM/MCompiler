@@ -831,10 +831,13 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
           if( pragmaString.find("parallel") == string::npos && 
               pragmaString.find("threadprivate") != string::npos ){
             global_vars.push_back("#pragma " + pragmaString);
-          } else if( pragmaString.find("parallel") != string::npos &&
-                     pragmaString.find("for") == string::npos ){
-            /* Do nothing since it should be covered in a base file or inside the body of loop */ 
-          } else {
+//          } else if( pragmaString.find("parallel") != string::npos &&
+//                     pragmaString.find("for") == string::npos ){
+//            /* Do nothing since it should be covered in a base file or inside the body of loop */ 
+          } else if( pragmaString.find("for") != string::npos ){
+            /* Should only be concerned with 'for' directive, 
+             * every other directive remains where they are.
+             * i.e. either in base file or inside the loop */
             loopOMPpragma = "#pragma " + pragmaString;
           }
         }
