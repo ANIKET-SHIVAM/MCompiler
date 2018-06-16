@@ -42,7 +42,9 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	vector<string> global_vars;
 	src_lang src_type;
 public:
-	string ignorePrettyFunctionCall = "__PRETTY_FUNCTION__";
+	string ignorePrettyFunctionCall1 = "__PRETTY_FUNCTION__";
+	string ignorePrettyFunctionCall2 = "__func__";
+	string ignorePrettyFunctionCall3 = "__FUNCTION__";
 	bool mainFuncPresent = false;	
 	vector<string> *loop_funcName_vec = new vector<string>;
 	map<SgFunctionDeclaration*,string> inline_func_map;

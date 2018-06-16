@@ -958,7 +958,9 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 													+ var_type_str.substr( first_square_brac ) );
 						} else {
 							/* Bcoz Rose add wierd stuff like __PRETTY_FUNCTION__ on assert() calls */
-							if( var_str.find(ignorePrettyFunctionCall) == string::npos )	
+							if( var_str.find(ignorePrettyFunctionCall1) == string::npos && 
+							    var_str.find(ignorePrettyFunctionCall2) == string::npos && 
+                  var_str.find(ignorePrettyFunctionCall3) == string::npos )	
 								global_vars.push_back( var_type_str + " " + var_str );
 						}
 						//lastIncludeStmt = dynamic_cast<SgStatement *>(astNode);	
