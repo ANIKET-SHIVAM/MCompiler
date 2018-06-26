@@ -20,7 +20,7 @@ string Extractor::getFileName( const string &fileNameWithPath ) {
 		fileStr.insert(0,1,'_');
 	/* Since you cannot have '-' in Function name */ 
 	while( fileStr.find('-') != string::npos )	
-		fileStr.replace(fileStr.find('-'),1,string("_"));
+		fileStr.replace(fileStr.find('-'),1,string("X_X"));
   return fileStr;
 }
 
@@ -83,7 +83,7 @@ string Extractor::getLoopName(SgNode *astNode){
   string loopName = getExtractionFileName(astNode, false);
 	/* Since you cannot have '-' in Function name */ 
 	while( loopName.find('-') != string::npos )	
-		loopName.replace(loopName.find('-'),1,string("_"));
+		loopName.replace(loopName.find('-'),1,string("X_X"));
   boost::erase_all(loopName,getDataFolderPath());
 	/* Since you cannot start Function name with a digit */ 
 	if( isdigit(loopName[0]) )	

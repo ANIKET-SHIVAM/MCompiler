@@ -351,7 +351,7 @@ void ProfilerC::getObjectFiles( const string& compiler_str ){
 void ProfilerC::gatherProfilingData( const string& binary_file, compiler_type curr_compiler ){
 	// CSV file open for storing profiler data
 	bool is_reading_file = false;
-	CSV csv_file( getDataFolderPath()+mCompiler_profile_data_csv, is_reading_file );
+	CSV csv_file( mCompiler_curr_dir_path + mCompiler_profile_data_csv, is_reading_file );
 
 	string compiler_str = compiler_keyword[curr_compiler];
 
@@ -381,8 +381,14 @@ void ProfilerC::gatherProfilingData( const string& binary_file, compiler_type cu
 				continue;
 			int keyword_colon_pos   = keyword_pos + mCompiler_timing_keyword.length();
 			string hotspot_name = cell.substr( 0, keyword_pos );
+      /* If hotspot name starts with a number, extractor adds a underscore at the beginning of the function name, 
+         but not in the filename */ 
 			if( hotspot_name.substr(0,1) == "_" )
 				hotspot_name = hotspot_name.substr(1,string::npos);
+      /* All dashes are converted to XunderscoreX in function name, recover them to match loop file names */
+      while ( hotspot_name.find("X_X") != string::npos ){
+        hotspot_name.replace( hotspot_name.find("X_X"), 3, "-" );
+      }
 			double hotspot_time = stod( cell.substr( keyword_colon_pos + 1 ) );
       /* For hotspots that are Pluto couldn't optimize and used ICC's instead */
       if(curr_compiler == compiler_Pluto && pluto_fail_hotspots->find(hotspot_name) != pluto_fail_hotspots->end())
