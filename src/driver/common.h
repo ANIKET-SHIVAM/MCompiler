@@ -12,6 +12,7 @@
 #include <vector>
 #include <regex>
 #include <cctype>
+#include <ctime>
 #include <dirent.h>
 
 // For Extractor especially
@@ -50,6 +51,7 @@ typedef enum{ EXTRACT, PROFILE, SYNTHESIZE, TEST, REPORT, PARALLEL, AUTO_PARALLE
 			  HELP, UNKNOWN 
 			} mCompiler_options;
 
+extern int    profile_binary_err_cnt;
 extern string space_str;
 extern string forward_slash_str;
 extern string minus_c_str;
@@ -138,6 +140,7 @@ void addLinkerFlags();
 void addPostLinkerFlags();
 bool isDirExist( const string &path );
 bool isFileExist( const string &filename );
+bool isFileRecent( const string &filename );
 bool isEndingWith( string const &fullString, string const &ending );
 bool isEndingWithCompilerName( string const &fullString );
 double getVectorMean( vector<double>* dataVec );

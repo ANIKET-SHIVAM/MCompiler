@@ -102,6 +102,11 @@ void SynthesizerC::generateFinalBinary(){
     CL += "-L" + pgi_lib_path + space_str + " -lpgatm -lomp -lpgmath -lpgc";
 
 	executeCommand( CL );
+	/* Check if binary is generated */
+	if( !isFileRecent( binary_name ) ){
+		cerr << "Fatal error: Cannot generate binary. Check --info." << endl;
+    exit(EXIT_FAILURE);
+  }
 }
 
 SynthesizerC::SynthesizerC(){

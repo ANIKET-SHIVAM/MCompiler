@@ -358,7 +358,8 @@ void ProfilerC::gatherProfilingData( const string& binary_file, compiler_type cu
 	/* Check if binary file is present at all */
 	if( !isFileExist( binary_file ) ){
 		cerr << "Profiler: Following binary file doesn't exist: " << binary_file << endl;
-		exit(EXIT_FAILURE);
+		profile_binary_err_cnt++;
+    return;
 	}
 
 	set<string> covered_hotspots;		
@@ -661,6 +662,10 @@ ProfilerC::ProfilerC(){
     map< compiler_type, bool >::iterator iter;
     for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){
       Profile(iter);  // Phase 2
+    }
+    if( profile_binary_err_cnt > 2 ){
+      cerr << "Fatal error: Generating enough binaries for profiling." << endl;
+      exit(EXIT_FAILURE);
     }
   }
 }

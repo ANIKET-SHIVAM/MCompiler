@@ -16,6 +16,7 @@ map< pair< string, string >, vector<double>* > profiler_hotspot_data;
 map< pair< string, string >, string > profiler_hotspot_obj_path;
 set<string> hotspots_skipped_profiling;
 
+int    profile_binary_err_cnt = 0;
 string space_str         = " ";
 string forward_slash_str = "/";
 string minus_c_str = "-c";
@@ -340,6 +341,18 @@ bool isDirExist( const string &path ){
 bool isFileExist( const string &filename ){
   struct stat info;   
   return (stat (filename.c_str(), &info) == 0); 
+}
+
+bool isFileRecent( const string &filename ){
+  struct stat info; 
+  if(stat (filename.c_str(), &info) == 0){
+    auto mtime = info.st_mtime;
+    /* Check if file was modified before 5 seconds */
+    if( time(0) - info.st_mtime > 5 )
+      return false;
+    return true;
+  }
+  return false;
 }
 
 bool isEndingWith( string const &fullString, string const &ending ){
