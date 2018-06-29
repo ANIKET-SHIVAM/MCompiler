@@ -467,7 +467,7 @@ void ProfilerC::iccProfile( bool asPlutoBackend ){
 	/* For gathering object files */
 	set<string>::iterator iters;
 	string object_files;
-	string out_file;
+	string out_file = getDataFolderPath() + mCompiler_binary_name + compiler_str;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
     if( asPlutoBackend && (*iters).find(XplutoX_str) != string::npos ){
       string hotspot_name = *iters;
@@ -476,7 +476,6 @@ void ProfilerC::iccProfile( bool asPlutoBackend ){
       pluto_fail_hotspots->insert(hotspot_name.substr(0,pos)); 
     }
 		object_files += *iters + space_str;
-		out_file = getDataFolderPath() + mCompiler_binary_name + compiler_str;
 	}
 	/* Add object files then add -o binary_name, before adding post linker flags */
 	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
@@ -505,10 +504,9 @@ void ProfilerC::gccProfile(){
 
 	set<string>::iterator iters;
 	string object_files;
-	string out_file;
+	string out_file = getDataFolderPath() + mCompiler_binary_name + gcc_str;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
 		object_files += *iters + space_str;
-		out_file = getDataFolderPath() + mCompiler_binary_name + gcc_str;
 	}
 	
 	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
@@ -547,10 +545,9 @@ void ProfilerC::llvmProfile( bool withPollyPlugin ){
 
 	set<string>::iterator iters;
 	string object_files;
-	string out_file;
+	string out_file = getDataFolderPath() + mCompiler_binary_name + compiler_str;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
 		object_files += *iters + space_str;
-		out_file = getDataFolderPath() + mCompiler_binary_name + compiler_str;
 	}
 
 	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
@@ -577,10 +574,9 @@ void ProfilerC::pgiProfile(){
 
 	set<string>::iterator iters;
 	string object_files;
-	string out_file;
+	string out_file = getDataFolderPath() + mCompiler_binary_name + pgi_str;
 	for( iters = files_to_link.begin(); iters != files_to_link.end(); iters++){
 		object_files += *iters + space_str;
-		out_file = getDataFolderPath() + mCompiler_binary_name + pgi_str;
 	}
 	
 	CL += object_files + space_str + minus_o_str + space_str + out_file + space_str;
