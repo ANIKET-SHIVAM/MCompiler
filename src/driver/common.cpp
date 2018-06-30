@@ -111,7 +111,8 @@ void addOptimizationFlags(){
   	flag_vec.push_back("-O0 -g");
   }
   flag_vec.push_back("-xHost");
-	flag_vec.push_back("-qopenmp");
+  if(mCompiler_enabled_options[PARALLEL])
+    flag_vec.push_back("-qopenmp");
   if(mCompiler_enabled_options[C99])
   	flag_vec.push_back("-std=c99");
   else
@@ -132,7 +133,8 @@ void addOptimizationFlags(){
 	flag_vec.push_back("gcc");
 	flag_vec.push_back("-Ofast");
 	flag_vec.push_back("-march=native");
-	flag_vec.push_back("-fopenmp");
+  if(mCompiler_enabled_options[PARALLEL])
+    flag_vec.push_back("-fopenmp");
   if(mCompiler_enabled_options[C99])
   	flag_vec.push_back("-std=c99");
   else
@@ -155,7 +157,8 @@ void addOptimizationFlags(){
   	flag_vec.push_back("-march=knl");
   else
     flag_vec.push_back("-march=native");
-	flag_vec.push_back("-fopenmp");
+  if(mCompiler_enabled_options[PARALLEL])
+    flag_vec.push_back("-fopenmp");
   if(mCompiler_enabled_options[C99])
   	flag_vec.push_back("-std=c99");
   else
@@ -179,7 +182,8 @@ void addOptimizationFlags(){
   else
     flag_vec.push_back("-tp=haswell");
 	flag_vec.push_back("-Mllvm");
-	flag_vec.push_back("-mp");
+  if(mCompiler_enabled_options[PARALLEL])
+    flag_vec.push_back("-mp");
   if(mCompiler_enabled_options[C99])
   	flag_vec.push_back("-c99");
   else
@@ -214,7 +218,8 @@ void addOptimizationFlags(){
   	flag_vec.push_back("-march=knl");
   else
     flag_vec.push_back("-march=native");
-	flag_vec.push_back("-fopenmp");
+  if(mCompiler_enabled_options[PARALLEL])
+    flag_vec.push_back("-fopenmp");
   if(mCompiler_enabled_options[C99])
   	flag_vec.push_back("-std=c99");
   else

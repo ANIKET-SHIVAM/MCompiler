@@ -6,10 +6,12 @@ Performs following task:
 3. Later use for inference to chose best candidate using ML
 */
 
-void AdvProfiler::addNoOptCompilerFlags(){
+void AdvProfiler::addNoOptCompilerFlags( bool link_phase ){
+  compilerCL.clear();
   compilerCL.push_back("icc");
   compilerCL.push_back("-O1 -g -no-vec"); //-xHOST generate vector code, even with -no-vec
-  compilerCL.push_back("-qopenmp");
+  if(link_phase || mCompiler_enabled_options[PARALLEL])
+    compilerCL.push_back("-qopenmp");
   compilerCL.push_back("-std=c11");
   compilerCL.push_back("-w");
   compilerCL.push_back(mCompiler_include_path);
@@ -179,13 +181,14 @@ void AdvProfiler::sanitizeProfileData(){
 
 AdvProfiler::AdvProfiler(){
   cout << "Advanced Profiling" << endl;
-  addNoOptCompilerFlags();
   if( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_TO_OBJECT ||
     mCompiler_mode == mode_COMPLEX ){
+    addNoOptCompilerFlags(false);
     compileSource(); // Phase 1
   }
   if( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
     mCompiler_mode == mode_COMPLEX ){
+    addNoOptCompilerFlags(true);
     linkObjs();  // Phase 2
     addProfileToolOptions();
     runProfileTool();

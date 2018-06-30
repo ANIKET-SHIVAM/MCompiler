@@ -20,7 +20,7 @@ private:
   string getProfBinary() {return prof_binary;};
   void setProfDir(const string& str) {prof_dir = str;};
   string getProfDir() {return prof_dir;};
-  void addNoOptCompilerFlags();
+  void addNoOptCompilerFlags(bool link_phase);
   void addProfileToolOptions();
   void compileSource();
   void linkObjs();
