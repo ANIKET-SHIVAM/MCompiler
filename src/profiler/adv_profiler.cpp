@@ -133,6 +133,10 @@ void AdvProfiler::runProfileTool(){
   for( vector<string>::iterator iterv = toolCL_collect.begin(); iterv != toolCL_collect.end(); iterv++ )
     CL += *iterv;
   string result = executeCommand(CL);
+  if(result.find("Collection failed") != string::npos){
+    cerr << "Profiling failed" << endl;
+    exit(EXIT_FAILURE);
+  }
   if(result.find(getDataFolderPath()) != string::npos){
     setProfDir( result.substr(result.find(getDataFolderPath()), getDataFolderPath().length() + vtune_default_dir_naming.length()) );
     cout << "Profiler Data Folder:" << getProfDir() << endl;
