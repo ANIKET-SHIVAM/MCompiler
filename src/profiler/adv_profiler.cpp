@@ -102,7 +102,7 @@ void AdvProfiler::linkObjs(){
 void AdvProfiler::addProfileToolOptions(){
   vector<string> counters = {
 #ifdef OS_CENTOS
-    #include "counters_knl.vtune"
+    #include "counters_knl_extended.vtune"
 #else
     #include "counters_skylake.vtune"
 #endif
@@ -118,6 +118,7 @@ void AdvProfiler::addProfileToolOptions(){
   toolCL_collect.push_back(*iterv);
   for(; iterv != counters.end(); iterv++ )
     toolCL_collect.push_back(comma_str + *iterv);
+  toolCL_collect.push_back(space_str + "-knob sampling-interval=1");
   toolCL_collect.push_back(space_str + "-app-working-dir" + space_str);
   toolCL_collect.push_back(getDataFolderPath() + space_str);
   toolCL_collect.push_back("-user-data-dir=");
