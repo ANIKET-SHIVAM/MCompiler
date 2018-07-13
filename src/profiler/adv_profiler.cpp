@@ -172,9 +172,15 @@ void AdvProfiler::sanitizeProfileData(){
     func_data = csv_file_profiler.getRowData();
     vector<string>::iterator iter = func_data.begin();
     string hotspot_name = *iter;
+    /* All dashes are converted to XunderscoreX in function name, recover them to match loop file names */
+    while ( hotspot_name.find("X_X") != string::npos ){
+      hotspot_name.replace( hotspot_name.find("X_X"), 3, "-" );
+    }
     for(map<string,string>::iterator mIter = hotspot_best_compiler_map.begin(); mIter != hotspot_best_compiler_map.end(); mIter++){
-      if(hotspot_name.find(mIter->first) != string::npos){
-        csv_file_counters << mIter->first << mIter->second;
+      string curr_hotspot = mIter->first;
+      /* Underscore added before function with number at starting taken care of automatically, since it a find for smaller string */
+      if(hotspot_name.find(curr_hotspot) != string::npos){
+        csv_file_counters << curr_hotspot << mIter->second;
         for(;iter != func_data.end(); iter++)
           csv_file_counters << *iter;
         csv_file_counters << endrow;
