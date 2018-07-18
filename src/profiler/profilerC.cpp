@@ -35,9 +35,10 @@ void ProfilerC::iccOptimize( bool asPlutoBackend ){
 	for( iterv = CL_flags.begin(); iterv != CL_flags.end(); iterv++){
 		CL += *iterv + space_str;
 	}
-
-	//Since we only want to generate .o at this point
-	CL += minus_c_str + space_str;
+  if(asPlutoBackend && mCompiler_enabled_options[AUTO_PARALLEL])
+    CL.erase( CL.find("-parallel"), 9 );	
+  //Since we only want to generate .o at this point
+  CL += minus_c_str + space_str;
 
 	/* If compiling PLuTo optimized files or just simple ICC */	
 	set<string> files_compile = set<string>();

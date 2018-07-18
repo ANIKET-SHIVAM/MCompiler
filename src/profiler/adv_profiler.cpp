@@ -126,6 +126,7 @@ void AdvProfiler::addProfileToolOptions(){
   toolCL_collect.push_back("-no-summary" + space_str );
   toolCL_collect.push_back("--" + space_str);
   toolCL_collect.push_back(getProfBinary());
+  toolCL_collect.push_back(space_str + mCompiler_profiler_input);
 //  TODO: Handle Input file for profiling
 }
 
