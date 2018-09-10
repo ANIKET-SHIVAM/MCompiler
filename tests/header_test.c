@@ -1,14 +1,4 @@
-#include <stdio.h>
-#include <math.h>
-#include <omp.h>
-extern void external();
-int X=55;
-int glob=99;
-int yo(int x, int y){
-	return x*y;
-}
-int foo(int);
-int bar(int*,int);
+#include "header_test.h"
 
 int main(){
 	int i,j,k; long long sum1=0,sum2=0;
@@ -17,11 +7,12 @@ int main(){
     #pragma omp for 
     for(i=0;i<100;i++){
       printf("Threads: %d\n", omp_get_thread_num());
-      for(k=0;k<1000000;k++)
+      for(k=0;k<1000000;k++){
         sum1+=i+k+pow(i,k);
-      #pragma omp critical
-      {
-        glob++;
+        #pragma omp critical 
+        {
+          glob++;
+        }
       }
     }
     printf("sum = %d\n", sum1);

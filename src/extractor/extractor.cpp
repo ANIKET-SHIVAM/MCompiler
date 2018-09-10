@@ -96,6 +96,7 @@ void Extractor::printHeaders( ofstream& loop_file_buf, bool isProfileFile ){
 	vector<string>::iterator iter;
 	bool hasOMP = false;
 	bool hasIO = false;
+/*
 	for( iter = header_vec.begin(); iter != header_vec.end(); iter++ ){
 		string header_str = *iter;
 		loop_file_buf << header_str;  //header_vec has space at the end already
@@ -106,6 +107,7 @@ void Extractor::printHeaders( ofstream& loop_file_buf, bool isProfileFile ){
 		if( src_type == src_lang_CPP && header_str.find("iostream") != string::npos )
 				hasIO = true;
 	}
+*/
 	// TODO: if it is a fortran code
   if(isProfileFile)
 	  loop_file_buf << "#include \"" << mCompiler_header_name << "\"" << endl;
@@ -249,7 +251,10 @@ void LoopInfo::getVarsInScope(){
 			//cerr << "Symbol Table : " << *(scope_vars_str_vec.rbegin()) << endl;
 			scope_vars_symbol_vec.push_back( var ); // Needed for function call	
 			scope_vars_initName_vec.push_back( var->get_declaration() ); // Needed for function extern defn	
-		}
+		} else if(isSgGlobal(var_scope) && var_scope->get_qualified_name() != ""){
+      //cout << "In scope global: " << (var->get_type())->unparseToString() << space_str << var->get_name().getString() << endl;
+      scope_globals_vec.push_back((var->get_type())->unparseToString() + space_str + var->get_name().getString());
+    }
 	}
   /* Erase vector of all non-array OMP privates */
 	vector<string>::iterator iter2 = privateOMP_array_vec.begin();
@@ -298,6 +303,12 @@ void LoopInfo::addScopeFuncAsExtern( string &externFuncStr ){
 		if( consider_as_Extern )
 			externFuncStr += "extern " + declFunc->unparseToString() + '\n';
 	}
+}
+
+void LoopInfo::addScopeGlobalsAsExtern( string &externGlobalsStr ){
+  for( auto const &str : scope_globals_vec ){
+    externGlobalsStr += "extern " + str + ";\n";
+  }
 }
 
 /* Only called if C */
@@ -469,6 +480,12 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 	if( isProfileFile )
     getVarsInScope();
   
+  if( !scope_globals_vec.empty() ){
+    string externGlobalsStr;
+    addScopeGlobalsAsExtern( externGlobalsStr );
+    loop_file_buf << externGlobalsStr;
+  } 
+ 
 	// Function definition 
 	loop_file_buf << endl << "void " << getFuncName() << "( ";
 	if( !scope_vars_str_vec.empty() ){

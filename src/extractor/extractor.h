@@ -106,6 +106,7 @@ class LoopInfo {
 	vector<SgVariableSymbol*> scope_vars_symbol_vec;
 	vector<SgInitializedName*> scope_vars_initName_vec;
 	set<SgFunctionDeclaration *> scope_funcCall_vec;
+	vector<string> scope_globals_vec;
   vector<string> privateOMP_array_vec;
   vector<string> OMPscope_symbol_vec;
 	map<string,string> OMParray_type_map;
@@ -119,6 +120,7 @@ public:
 	void getVarsInScope();
 	bool hasFuncCallInScope();
 	void addScopeFuncAsExtern( string &externFuncStr );
+	void addScopeGlobalsAsExtern( string &externGlobalsStr );
 
 	void printLoopFunc( ofstream& loop_file_buf, bool isProfileFile );
 	void pushPointersToLocalVars( ofstream& loop_file_buf );
