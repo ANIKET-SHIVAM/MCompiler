@@ -96,7 +96,7 @@ void Extractor::printHeaders( ofstream& loop_file_buf, bool isProfileFile ){
 	vector<string>::iterator iter;
 	bool hasOMP = false;
 	bool hasIO = false;
-/*
+
 	for( iter = header_vec.begin(); iter != header_vec.end(); iter++ ){
 		string header_str = *iter;
 		loop_file_buf << header_str;  //header_vec has space at the end already
@@ -107,7 +107,7 @@ void Extractor::printHeaders( ofstream& loop_file_buf, bool isProfileFile ){
 		if( src_type == src_lang_CPP && header_str.find("iostream") != string::npos )
 				hasIO = true;
 	}
-*/
+
 	// TODO: if it is a fortran code
   if(isProfileFile)
 	  loop_file_buf << "#include \"" << mCompiler_header_name << "\"" << endl;
@@ -479,13 +479,13 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 	//getParamatersInFunc - Dont need same analysis twice	
 	if( isProfileFile )
     getVarsInScope();
-  
+ /* 
   if( !scope_globals_vec.empty() ){
     string externGlobalsStr;
     addScopeGlobalsAsExtern( externGlobalsStr );
     loop_file_buf << externGlobalsStr;
   } 
- 
+*/
 	// Function definition 
 	loop_file_buf << endl << "void " << getFuncName() << "( ";
 	if( !scope_vars_str_vec.empty() ){
@@ -1048,7 +1048,7 @@ void Extractor::addTimingFuncCallNonVoidMain( SgStatement* returnStmt ){
 
 void Extractor::modifyExtractedFileText( const string &base_file, const string &base_file_profile ){
 	/* Remove static keyword from variables and functions in both profile and non-profile file */
-/*	string sed_command1 = "sed -i 's/static //g' " + base_file;
+	string sed_command1 = "sed -i 's/static //g' " + base_file;
 	executeCommand( sed_command1 );
 	sed_command1 = "sed -i 's/static //g' " + base_file_profile;
 	executeCommand( sed_command1 );
@@ -1056,7 +1056,7 @@ void Extractor::modifyExtractedFileText( const string &base_file, const string &
 	executeCommand( sed_command1 );
 	sed_command1 = "sed -i 's/inline //g' " + base_file_profile;
 	executeCommand( sed_command1 );
-*/
+
 	/* Remove register keyword from variables and functions in both profile and non-profile file */
 	string sed_command2 = "sed -i 's/register //g' " + base_file;
 	executeCommand( sed_command2 );
