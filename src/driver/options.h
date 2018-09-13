@@ -49,7 +49,8 @@ const option::Descriptor usage[] =
 	{ADV_PROFILE        , 0, ""  , "adv-profile"   ,Arg::None     , "    --adv-profile        Advanced Profiling" },
 	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>       Input to the program"
 																							                                              " Needed to generate profiling information" },
-	{KNL                , 0, ""  , "knl"           ,Arg::None     , "    --knl                Compile for Intel Knights Landing processor" },
+	{KNL                , 0, ""  , "knl"           ,Arg::None     , "    --knl                Compile for Intel Knights Landing processor. Default: Haswell" },
+	{SKYLAKE            , 0, ""  , "skylake"       ,Arg::None     , "    --skylake            Compile for Intel Skylake processor. Default: Haswell" },
 	{C99                , 0, ""  , "c99"           ,Arg::None     , "    --c99                Conforms to ISO C99 standards. Default: C11" },
 	{JOBS               , 0, "j" , "jobs"          ,Arg::None     , "    -j                   Compile hotspots in parallel" },
 	{COMPILE_TO_OBJECT  , 0, "c" , "compile"       ,Arg::None     , "    -c[<arg>]            Compile to object file" },
@@ -74,6 +75,7 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		{ PREFETCH,          false },
 		{ ADV_PROFILE,       false },
 		{ KNL,               false },
+		{ SKYLAKE,           false },
 		{ C99,               false },
 		{ JOBS,              false },
 		{ COMPILE_TO_OBJECT, false },
@@ -151,6 +153,9 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		case KNL:
 			mCompiler_enabled_options[KNL] = true;
+			break;
+		case SKYLAKE:
+			mCompiler_enabled_options[SKYLAKE] = true;
 			break;
 		case C99:
 			mCompiler_enabled_options[C99] = true;

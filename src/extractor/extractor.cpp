@@ -895,26 +895,28 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 			if (directives != NULL && locatedNode_SgStatement && isSgGlobal(locatedNode_SgStatement->get_scope()) ) {
         /* Dirty trick to push a node like extern func after headers,
          * since control flow get here after the node was pushed already */
-        string vector_top;
-        if( !header_vec.empty() ){
+       string vector_top;
+/*        if( !header_vec.empty() ){
           vector_top = header_vec.back();
           header_vec.pop_back();
-        }
+        } */
 				AttachedPreprocessingInfoType::iterator i;
 				for (i = directives->begin(); i != directives->end(); i++) {
 					string directiveTypeName = PreprocessingInfo::directiveTypeName((*i)->getTypeOfDirective()).c_str();
 					string headerName = (*i)->getString().c_str();
 					//cerr << "Header Type: " << directiveTypeName << endl;	
 					// #include
-					if (directiveTypeName == "CpreprocessorIncludeDeclaration" &&
-						find( header_vec.begin(), header_vec.end(), headerName ) ==  header_vec.end()) {
+					if (directiveTypeName == "CpreprocessorIncludeDeclaration" 
+            && find( header_vec.begin(), header_vec.end(), headerName ) ==  header_vec.end()
+            ) {
 						header_vec.push_back(headerName);
 						lastIncludeStmt = locatedNode_SgStatement;	
 						//cerr << "Header: " << headerName << endl;	
 					}	
 					// #define
-					if (directiveTypeName == "CpreprocessorDefineDeclaration" &&
-						find( header_vec.begin(), header_vec.end(), headerName ) ==  header_vec.end()) {
+					if (directiveTypeName == "CpreprocessorDefineDeclaration" 
+            && find( header_vec.begin(), header_vec.end(), headerName ) ==  header_vec.end()
+            ) {
 						header_vec.push_back(headerName);
 						//cerr << "Header: " << headerName << endl;	
 					}	
@@ -1048,7 +1050,7 @@ void Extractor::addTimingFuncCallNonVoidMain( SgStatement* returnStmt ){
 
 void Extractor::modifyExtractedFileText( const string &base_file, const string &base_file_profile ){
 	/* Remove static keyword from variables and functions in both profile and non-profile file */
-	string sed_command1 = "sed -i 's/static //g' " + base_file;
+/*	string sed_command1 = "sed -i 's/static //g' " + base_file;
 	executeCommand( sed_command1 );
 	sed_command1 = "sed -i 's/static //g' " + base_file_profile;
 	executeCommand( sed_command1 );
@@ -1056,7 +1058,7 @@ void Extractor::modifyExtractedFileText( const string &base_file, const string &
 	executeCommand( sed_command1 );
 	sed_command1 = "sed -i 's/inline //g' " + base_file_profile;
 	executeCommand( sed_command1 );
-
+*/
 	/* Remove register keyword from variables and functions in both profile and non-profile file */
 	string sed_command2 = "sed -i 's/register //g' " + base_file;
 	executeCommand( sed_command2 );

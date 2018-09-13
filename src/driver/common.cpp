@@ -48,10 +48,10 @@ map<compiler_type, string> compiler_keyword = {
 string baseline_compiler_str;
 
 /*TODO: Get from LD_LIBRARY_PATH */
-string pgi_lib_path = "/opt/pgi/linux86-64-llvm/2018/lib/";
-string vtune_path   = "/opt/intel/vtune_amplifier/bin64/";
+string pgi_lib_path = "/big_mount/pgi/linux86-64-llvm/2018/lib/";
+string vtune_path   = "/big_mount/intel/vtune_amplifier/bin64/";
 #ifdef OS_CENTOS
-string rose_path    = "/home/aniket/mCompiler/tools/rose_install/";
+string rose_path    = "/big_mount/mCompiler/tools/rose_build/";
 #endif
 
 /* Mode in which mCompiler is working */
@@ -179,7 +179,9 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-fast");
   if(mCompiler_enabled_options[KNL])
   	flag_vec.push_back("-tp=knl");
-  else
+  else if (mCompiler_enabled_options[SKYLAKE])
+    flag_vec.push_back("-tp=skylake");
+  else 
     flag_vec.push_back("-tp=haswell");
 	flag_vec.push_back("-Mllvm");
   if(mCompiler_enabled_options[PARALLEL])
@@ -282,8 +284,10 @@ void addLinkerFlags(){
 	flag_vec.push_back("pgcc");
   if(mCompiler_enabled_options[KNL])
   	flag_vec.push_back("-tp=knl");
-  else
-  	flag_vec.push_back("-tp=haswell");
+  else if (mCompiler_enabled_options[SKYLAKE])
+    flag_vec.push_back("-tp=skylake");
+  else 
+    flag_vec.push_back("-tp=haswell");
 	flag_vec.push_back("-Mllvm");
 	flag_vec.push_back("-mp");
 	flag_vec.push_back("-w");
