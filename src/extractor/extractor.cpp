@@ -70,6 +70,9 @@ string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 
   file_name += "_" + enclosingFuncName;
 	file_name += "_line" + to_string(lineNumber);
+
+  if( uniqueCounter != 0 )
+    file_name += "_" + to_string(uniqueCounter);
 	
 	if( isProfileFile )
 		file_name += mCompiler_profile_file_tag + "." + file_extn;
@@ -77,6 +80,19 @@ string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 		file_name += "." + mCompiler_file_extn;
 
 	return output_path + file_name;
+}
+
+void Extractor::updateUniqueCounter( SgNode *astNode ){
+  uniqueCounter = 0;
+  string file_name = getExtractionFileName(astNode, false);
+  boost::erase_all(file_name,getDataFolderPath());
+  boost::erase_all(file_name,"."+mCompiler_file_extn);
+ 
+  /* check for loops at same line number bcoz of macros and add suffix*/
+  for( auto const &funcstr: files_to_compile ){
+    if( funcstr.find(file_name) != string::npos && funcstr.find(mCompiler_profile_file_tag) == string::npos )
+      uniqueCounter++; 
+  }
 }
 
 string Extractor::getLoopName(SgNode *astNode){
@@ -765,6 +781,7 @@ bool Extractor::skipLoop( SgNode *astNode ){
 
 void Extractor::extractLoops( SgNode *astNode ){
 	SgForStatement *loop = dynamic_cast<SgForStatement *>(astNode);
+  updateUniqueCounter(astNode);
 	string loop_profile_file_name    = getExtractionFileName(astNode, true);
 	string loop_no_profile_file_name = getExtractionFileName(astNode, false);
 	

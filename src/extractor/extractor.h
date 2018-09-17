@@ -32,6 +32,7 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	string mCompiler_file_extn;
 	SgScopeStatement* main_scope = NULL;
 	bool nonVoidMain = false;
+  int uniqueCounter = 0; // for loops at same line number bcoz of macros 
 	SgStatement *lastIncludeStmt = NULL;
 	SgGlobal *global_node; // Needed to add the extern calls
 	set<SgNode*> astNodesCollector; //Required to not add loop functions on Ast Post Processing
@@ -77,6 +78,7 @@ public:
 	string getFileExtn( const string &fileNameWithPath );
 	int getAstNodeLineNum( SgNode *const &astNode );
 	string getExtractionFileName( SgNode *astNode, bool isProfileFile );
+  void updateUniqueCounter( SgNode *astNode );
   string getLoopName(SgNode *astNode);
 	void printHeaders( ofstream& loop_file_buf, bool isProfileFile );
 	void printGlobalsAsExtern( ofstream& loop_file_buf );
