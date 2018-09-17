@@ -200,9 +200,13 @@ void Driver::generateMCompilerHeaderFile(){
 
 }
 
-void Driver::copyInFolderHeaders( string folder_path ){
+void Driver::copyInFolderHeaders( string folder_path, bool copysourcefiles ){
 	string cmd_str = "cp -u " + folder_path + "*.h " + getDataFolderPath();
 	executeCommand(cmd_str);
+  if( copysourcefiles ){
+    string cmd_str = "cp -u " + folder_path + "*.c " + getDataFolderPath();
+    executeCommand(cmd_str);
+  }
 }
 
 /* Fetch profiler input args and required data files */
@@ -273,7 +277,7 @@ void Driver::initiateExtractor( string file_name ){
 		generateMCompilerHeaderFile();
 	}
 	/* Copy headers that are in same folder as Source to mC data folder */ 	
-	copyInFolderHeaders(extr->getFilePath());
+	copyInFolderHeaders(extr->getFilePath(), extr->copysourcefiles);
 	
 }
 

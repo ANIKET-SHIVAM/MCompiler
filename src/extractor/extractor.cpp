@@ -96,16 +96,29 @@ void Extractor::printHeaders( ofstream& loop_file_buf, bool isProfileFile ){
 	vector<string>::iterator iter;
 	bool hasOMP = false;
 	bool hasIO = false;
+  if_else_macro_count = 0;
 
 	for( iter = header_vec.begin(); iter != header_vec.end(); iter++ ){
 		string header_str = *iter;
+    /* If including a .c file then copy to mC data folder */
+    if( header_str.find(".c") != string::npos ){
+      copysourcefiles = true;
+      continue;
+    }
+    if( header_str.find("#endif") == 0 && if_else_macro_count == 0 )
+      continue;
 		loop_file_buf << header_str;  //header_vec has space at the end already
 		if( header_str.find("omp.h") != string::npos )
-				hasOMP = true;
+			hasOMP = true;
 		if( src_type == src_lang_C && header_str.find("stdio.h") != string::npos )
-				hasIO = true;
+			hasIO = true;
 		if( src_type == src_lang_CPP && header_str.find("iostream") != string::npos )
-				hasIO = true;
+			hasIO = true;
+  
+    if( header_str.find("#if") == 0 )
+      if_else_macro_count++;
+    if( header_str.find("#endif") == 0 )
+      if_else_macro_count--;
 	}
 
 	// TODO: if it is a fortran code
@@ -344,6 +357,11 @@ void LoopInfo::pushPointersToLocalVars( ofstream& loop_file_buf ){
       if( SageInterface::isStructType(var_pointer_type) )
         isPrimitive = true;
     }
+    /* In case struct type contains stuct definition */
+    if( isPrimitive && var_type_str.find("{") != string::npos ){
+      var_type_str.erase( var_type_str.find_first_of("{"), 
+        var_type_str.find_last_of("}") - var_type_str.find_first_of("{") + 1 );
+    }
 
 		if( isPrimitive ){
 			loop_file_buf << var_type_str <<" "<< var_name_str <<" = "<<"*"
@@ -507,6 +525,9 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 	// Add OMP Timer start
 	if( isProfileFile )
 		loop_file_buf << "double loop_timer_start = omp_get_wtime( );" << endl;
+  
+  if( mCompiler_enabled_options[MC_DEBUG] )
+    loop_file_buf << "printf (\"__FUNCTION__ = \%s\\n\", __FUNCTION__);" << endl;
 
 	// TODO: Add SCoP pragma based on tool option 
 	loop_file_buf << "#pragma scop" << endl;
@@ -522,6 +543,8 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 	} else if( extr.getSrcType() == src_lang_CPP ){
 		loop_body_str = loop->unparseToCompleteString();
 	}
+  if( loop_body_str.find("#else") == 0 )
+    loop_body_str.erase(0, loop_body_str.find("\n") + 1);
   if( loop_body_str.find("#endif") == 0 )
     loop_body_str.erase(0, loop_body_str.find("\n") + 1);
 
@@ -557,6 +580,10 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 		popLocalVarsToPointers( loop_file_buf );
 	
 	loop_file_buf << "}" << endl; // Function End
+
+  /* close unclosed macros */
+  for( int i = 0; i < extr.if_else_macro_count; i++)
+	  loop_file_buf << "#endif" << endl;
 }
 
 void Extractor::addExternDefs( SgFunctionDeclaration *func ){
@@ -697,10 +724,41 @@ bool Extractor::skipLoop( SgNode *astNode ){
   Rose_STL_Container<SgNode *> returnStmt = NodeQuery::querySubTree(scope, V_SgReturnStmt);
   if(returnStmt.begin() != returnStmt.end())
     return true;
+  
+  /* Skip loop with macro def in the body, Rose will extract the first instance of complete loop */
+  string loop_body = loop->unparseToCompleteString();
+  if( loop_body.find("#if")    != string::npos ||  
+      loop_body.find("#else")  != string::npos ||  
+      loop_body.find("#endif") != string::npos ) 
+    return true;  
 
   Rose_STL_Container<SgNode *> gotoStmt = NodeQuery::querySubTree(scope, V_SgGotoStatement);
   if(gotoStmt.begin() != gotoStmt.end())
     return true;
+
+  /* If calls a static function */
+  Rose_STL_Container<SgNode *> funcCallList = NodeQuery::querySubTree(scope, V_SgFunctionCallExp);
+	Rose_STL_Container<SgNode *>::iterator funcCallIter = funcCallList.begin();
+	for (; funcCallIter != funcCallList.end(); funcCallIter++) {
+		SgFunctionCallExp *funcCallExp = isSgFunctionCallExp(*funcCallIter);
+		SgFunctionDeclaration *funcDecl = funcCallExp->getAssociatedFunctionDeclaration();
+    if( funcDecl != NULL && SageInterface::isStatic(funcDecl) )
+      return true;
+    if( funcDecl != NULL && 
+    find( static_funcs_vec.begin(), static_funcs_vec.end(), string(funcDecl->get_name()) ) !=  static_funcs_vec.end() )
+      return true;
+  }
+
+  /* If uses a static variable */
+	vector<SgVarRefExp *> sym_table;
+	SageInterface::collectVarRefs( dynamic_cast<SgLocatedNode *>(astNode), sym_table );
+	vector<SgVarRefExp *>::iterator iter;
+	for( iter = sym_table.begin(); iter != sym_table.end(); iter++ ){
+		SgVariableSymbol *var = (*iter)->get_symbol();
+		SgDeclarationStatement *var_decl = ( var->get_declaration() )->get_declaration();
+    if( var_decl != NULL  && SageInterface::isStatic(var_decl) )
+      return true;
+	}
 
   return false; 
 }
@@ -747,6 +805,20 @@ void Extractor::extractLoops( SgNode *astNode ){
 	loop_file_buf_profile.close();
 	loop_file_buf_no_profile.close();
 
+  /* Remove preprocessor text, since ROSE preprocessor has already worked */
+/*	string sed_command;
+  sed_command = "sed -i '/^#if/ d' " + loop_profile_file_name;
+	executeCommand( sed_command );
+  sed_command = "sed -i '/^#if/ d' " + loop_no_profile_file_name;
+	executeCommand( sed_command );
+  sed_command = "sed -i '/^#else/ d' " + loop_profile_file_name;
+	executeCommand( sed_command );
+  sed_command = "sed -i '/^#else/ d' " + loop_no_profile_file_name;
+	executeCommand( sed_command );
+  sed_command = "sed -i '/^#endif/ d' " + loop_profile_file_name;
+	executeCommand( sed_command );
+  sed_command = "sed -i '/^#endif/ d' " + loop_no_profile_file_name;
+	executeCommand( sed_command );*/
 	/* Change struct access with pointer to struct */
 //	for( auto const &str : curr_loop.scope_struct_str_vec ){
 //		/* change struct access: 'st =' to '(*st) =' */ 
@@ -834,6 +906,11 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 			}
       case V_SgFunctionDefinition: {
         loopParentFuncScope = dynamic_cast<SgScopeStatement *>(astNode);
+        SgFunctionDefinition *funcDef = dynamic_cast<SgFunctionDefinition *>(astNode);
+        if( funcDef != NULL && 
+        ( (funcDef->unparseToString()).find("static") < (funcDef->unparseToString()).find(funcDef->get_declaration()->get_name()) ) 
+        )
+          static_funcs_vec.push_back(funcDef->get_declaration()->get_name());
         break;
       }
 			case V_SgGlobal: {
@@ -896,10 +973,13 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
         /* Dirty trick to push a node like extern func after headers,
          * since control flow get here after the node was pushed already */
        string vector_top;
-/*        if( !header_vec.empty() ){
+        if( !header_vec.empty() ){
           vector_top = header_vec.back();
-          header_vec.pop_back();
-        } */
+          if( vector_top.find("#") == 0 ){
+            vector_top = "";
+          } else
+            header_vec.pop_back();
+        }
 				AttachedPreprocessingInfoType::iterator i;
 				for (i = directives->begin(); i != directives->end(); i++) {
 					string directiveTypeName = PreprocessingInfo::directiveTypeName((*i)->getTypeOfDirective()).c_str();
@@ -1103,11 +1183,19 @@ Extractor::Extractor( const vector<string> &argv ){
   }
 	string base_file = getDataFolderPath() + getOrigFileName() + base_str + "." + getFileExtn();
 	string base_file_profile = getDataFolderPath() + getOrigFileName() + base_str + mCompiler_profile_file_tag + "." + getFileExtn();
-  /* Move base file to the mCompiler data folder: 
-   * mv rose_filename.x mCompiler_data/filename_base.x
-   * cp mCompiler_data/filename_base.x mCompiler_data/filename_base_profile_.x
-   */
-  executeCommand( "mv rose_"+ getOrigFileName() + "." + getFileExtn() + space_str + base_file );
+  
+  if( mCompiler_file_name.empty() ){
+    /* Copy original file to the mCompiler data folder: 
+     * cp rose_filename.x mCompiler_data/filename_base.x
+     */
+    executeCommand( "cp " + argv.back() + space_str + base_file );
+  } else {
+    /* Move base file to the mCompiler data folder: 
+     * mv rose_filename.x mCompiler_data/filename_base.x
+     */
+    executeCommand( "mv rose_"+ getOrigFileName() + "." + getFileExtn() + space_str + base_file );
+  }
+  /* cp mCompiler_data/filename_base.x mCompiler_data/filename_base_profile_.x */
   executeCommand( "cp " + base_file + space_str + base_file_profile );
   modifyExtractedFileText(base_file, base_file_profile);
 	

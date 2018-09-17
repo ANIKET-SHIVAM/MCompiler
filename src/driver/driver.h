@@ -39,7 +39,7 @@ public:
 	void removeMCompilerDataFolder();
 	void generateMCompilerHeaderFile();
 	void fetchProfilerInput();
-	void copyInFolderHeaders( string folder_path );
+	void copyInFolderHeaders( string folder_path, bool copysourcefiles );
 	void initiateExtractor( string file_name );
 	void initiateProfiler();
 	void initiateAdvProfiler();

@@ -40,12 +40,15 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	vector<string> header_vec;
   /* Global vars and associated OMP threadprivate directives */
 	vector<string> global_vars;
+	vector<string> static_funcs_vec;
 	src_lang src_type;
 public:
 	string ignorePrettyFunctionCall1 = "__PRETTY_FUNCTION__";
 	string ignorePrettyFunctionCall2 = "__func__";
 	string ignorePrettyFunctionCall3 = "__FUNCTION__";
 	bool mainFuncPresent = false;	
+	bool copysourcefiles = false;
+  int if_else_macro_count;
 	vector<string> *loop_funcName_vec = new vector<string>;
 	map<SgFunctionDeclaration*,string> inline_func_map;
   string loopOMPpragma = "";
