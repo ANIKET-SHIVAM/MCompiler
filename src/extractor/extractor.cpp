@@ -155,8 +155,14 @@ void Extractor::printGlobalsAsExtern( ofstream& loop_file_buf ){
 		string var_str = *iter;
     if( var_str.find("pragma") != string::npos )
       loop_file_buf << var_str << endl;
-    else
+    else {
+      /* In case struct type contains stuct definition */
+      if( var_str.find("struct") != string::npos && var_str.find("{") != string::npos ){
+        var_str.erase( var_str.find_first_of("{"), 
+          var_str.find_last_of("}") - var_str.find_first_of("{") + 1 );
+      }
       loop_file_buf << "extern " << var_str << ";" << endl;
+    }
 	}
 }
 
@@ -1195,6 +1201,7 @@ Extractor::Extractor( const vector<string> &argv ){
 	
 	/* If file doesn't have any loop, then mCompiler_file_name,_file_extn would be empty at this point */
 	if( mCompiler_file_name.empty() ){
+    mCompiler_file_path          = getFilePath(argv.back());
     mCompiler_original_file_name = getOrigFileName(argv.back());
     mCompiler_file_extn          = getFileExtn(argv.back());
   }
@@ -1203,9 +1210,11 @@ Extractor::Extractor( const vector<string> &argv ){
   
   if( mCompiler_file_name.empty() ){
     /* Copy original file to the mCompiler data folder: 
-     * cp rose_filename.x mCompiler_data/filename_base.x
+     * cp filename.x mCompiler_data/filename_base.x
+     * rm rose_filename.x
      */
     executeCommand( "cp " + argv.back() + space_str + base_file );
+    executeCommand( "rm rose_"+ getOrigFileName() + "." + getFileExtn() );
   } else {
     /* Move base file to the mCompiler data folder: 
      * mv rose_filename.x mCompiler_data/filename_base.x
