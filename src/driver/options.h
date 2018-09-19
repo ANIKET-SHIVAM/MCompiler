@@ -197,6 +197,16 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		/* Search for source files in the name */
 			mCompiler_input_file.push_back( getAbsolutePath(str) );
 			postSourceFlags = true;
+      
+      string srcparentdir = str.substr(0, str.find_last_of("/"));
+      if(srcparentdir.compare(str) != 0){
+        boost::erase_all(srcparentdir,"/");
+        boost::erase_all(srcparentdir,".");
+        mCompiler_input_file_relpathcode.insert(pair<string,string>(getAbsolutePath(str),srcparentdir));     
+      } else {
+        mCompiler_input_file_relpathcode.insert(pair<string,string>(getAbsolutePath(str), ""));     
+      }
+
 		} else if( isEndingWith( str, ".o" ) ){ 
 		/* Search for object files in the name */
 			mCompiler_object_file.push_back( str );

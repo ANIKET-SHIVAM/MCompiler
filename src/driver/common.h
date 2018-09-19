@@ -94,6 +94,7 @@ extern string rose_path;
 
 /* For the extractor */
 extern vector<string> mCompiler_input_file;
+extern map<string,string> mCompiler_input_file_relpathcode;
 
 extern vector<string> mCompiler_object_file;
 

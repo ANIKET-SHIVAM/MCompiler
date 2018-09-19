@@ -33,6 +33,7 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
 	SgScopeStatement* main_scope = NULL;
 	bool nonVoidMain = false;
   int uniqueCounter = 0; // for loops at same line number bcoz of macros 
+  string relpathcode = ""; // for files with same name but in different folders
 	SgStatement *lastIncludeStmt = NULL;
 	SgGlobal *global_node; // Needed to add the extern calls
 	set<SgNode*> astNodesCollector; //Required to not add loop functions on Ast Post Processing

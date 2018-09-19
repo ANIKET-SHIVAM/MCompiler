@@ -73,6 +73,8 @@ string Extractor::getExtractionFileName( SgNode *astNode, bool isProfileFile ) {
 
   if( uniqueCounter != 0 )
     file_name += "_" + to_string(uniqueCounter);
+  if( !relpathcode.empty() )
+    file_name += "_" + relpathcode;
 	
 	if( isProfileFile )
 		file_name += mCompiler_profile_file_tag + "." + file_extn;
@@ -87,6 +89,7 @@ void Extractor::updateUniqueCounter( SgNode *astNode ){
   string file_name = getExtractionFileName(astNode, false);
   boost::erase_all(file_name,getDataFolderPath());
   boost::erase_all(file_name,"."+mCompiler_file_extn);
+  boost::erase_all(file_name,relpathcode);
  
   /* check for loops at same line number bcoz of macros and add suffix*/
   for( auto const &funcstr: files_to_compile ){
@@ -1185,6 +1188,11 @@ void Extractor::modifyExtractedFileText( const string &base_file, const string &
 
 /* Extractor constructor, for initiating via driver */
 Extractor::Extractor( const vector<string> &argv ){
+  /* Get relative path unique code */
+  if( mCompiler_input_file_relpathcode.find(argv.back()) != mCompiler_input_file_relpathcode.end() &&
+      !(mCompiler_input_file_relpathcode.find(argv.back())->second).empty() )
+    relpathcode = mCompiler_input_file_relpathcode.find(argv.back())->second; 
+ 
 	SgProject *ast = NULL;
 	/* Create AST and pass to the extraction functions */
 	ast = frontend( argv );
@@ -1205,8 +1213,8 @@ Extractor::Extractor( const vector<string> &argv ){
     mCompiler_original_file_name = getOrigFileName(argv.back());
     mCompiler_file_extn          = getFileExtn(argv.back());
   }
-	string base_file = getDataFolderPath() + getOrigFileName() + base_str + "." + getFileExtn();
-	string base_file_profile = getDataFolderPath() + getOrigFileName() + base_str + mCompiler_profile_file_tag + "." + getFileExtn();
+	string base_file = getDataFolderPath() + getOrigFileName() + base_str + "_" + relpathcode + "." + getFileExtn();
+	string base_file_profile = getDataFolderPath() + getOrigFileName() + base_str + "_" + relpathcode + mCompiler_profile_file_tag + "." + getFileExtn();
   
   if( mCompiler_file_name.empty() ){
     /* Copy original file to the mCompiler data folder: 
