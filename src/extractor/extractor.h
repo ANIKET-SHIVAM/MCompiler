@@ -4,6 +4,7 @@
 #include "driver/common.h"
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 
 using namespace std;
 
@@ -57,7 +58,7 @@ public:
   string loopSkipPragma = "";
 	vector<string> func_var_str_vec;
   SgScopeStatement* loopParentFuncScope = NULL;
-  map<SgStatement*,SgStatement*> externFuncDef;
+  map<SgStatement*,SgScopeStatement*> externFuncDef;
 public:
 	Extractor() {};
 	Extractor( const vector<string> &argv );

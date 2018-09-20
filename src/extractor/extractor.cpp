@@ -612,7 +612,8 @@ void LoopInfo::printLoopFunc( ofstream& loop_file_buf,  bool isProfileFile ){
 }
 
 void Extractor::addExternDefs( SgFunctionDeclaration *func ){
-	externFuncDef.insert(pair<SgStatement*,SgStatement*>( dynamic_cast<SgStatement *>(func), SageInterface::getFirstStatement(loopParentFuncScope) ));
+  externFuncDef.insert(pair<SgStatement*,SgScopeStatement*>( dynamic_cast<SgStatement *>(func), loopParentFuncScope ));
+  //externFuncDef.insert(pair<SgStatement*,SgStatement*>( dynamic_cast<SgStatement *>(func), SageInterface::getFirstStatement(loopParentFuncScope) ));
 }
 
 /* Add loop function call as extern in the base source file */
@@ -718,6 +719,14 @@ void LoopInfo::addLoopFuncCall(){
 	SgName func_name = getFuncName();
 	SgFunctionCallExp* call_expr = SageBuilder::buildFunctionCallExp
 		( func_name, SageBuilder::buildVoidType(), SageBuilder::buildExprListExp( expr_list ),loop_scope );
+  /* Check if previous statement is OMP pragma, then remove it */
+  SgStatement *prevStmt = SageInterface::getPreviousStatement(loop, false);
+  if( prevStmt != NULL && prevStmt->variantT() == V_SgPragmaDeclaration ){
+    SgPragmaDeclaration *pragmaDecl = dynamic_cast<SgPragmaDeclaration *>(prevStmt);
+    if(SageInterface::extractPragmaKeyword(pragmaDecl) == "omp")
+      SageInterface::replaceStatement( prevStmt, SageBuilder::buildNullStatement() );
+  }
+  /* Replace for loop with function call */
   SageInterface::replaceStatement( loop, SageBuilder::buildExprStatement( call_expr ), true);
 }
 
@@ -781,7 +790,7 @@ bool Extractor::skipLoop( SgNode *astNode ){
 	for( iter = sym_table.begin(); iter != sym_table.end(); iter++ ){
 		SgVariableSymbol *var = (*iter)->get_symbol();
 		SgDeclarationStatement *var_decl = ( var->get_declaration() )->get_declaration();
-    if( var_decl != NULL  && SageInterface::isStatic(var_decl) )
+    if( var_decl != NULL && SageInterface::isStatic(var_decl) )
       return true;
 	}
 
@@ -1124,9 +1133,19 @@ int Extractor::evaluateSynthesizedAttribute( SgNode *astNode, InheritedAttribute
 }
 
 void Extractor::addPostTraversalDefs(){
+  for (std::map<SgStatement*,SgScopeStatement*>::iterator it=externFuncDef.begin(); it!=externFuncDef.end(); ++it){
+    BOOST_FOREACH ( SgStatement *targetStmt, (it->second)->generateStatementList()) {
+      if (!isSgDeclarationStatement(targetStmt) || targetStmt->variantT() == V_SgPragmaDeclaration ) {
+        SageInterface::insertStatementBefore(targetStmt, it->first);
+        goto NEXTSTMT;
+      }
+    }
+    SageInterface::appendStatement(it->first, it->second);
+    NEXTSTMT:;
+  }
   //SageInterface::insertStatementListBeforeFirstNonDeclaration ( externLoopFuncDefinitionsAdd, getLastIncludeStatement()->get_scope() );
-  for (std::map<SgStatement*,SgStatement*>::iterator it=externFuncDef.begin(); it!=externFuncDef.end(); ++it)
-    SageInterface::insertStatementBefore(it->second, it->first,true);
+//    SageInterface::insertStatementBeforeFirstNonDeclaration ( it->first, it->second );
+//    SageInterface::insertStatementBefore(it->second, it->first,true);
 	/* LastIncludeStatement point to either last include or global var declr
 	 * Due to bug in rosem insert After on include statement skip the next subtree */
 	/*if( getLastIncludeStatement() != NULL ){
@@ -1172,7 +1191,7 @@ void Extractor::modifyExtractedFileText( const string &base_file, const string &
 	executeCommand( sed_command2 );
 	
 	/* Remove OMP pragma from profile and non-profile file bcoz ROSE APIs can't */
-	sed_command2 = "sed -i '/omp parallel for/d' " + base_file;
+/*sed_command2 = "sed -i '/omp parallel for/d' " + base_file;
 	executeCommand( sed_command2 );
 	sed_command2 = "sed -i '/omp parallel for/d' " + base_file_profile;
 	executeCommand( sed_command2 );
@@ -1180,7 +1199,7 @@ void Extractor::modifyExtractedFileText( const string &base_file, const string &
 	executeCommand( sed_command2 );
 	sed_command2 = "sed -i '/omp for/d' " + base_file_profile;
 	executeCommand( sed_command2 );
-	
+*/
 	/* Remove mCompile header and accumulater timing var print function from non profile base file */
 	string sed_command3 = "sed -i '/" + mCompiler_header_name + "/d;/" + printTimingVarFuncName + "/d' " + base_file;
 	executeCommand( sed_command3 );
