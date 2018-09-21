@@ -986,6 +986,17 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
 			}
       case V_SgTypedefDeclaration: {
         header_vec.push_back(astNode->unparseToString()+"\n");
+        SgTypedefDeclaration *typedef_decl = dynamic_cast<SgTypedefDeclaration *>(astNode);
+        if( typedef_decl->get_base_type()->variantT() == V_SgClassType ){
+          typedef_struct_lineno_vec.push_back(getAstNodeLineNum(astNode));
+        }
+        break;
+      }
+      case V_SgClassDeclaration: {
+        SgClassDeclaration *structC_decl = dynamic_cast<SgClassDeclaration *>(astNode);
+        if( find(typedef_struct_lineno_vec.begin(), typedef_struct_lineno_vec.end(), getAstNodeLineNum(astNode)) == typedef_struct_lineno_vec.end() ){
+          header_vec.push_back(astNode->unparseToString()+"\n");
+        }
         break;
       }
 //			case V_SgSourceFile: {

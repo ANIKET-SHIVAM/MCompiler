@@ -44,6 +44,8 @@ class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
   /* Global vars and associated OMP threadprivate directives */
 	vector<string> global_vars;
 	vector<string> static_funcs_vec;
+  /* If typedef struct is with defination then line number of struct def is same, hence exclude */
+	vector<int> typedef_struct_lineno_vec;
 	src_lang src_type;
 public:
 	string ignorePrettyFunctionCall1 = "__PRETTY_FUNCTION__";
