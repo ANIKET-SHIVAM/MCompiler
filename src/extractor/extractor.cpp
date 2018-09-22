@@ -422,7 +422,7 @@ void LoopInfo::popLocalVarsToPointers( ofstream& loop_file_buf ){
 		if( (var->get_type())->variantT() == V_SgArrayType || isTypedefArray ){
 			isPrimitive = false;	
 		} else if( SageInterface::isStructType( var->get_type() ) || isTypedefStruct ){
-			isPrimitive = false;	
+			isPrimitive = true;	
 		} else if( (var->get_type())->variantT() == V_SgPointerType ){
 			isPrimitive = false;	
       SgType *var_pointer_type = var->get_type()->stripType(1<<2);
