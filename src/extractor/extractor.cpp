@@ -121,7 +121,6 @@ void Extractor::printHeaders( ofstream& loop_file_buf, bool isProfileFile ){
 		string header_str = *iter;
     /* If including a .c file then copy to mC data folder */
     if( header_str.find(".c") != string::npos ){
-      copysourcefiles = true;
       continue;
     }
     if( header_str.find("#endif") == 0 && if_else_macro_count == 0 )
@@ -1036,6 +1035,10 @@ InheritedAttribute Extractor::evaluateInheritedAttribute( SgNode *astNode,
             && find( header_vec.begin(), header_vec.end(), headerName ) ==  header_vec.end()
             ) {
 						header_vec.push_back(headerName);
+            /* If including a .c file then copy to mC data folder */
+            if( headerName.find(".c") != string::npos ){
+              copysourcefiles = true;
+            }
 						lastIncludeStmt = locatedNode_SgStatement;	
 						//cerr << "Header: " << headerName << endl;	
 					}	

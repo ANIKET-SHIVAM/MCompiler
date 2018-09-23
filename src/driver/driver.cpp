@@ -203,6 +203,8 @@ void Driver::generateMCompilerHeaderFile(){
 void Driver::copyInFolderHeaders( string folder_path, bool copysourcefiles ){
 	string cmd_str = "cp " + folder_path + "*.h " + getDataFolderPath();
 	executeCommand(cmd_str);
+	cmd_str = "cp " + folder_path + "*.inc " + getDataFolderPath();
+	executeCommand(cmd_str);
   if( copysourcefiles ){
     string cmd_str = "cp " + folder_path + "*.c " + getDataFolderPath();
     executeCommand(cmd_str);
