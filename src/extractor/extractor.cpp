@@ -1249,7 +1249,7 @@ Extractor::Extractor( const vector<string> &argv ){
 	string base_file = getDataFolderPath() + getOrigFileName() + base_str + "_" + relpathcode + "." + getFileExtn();
 	string base_file_profile = getDataFolderPath() + getOrigFileName() + base_str + "_" + relpathcode + mCompiler_profile_file_tag + "." + getFileExtn();
   
-  if( mCompiler_file_name.empty() ){
+  if( mCompiler_file_name.empty() && !mainFuncPresent ){
     /* Copy original file to the mCompiler data folder: 
      * cp filename.x mCompiler_data/filename_base.x
      * rm rose_filename.x
