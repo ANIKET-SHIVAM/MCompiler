@@ -354,7 +354,7 @@ int main( int argc, char* argv[] ){
 		Tester *tester = new Tester();
 	}
 
-  if( !mCompiler_enabled_options[MC_DEBUG] &&
+  if( !mCompiler_enabled_options[MC_INFO] &&
     ( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT || mCompiler_mode == mode_COMPLEX )){
     driver->removeMCompilerDataFolder();
   }

@@ -759,11 +759,22 @@ bool Extractor::skipLoop( SgNode *astNode ){
     return true;
   
   /* Skip loop with macro def in the body, Rose will extract the first instance of complete loop */
-  string loop_body = loop->unparseToCompleteString();
+  string loop_body_orig = loop->unparseToCompleteString();
+  string loop_body = loop_body_orig.substr(loop_body_orig.find_first_of("for"));
   if( loop_body.find("#if")    != string::npos ||  
       loop_body.find("#else")  != string::npos ||  
-      loop_body.find("#endif") != string::npos ) 
-    return true;  
+      loop_body.find("#endif") != string::npos ){
+    int count_if = 0;
+    string sub = "#if";
+    for (size_t offset = loop_body.find(sub); offset != string::npos; offset = loop_body.find(sub, offset + sub.length()))
+      ++count_if;
+    int count_endif = 0;
+    sub = "#endif";
+    for (size_t offset = loop_body.find(sub); offset != string::npos; offset = loop_body.find(sub, offset + sub.length()))
+      ++count_endif;
+    if(count_if != count_endif)
+      return true;
+  }
 
   Rose_STL_Container<SgNode *> gotoStmt = NodeQuery::querySubTree(scope, V_SgGotoStatement);
   if(gotoStmt.begin() != gotoStmt.end())

@@ -61,6 +61,7 @@ const option::Descriptor usage[] =
 	{MACRO_DEFS         , 0, "D" , "DEFS"          ,Arg::Required , "    -D[<arg>]            Macro definition" },
 	{MC_DEBUG           , 0, ""  , "debug"         ,Arg::None     , "    --debug              Output mCompiler workflow" },
 	{MC_INFO            , 0, ""  , "info"          ,Arg::None     , "    --info               Print information for mCompiler workflow" },
+	{NOVEC              , 0, ""  , "novec"         ,Arg::None     , "    --novec              Disable vectorizer" },
 	{0,0,0,0,0,0}
 };
 
@@ -81,6 +82,7 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		{ COMPILE_TO_OBJECT, false },
 		{ MC_DEBUG,          false },
 		{ MC_INFO,           false },
+		{ NOVEC,             false },
 	};
 	argc-=(argc>0); argv+=(argc>0); // skip program name argv[0] if present
 	option::Stats stats(usage, argc, argv);
@@ -186,6 +188,9 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		case MC_INFO:
 			mCompiler_enabled_options[MC_INFO] = true;
+			break;
+		case NOVEC:
+			mCompiler_enabled_options[NOVEC] = true;
 			break;
 		}
 	}

@@ -107,7 +107,7 @@ void addOptimizationFlags(){
 	flag_vec.clear();
 	flag_vec.push_back("icc");
   if( !mCompiler_enabled_options[MC_DEBUG] ){
-    flag_vec.push_back("-Ofast");
+    flag_vec.push_back("-Ofast -g");
   } else {
   	flag_vec.push_back("-O0 -g");
   }
@@ -123,6 +123,8 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("-parallel");
+  if(mCompiler_enabled_options[NOVEC])
+    flag_vec.push_back("-no-vec");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -142,6 +144,8 @@ void addOptimizationFlags(){
     flag_vec.push_back("-std=c11");
   if(mCompiler_enabled_options[PREFETCH])
   	flag_vec.push_back("-fprefetch-loop-arrays");
+  if(mCompiler_enabled_options[NOVEC])
+    flag_vec.push_back("-fno-tree-vectorize");
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[AUTO_PARALLEL]);
 	flag_vec.push_back(mCompiler_include_path);
@@ -167,6 +171,8 @@ void addOptimizationFlags(){
   if(mCompiler_enabled_options[PREFETCH])
   	flag_vec.push_back("-loop-data-prefetch");
 	flag_vec.push_back("-w");
+  if(mCompiler_enabled_options[NOVEC])
+    flag_vec.push_back("-fno-vectorize");
   if(mCompiler_enabled_options[AUTO_PARALLEL]);
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
@@ -196,6 +202,8 @@ void addOptimizationFlags(){
 	flag_vec.push_back("-w");
   if(mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("-Mconcur");
+  if(mCompiler_enabled_options[NOVEC])
+    flag_vec.push_back("-Mnovect");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
@@ -209,6 +217,8 @@ void addOptimizationFlags(){
   flag_vec.push_back("--tile");
   if(mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("--parallel");
+  if(mCompiler_enabled_options[NOVEC])
+    flag_vec.push_back("--noprevector ");
 	optimization_flags[compiler_Pluto] = flag_vec;	
 
 	/* Polly */
@@ -216,7 +226,10 @@ void addOptimizationFlags(){
 	flag_vec.push_back("clang");
 	flag_vec.push_back("-O3");
 	flag_vec.push_back("-mllvm -polly");
-	flag_vec.push_back("-mllvm -polly-vectorizer=stripmine");
+  if(!mCompiler_enabled_options[NOVEC])
+	  flag_vec.push_back("-mllvm -polly-vectorizer=stripmine");
+  else
+	  flag_vec.push_back("-mllvm -polly-vectorizer=none");
   if(mCompiler_enabled_options[KNL])
   	flag_vec.push_back("-march=knl");
   else
@@ -230,6 +243,8 @@ void addOptimizationFlags(){
   if(mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("-mllvm -polly-parallel");
 	flag_vec.push_back("-w");
+  if(mCompiler_enabled_options[NOVEC])
+    flag_vec.push_back("-fno-vectorize");
 	flag_vec.push_back(mCompiler_include_path);
 	flag_vec.push_back(mCompiler_macro_defs);
 	flag_vec.push_back(mCompiler_extraPreSrcFlags);
