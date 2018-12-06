@@ -7,7 +7,7 @@ ifeq ($(OS), centos)
 	ROSE_INCLUDE = -I${ROSE_PATH}/include/ -I${BOOST_PATH}/include/
 	ROSE_LIB = -lROSE_DLL
 else
-	CC = g++
+	CC = g++-4.9
 	FLAGS = -std=c++11 -g
 
 	ROSE_PATH = ${CURDIR}/tools/rose_build
