@@ -48,8 +48,8 @@ map<compiler_type, string> compiler_keyword = {
 string baseline_compiler_str;
 
 /*TODO: Get from LD_LIBRARY_PATH */
-string pgi_lib_path = "/big_mount/pgi/linux86-64-llvm/2018/lib/";
-string vtune_path   = "/big_mount/intel/vtune_amplifier/bin64/";
+string pgi_lib_path = "/opt/pgi/linux86-64-llvm/2018/lib/";
+string vtune_path   = "/opt/intel/vtune_amplifier/bin64/";
 #ifdef OS_CENTOS
 string rose_path    = "/big_mount/mCompiler/tools/rose_build/";
 #endif

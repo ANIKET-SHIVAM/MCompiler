@@ -6,6 +6,10 @@ ifeq ($(OS), centos)
 	BOOST_PATH = ${CURDIR}/tools/boost_build
 	ROSE_INCLUDE = -I${ROSE_PATH}/include/ -I${BOOST_PATH}/include/
 	ROSE_LIB = -lROSE_DLL
+	OPENCV_PATH = ${CURDIR}/tools/opencv_install
+	OPENCV_VERSION = 4
+	OPENCV_INCLUDE = -I${OPENCV_PATH}/include/opencv$(OPENCV_VERSION)
+	OPENCV_LIB = -lopencv_ml -lopencv_core
 else
 	CC = g++-4.9
 	FLAGS = -std=c++11 -g
@@ -14,6 +18,10 @@ else
 	BOOST_PATH = ${CURDIR}/tools/boost_build
 	ROSE_INCLUDE = -I${ROSE_PATH}/include/rose -I${BOOST_PATH}/include/
 	ROSE_LIB = -lrose
+	OPENCV_PATH = ${CURDIR}/tools/opencv_install
+	OPENCV_VERSION = 4
+	OPENCV_INCLUDE = -I${OPENCV_PATH}/include/opencv$(OPENCV_VERSION)
+	OPENCV_LIB = -lopencv_ml -lopencv_core
 endif
 
 OBJS = obj
@@ -22,6 +30,7 @@ BIN  = bin
 EXTRACTOR_PATH    = src/extractor
 PROFILER_PATH     = src/profiler
 SYNTHESIZER_PATH  = src/synthesizer
+PREDICTOR_PATH    = src/predictor
 TESTER_PATH       = src/tester
 DRIVER_PATH       = src/driver
 
@@ -29,7 +38,7 @@ MC_DATA_FOLDER    = /tmp/mCompiler_data
 
 DIRS := $(shell mkdir -p ${CURDIR}/$(OBJS) &&  mkdir -p ${CURDIR}/$(BIN))
   
-all: extractor profiler synthesizer tester driver
+all: extractor profiler synthesizer predictor tester driver
 	
 ##### EXTRACTOR #####
 EXTRACTOR_COMPILE_FLAGS = -I${CURDIR}/src $(ROSE_INCLUDE)
@@ -96,6 +105,27 @@ just_synthesizer: $(SRC_SYNTHESIZER)
 	$(CC) $(FLAGS) $(SYNTHESIZER_COMPILE_FLAGS) $(SRC_SYNTHESIZER) -c -o $(OBJ_SYNTHESIZER)
 	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR)  $(OBJ_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
 
+##### PREDICTOR #####
+
+PREDICTOR_COMPILE_FLAGS = -I${CURDIR}/src \
+	$(EXTRACTOR_COMPILE_FLAGS) \
+	$(OPENCV_INCLUDE)
+  
+PREDICTOR_LD_FLAGS = -L$(OPENCV_PATH)/lib $(OPENCV_LIB) 
+
+OBJ_PREDICTOR = $(OBJS)/predictor.o
+SRC_PREDICTOR = $(PREDICTOR_PATH)/predictor.cpp 
+
+predictor: $(OBJ_PREDICTOR)
+
+$(OBJ_PREDICTOR): $(SRC_PREDICTOR)
+	$(CC) $(FLAGS) $(PREDICTOR_COMPILE_FLAGS) $(SRC_PREDICTOR) -c -o $@
+
+just_predictor: $(SRC_PREDICTOR)
+	rm -f $(OBJ_PREDICTOR)
+	$(CC) $(FLAGS) $(PREDICTOR_COMPILE_FLAGS) $(SRC_PREDICTOR) -c -o $(OBJ_PREDICTOR)
+	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR)  $(OBJ_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_PREDICTOR) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
+
 ##### TESTER #####
 OBJ_TESTER = $(OBJS)/tester.o
 SRC_TESTER = $(TESTER_PATH)/tester.cpp
@@ -105,8 +135,8 @@ $(OBJ_TESTER): $(SRC_TESTER)
 
 ##### DRIVER #####
 
-DRIVER_COMPILE_FLAGS = $(EXTRACTOR_COMPILE_FLAGS)
-DRIVER_LD_FLAGS      = $(EXTRACTOR_LD_FLAGS) -pthread
+DRIVER_COMPILE_FLAGS = $(EXTRACTOR_COMPILE_FLAGS) $(OPENCV_INCLUDE)
+DRIVER_LD_FLAGS      = $(EXTRACTOR_LD_FLAGS) -pthread $(PREDICTOR_LD_FLAGS)
 
 OBJ_DRIVER = $(OBJS)/driver.o
 SRC_DRIVER = $(DRIVER_PATH)/driver.cpp 
@@ -115,12 +145,12 @@ OBJ_COMMON = $(OBJS)/common.o
 $(OBJ_COMMON): src/driver/common.cpp
 	$(CC) $(FLAGS) src/driver/common.cpp $(ROSE_INCLUDE) -c -o $@
 
-driver: $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_ADV_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(OBJ_TESTER)
+driver: $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_ADV_PROFILER) $(OBJ_PREDICTOR) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(OBJ_TESTER)
 	$(CC) $^ $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
 $(OBJ_DRIVER): $(SRC_DRIVER)
 	$(CC) $(FLAGS) $(DRIVER_COMPILE_FLAGS) $(SRC_DRIVER) -c -o $@
 
-just_driver: $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_ADV_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(OBJ_TESTER)
+just_driver: $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_ADV_PROFILER) $(OBJ_PREDICTOR) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(OBJ_TESTER)
 	rm -f $(OBJ_DRIVER)
 	$(CC) $(FLAGS) $(DRIVER_COMPILE_FLAGS) $(SRC_DRIVER) -c -o $(OBJ_DRIVER)
 	$(CC) $(OBJ_DRIVER) $^ $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
@@ -131,4 +161,4 @@ clean:
 clean_data_folder:
 	rm -rf $(MC_DATA_FOLDER)
   
-.PHONY: all dirs extractor profiler synthesizer tester driver clean
+.PHONY: all dirs extractor profiler synthesizer predictor tester driver clean

@@ -6,6 +6,7 @@
 #include "extractor/extractor.h"
 #include "profiler/profilerC.h"
 #include "profiler/adv_profiler.h"
+#include "predictor/predictor.h"
 #include "synthesizer/synthesizerC.h"
 #include "tester/tester.h"
 //#include "profiler/profilerCPP.h"
@@ -23,6 +24,7 @@ class Driver {
 	Extractor *extr;
 	ProfilerC *prof;
 	AdvProfiler *adv_prof;
+	Predictor *predictor;
 	SynthesizerC *synth;
 public:
 	bool mainFuncPresent = false;
@@ -43,6 +45,7 @@ public:
 	void initiateExtractor( string file_name );
 	void initiateProfiler();
 	void initiateAdvProfiler();
+	void initiatePredictor();
 	void initiateSynthesizer();
 
 };

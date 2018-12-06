@@ -38,6 +38,8 @@ const option::Descriptor usage[] =
 	{EXTRACT            , 0, ""  , "noextract"     ,Arg::None     , "    --[no]extract        Extract hotspots" },
 	{PROFILE            , 0, ""  , "noprofile"     ,Arg::None     , "    --[no]profile        Profile extracted hotspots" },
 	{SYNTHESIZE         , 0, ""  , "nosynthesize"  ,Arg::None     , "    --[no]synthesize     Combine best performing hotspots to generate binary" },
+	{ADV_PROFILE        , 0, ""  , "adv-profile"   ,Arg::None     , "    --adv-profile        Advanced Profiling" },
+	{PREDICT            , 0, ""  , "predict"       ,Arg::None     , "    --predict            Predict candidate using ML" },
 	{TEST               , 0, ""  , "test"          ,Arg::None     , "    --test               Test performance compared to other compilers"
 																							                                              " optimized code" },
 	{PARALLEL           , 0, ""  , "parallel"      ,Arg::None     , "    --parallel           Generate multi-threaded code based on OpenMP directives\n"
@@ -46,7 +48,6 @@ const option::Descriptor usage[] =
 	{PREFETCH           , 0, ""  , "prefetch"      ,Arg::None     , "    --prefetch           Enable software data prefetching" },
 	{PROFILE_COUNT      , 0, ""  , "profile-runs"  ,Arg::Numeric  , "    --profile-runs=<num> Number of time profiler should run the program to"
 																							                                              " collect data. Default: 3" },
-	{ADV_PROFILE        , 0, ""  , "adv-profile"   ,Arg::None     , "    --adv-profile        Advanced Profiling" },
 	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>       Input to the program"
 																							                                              " Needed to generate profiling information" },
 	{KNL                , 0, ""  , "knl"           ,Arg::None     , "    --knl                Compile for Intel Knights Landing processor. Default: Haswell" },
@@ -70,11 +71,12 @@ void set_mCompiler_options( int argc, char* argv[] ){
 		{ EXTRACT,           true  },
 		{ PROFILE,           true  },
 		{ SYNTHESIZE,        true  },
+		{ ADV_PROFILE,       false },
+		{ PREDICT,           false },
 		{ TEST,              false },
 		{ PARALLEL,          false },
 		{ AUTO_PARALLEL,     false },
 		{ PREFETCH,          false },
-		{ ADV_PROFILE,       false },
 		{ KNL,               false },
 		{ SKYLAKE,           false },
 		{ C99,               false },
@@ -128,6 +130,12 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			mCompiler_enabled_options[SYNTHESIZE] = false;
 			fprintf(stdout, "--numeric with argument '%s'\n", opt.arg);
 			break;
+		case ADV_PROFILE:
+			mCompiler_enabled_options[ADV_PROFILE] = true;
+			break;
+		case PREDICT:
+			mCompiler_enabled_options[PREDICT] = true;
+			break;
 		case TEST:
 			mCompiler_enabled_options[TEST]     = true;
 			break;
@@ -149,9 +157,6 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		case INPUT_PROFILE:
 			mCompiler_profiler_input = opt.arg;
-			break;
-		case ADV_PROFILE:
-			mCompiler_enabled_options[ADV_PROFILE] = true;
 			break;
 		case KNL:
 			mCompiler_enabled_options[KNL] = true;

@@ -291,6 +291,10 @@ void Driver::initiateAdvProfiler(){
 	adv_prof = new AdvProfiler();
 }
 
+void Driver::initiatePredictor(){
+	predictor = new Predictor();
+}
+
 void Driver::initiateSynthesizer(){
 	synth = new SynthesizerC();
 }
@@ -347,6 +351,10 @@ int main( int argc, char* argv[] ){
 
 	if( mCompiler_enabled_options[ADV_PROFILE] ){
     driver->initiateAdvProfiler();
+  }
+
+	if( mCompiler_enabled_options[PREDICT] ){
+    driver->initiatePredictor();
   }
 
 	if( mCompiler_enabled_options[TEST] && 
