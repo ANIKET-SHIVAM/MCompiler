@@ -1,58 +1,57 @@
 #include "common.h"
 
-map< mCompiler_options, bool > mCompiler_enabled_options;
-map< compiler_type, bool > compiler_candidate;
-map< compiler_type, vector<string> > optimization_flags;
-map< compiler_type, vector<string> > linker_flags;
-map< compiler_type, vector<string> > post_linker_flags;
-
+map<mCompiler_options, bool> mCompiler_enabled_options;
+map<compiler_type, bool> compiler_candidate;
+map<compiler_type, vector<string>> optimization_flags;
+map<compiler_type, vector<string>> linker_flags;
+map<compiler_type, vector<string>> post_linker_flags;
 
 /* Profiler to Synthesizer */
 set<string> hotspot_name_set;
 /* map< compiler_string, base file obj location > */
-map<string, vector<string>* > base_obj_path;
+map<string, vector<string> *> base_obj_path;
 /* map< pair<hotspot_name, compiler_string>, timing/obj_location > */
-map< pair< string, string >, vector<double>* > profiler_hotspot_data;
-map< pair< string, string >, string > profiler_hotspot_obj_path;
+map<pair<string, string>, vector<double> *> profiler_hotspot_data;
+map<pair<string, string>, string> profiler_hotspot_obj_path;
 set<string> hotspots_skipped_profiling;
 
-int    profile_binary_err_cnt = 0;
-string space_str         = " ";
-string forward_slash_str = "/";
-string minus_c_str = "-c";
-string minus_o_str = "-o";
-string dot_o_str   = ".o";
-string base_str    = "_base";
-string icc_str     = "_icc";
-string gcc_str     = "_gcc";
-string llvm_str    = "_llvm";
-string pgi_str     = "_pgi";
-string pluto_str   = "_pluto";
+int profile_binary_err_cnt = 0;
+string space_str           = " ";
+string forward_slash_str   = "/";
+string minus_c_str         = "-c";
+string minus_o_str         = "-o";
+string dot_o_str           = ".o";
+string base_str            = "_base";
+string icc_str             = "_icc";
+string gcc_str             = "_gcc";
+string llvm_str            = "_llvm";
+string pgi_str             = "_pgi";
+string pluto_str           = "_pluto";
 /* Case where PLuTo doesn't recognize the SCoP, so source fed to ICC as it is */
-string XplutoX_str = "_XplutoX"; 
-string polly_str   = "_polly";
-string test_str    = "_test";
-string mCompiler_skiplooppragma_str = "skiploop";
+string XplutoX_str                   = "_XplutoX";
+string polly_str                     = "_polly";
+string test_str                      = "_test";
+string mCompiler_skiplooppragma_str  = "skiploop";
 string mCompiler_skipplutopragma_str = "skippluto";
 
 map<compiler_type, string> compiler_keyword = {
-	{ compiler_ICC,   icc_str.substr(1,string::npos)   },
-	{ compiler_GCC,   gcc_str.substr(1,string::npos)   },
-	{ compiler_LLVM,  llvm_str.substr(1,string::npos)  },
-	{ compiler_PGI,   pgi_str.substr(1,string::npos)   },
-	{ compiler_Pluto, pluto_str.substr(1,string::npos) },
-	{ compiler_Polly, polly_str.substr(1,string::npos) },
-};	
+    {compiler_ICC, icc_str.substr(1, string::npos)},
+    {compiler_GCC, gcc_str.substr(1, string::npos)},
+    {compiler_LLVM, llvm_str.substr(1, string::npos)},
+    {compiler_PGI, pgi_str.substr(1, string::npos)},
+    {compiler_Pluto, pluto_str.substr(1, string::npos)},
+    {compiler_Polly, polly_str.substr(1, string::npos)},
+};
 
 /* Set baseline compiler to come from CL */
 string baseline_compiler_str;
 
 /*TODO: Get from LD_LIBRARY_PATH */
-string pgi_lib_path = "/opt/pgi/linux86-64-llvm/2018/lib/";
-string vtune_path   = "/opt/intel/vtune_amplifier/bin64/";
+string pgi_lib_path                 = "/opt/pgi/linux86-64-llvm/2018/lib/";
+string vtune_path                   = "/opt/intel/vtune_amplifier/bin64/";
 string mCompiler_trained_model_path = "mC_trained_model.yml";
 #ifdef OS_CENTOS
-string rose_path    = "/big_mount/mCompiler/tools/rose_build/";
+string rose_path = "/big_mount/mCompiler/tools/rose_build/";
 #endif
 
 /* Mode in which mCompiler is working */
@@ -76,375 +75,388 @@ string mCompiler_curr_dir_path;
 /*** Parameter that change based on the CL input ***/
 /* For the extractor */
 vector<string> mCompiler_input_file;
-map<string,string> mCompiler_input_file_relpathcode;
+map<string, string> mCompiler_input_file_relpathcode;
 vector<string> mCompiler_object_file;
-string mCompiler_binary_path       = ""; 
-string mCompiler_binary_name       = "a_mc.out"; //Default: If CL provided then replaced with that name
+string mCompiler_binary_path = "";
+string mCompiler_binary_name =
+    "a_mc.out"; // Default: If CL provided then replaced with that name
 
 /* Extractor passes to Profiler */
 set<string> files_to_compile;
 set<string> files_skip_pluto;
 /* Synthesizer to Advanced Profiler */
-map<string,string> hotspot_best_compiler_map;
+map<string, string> hotspot_best_compiler_map;
 
-int    mCompiler_profiler_runs     = 3; //Default: If CL provided then replaced with that number
-string mCompiler_profile_data_csv  = "profile_data.csv";
-string mCompiler_adv_profile_data_csv  = "adv_profile_data.csv";
-string mCompiler_profiler_input    = "";
-string mCompiler_macro_defs        = "";
-string mCompiler_include_path      = "";
-string mCompiler_link_path         = "";
-string mCompiler_libraries         = "";
-string mCompiler_extraPreSrcFlags  = "";
-string mCompiler_extraPostSrcFlags = "";
+int mCompiler_profiler_runs =
+    3; // Default: If CL provided then replaced with that number
+string mCompiler_profile_data_csv     = "profile_data.csv";
+string mCompiler_adv_profile_data_csv = "adv_profile_data.csv";
+string mCompiler_profiler_input       = "";
+string mCompiler_macro_defs           = "";
+string mCompiler_include_path         = "";
+string mCompiler_link_path            = "";
+string mCompiler_libraries            = "";
+string mCompiler_extraPreSrcFlags     = "";
+string mCompiler_extraPostSrcFlags    = "";
 
 /*** END: Parameter that change based on the CL input ***/
 
-// TODO: Add flags given to driver to following flag list (without or with mapping)
+// TODO: Add flags given to driver to following flag list (without or with
+// mapping)
 // Called inside Profiler
-void addOptimizationFlags(){
-	vector<string> flag_vec;
-	/* ICC */
-	flag_vec.clear();
-	flag_vec.push_back("icc");
-  if( !mCompiler_enabled_options[MC_DEBUG] ){
+void addOptimizationFlags() {
+  vector<string> flag_vec;
+  /* ICC */
+  flag_vec.clear();
+  flag_vec.push_back("icc");
+  if (!mCompiler_enabled_options[MC_DEBUG]) {
     flag_vec.push_back("-Ofast -g");
   } else {
-  	flag_vec.push_back("-O0 -g");
+    flag_vec.push_back("-O0 -g");
   }
   flag_vec.push_back("-xHost");
-  if(mCompiler_enabled_options[PARALLEL])
+  if (mCompiler_enabled_options[PARALLEL])
     flag_vec.push_back("-qopenmp");
-  if(mCompiler_enabled_options[C99])
-  	flag_vec.push_back("-std=c99");
+  if (mCompiler_enabled_options[C99])
+    flag_vec.push_back("-std=c99");
   else
     flag_vec.push_back("-std=c11");
-  if(mCompiler_enabled_options[PREFETCH])
-  	flag_vec.push_back("-qopt-prefetch");
-	flag_vec.push_back("-w");
-  if(mCompiler_enabled_options[AUTO_PARALLEL])
+  if (mCompiler_enabled_options[PREFETCH])
+    flag_vec.push_back("-qopt-prefetch");
+  flag_vec.push_back("-w");
+  if (mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("-parallel");
-  if(mCompiler_enabled_options[NOVEC])
+  if (mCompiler_enabled_options[NOVEC])
     flag_vec.push_back("-no-vec");
-	flag_vec.push_back(mCompiler_include_path);
-	flag_vec.push_back(mCompiler_macro_defs);
-	flag_vec.push_back(mCompiler_extraPreSrcFlags);
-	flag_vec.push_back(mCompiler_extraPostSrcFlags);
-	optimization_flags[compiler_ICC] = flag_vec;
+  flag_vec.push_back(mCompiler_include_path);
+  flag_vec.push_back(mCompiler_macro_defs);
+  flag_vec.push_back(mCompiler_extraPreSrcFlags);
+  flag_vec.push_back(mCompiler_extraPostSrcFlags);
+  optimization_flags[compiler_ICC] = flag_vec;
 
-	/* GCC */
-	flag_vec.clear();
-	flag_vec.push_back("gcc");
-	flag_vec.push_back("-Ofast");
-	flag_vec.push_back("-march=native");
-  if(mCompiler_enabled_options[PARALLEL])
+  /* GCC */
+  flag_vec.clear();
+  flag_vec.push_back("gcc");
+  flag_vec.push_back("-Ofast");
+  flag_vec.push_back("-march=native");
+  if (mCompiler_enabled_options[PARALLEL])
     flag_vec.push_back("-fopenmp");
-  if(mCompiler_enabled_options[C99])
-  	flag_vec.push_back("-std=c99");
+  if (mCompiler_enabled_options[C99])
+    flag_vec.push_back("-std=c99");
   else
     flag_vec.push_back("-std=c11");
-  if(mCompiler_enabled_options[PREFETCH])
-  	flag_vec.push_back("-fprefetch-loop-arrays");
-  if(mCompiler_enabled_options[NOVEC])
+  if (mCompiler_enabled_options[PREFETCH])
+    flag_vec.push_back("-fprefetch-loop-arrays");
+  if (mCompiler_enabled_options[NOVEC])
     flag_vec.push_back("-fno-tree-vectorize");
-	flag_vec.push_back("-w");
-  if(mCompiler_enabled_options[AUTO_PARALLEL]);
-	flag_vec.push_back(mCompiler_include_path);
-	flag_vec.push_back(mCompiler_macro_defs);
-	flag_vec.push_back(mCompiler_extraPreSrcFlags);
-	flag_vec.push_back(mCompiler_extraPostSrcFlags);
-	optimization_flags[compiler_GCC] = flag_vec;	
+  flag_vec.push_back("-w");
+  if (mCompiler_enabled_options[AUTO_PARALLEL])
+    ;
+  flag_vec.push_back(mCompiler_include_path);
+  flag_vec.push_back(mCompiler_macro_defs);
+  flag_vec.push_back(mCompiler_extraPreSrcFlags);
+  flag_vec.push_back(mCompiler_extraPostSrcFlags);
+  optimization_flags[compiler_GCC] = flag_vec;
 
-	/* LLVM */
-	flag_vec.clear();
-	flag_vec.push_back("clang");
-	flag_vec.push_back("-Ofast");
-  if(mCompiler_enabled_options[KNL])
-  	flag_vec.push_back("-march=knl");
+  /* LLVM */
+  flag_vec.clear();
+  flag_vec.push_back("clang");
+  flag_vec.push_back("-Ofast");
+  if (mCompiler_enabled_options[KNL])
+    flag_vec.push_back("-march=knl");
   else
     flag_vec.push_back("-march=native");
-  if(mCompiler_enabled_options[PARALLEL])
+  if (mCompiler_enabled_options[PARALLEL])
     flag_vec.push_back("-fopenmp");
-  if(mCompiler_enabled_options[C99])
-  	flag_vec.push_back("-std=c99");
+  if (mCompiler_enabled_options[C99])
+    flag_vec.push_back("-std=c99");
   else
     flag_vec.push_back("-std=c11");
-  if(mCompiler_enabled_options[PREFETCH])
-  	flag_vec.push_back("-loop-data-prefetch");
-	flag_vec.push_back("-w");
-  if(mCompiler_enabled_options[NOVEC])
+  if (mCompiler_enabled_options[PREFETCH])
+    flag_vec.push_back("-loop-data-prefetch");
+  flag_vec.push_back("-w");
+  if (mCompiler_enabled_options[NOVEC])
     flag_vec.push_back("-fno-vectorize");
-  if(mCompiler_enabled_options[AUTO_PARALLEL]);
-	flag_vec.push_back(mCompiler_include_path);
-	flag_vec.push_back(mCompiler_macro_defs);
-	flag_vec.push_back(mCompiler_extraPreSrcFlags);
-	flag_vec.push_back(mCompiler_extraPostSrcFlags);
-	optimization_flags[compiler_LLVM] = flag_vec;	
+  if (mCompiler_enabled_options[AUTO_PARALLEL])
+    ;
+  flag_vec.push_back(mCompiler_include_path);
+  flag_vec.push_back(mCompiler_macro_defs);
+  flag_vec.push_back(mCompiler_extraPreSrcFlags);
+  flag_vec.push_back(mCompiler_extraPostSrcFlags);
+  optimization_flags[compiler_LLVM] = flag_vec;
 
-	/* PGI */
-	flag_vec.clear();
-	flag_vec.push_back("pgcc");
-	flag_vec.push_back("-fast");
-  if(mCompiler_enabled_options[KNL])
-  	flag_vec.push_back("-tp=knl");
+  /* PGI */
+  flag_vec.clear();
+  flag_vec.push_back("pgcc");
+  flag_vec.push_back("-fast");
+  if (mCompiler_enabled_options[KNL])
+    flag_vec.push_back("-tp=knl");
   else if (mCompiler_enabled_options[SKYLAKE])
     flag_vec.push_back("-tp=skylake");
-  else 
+  else
     flag_vec.push_back("-tp=haswell");
-	flag_vec.push_back("-Mllvm");
-  if(mCompiler_enabled_options[PARALLEL])
+  flag_vec.push_back("-Mllvm");
+  if (mCompiler_enabled_options[PARALLEL])
     flag_vec.push_back("-mp");
-  if(mCompiler_enabled_options[C99])
-  	flag_vec.push_back("-c99");
+  if (mCompiler_enabled_options[C99])
+    flag_vec.push_back("-c99");
   else
     flag_vec.push_back("-c11");
-  if(mCompiler_enabled_options[PREFETCH])
-	  flag_vec.push_back("-Mprefetch");
-	flag_vec.push_back("-w");
-  if(mCompiler_enabled_options[AUTO_PARALLEL])
+  if (mCompiler_enabled_options[PREFETCH])
+    flag_vec.push_back("-Mprefetch");
+  flag_vec.push_back("-w");
+  if (mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("-Mconcur");
-  if(mCompiler_enabled_options[NOVEC])
+  if (mCompiler_enabled_options[NOVEC])
     flag_vec.push_back("-Mnovect");
-	flag_vec.push_back(mCompiler_include_path);
-	flag_vec.push_back(mCompiler_macro_defs);
-	flag_vec.push_back(mCompiler_extraPreSrcFlags);
-	flag_vec.push_back(mCompiler_extraPostSrcFlags);
-	optimization_flags[compiler_PGI] = flag_vec;	
-	
-	/* PLuTo */
-	flag_vec.clear();
-	/* Tiling and parallel code option are off by default */
-	flag_vec.push_back("polycc");
-  flag_vec.push_back("--tile");
-  if(mCompiler_enabled_options[AUTO_PARALLEL])
-    flag_vec.push_back("--parallel");
-  if(mCompiler_enabled_options[NOVEC])
-    flag_vec.push_back("--noprevector ");
-	optimization_flags[compiler_Pluto] = flag_vec;	
+  flag_vec.push_back(mCompiler_include_path);
+  flag_vec.push_back(mCompiler_macro_defs);
+  flag_vec.push_back(mCompiler_extraPreSrcFlags);
+  flag_vec.push_back(mCompiler_extraPostSrcFlags);
+  optimization_flags[compiler_PGI] = flag_vec;
 
-	/* Polly */
-	flag_vec.clear();
-	flag_vec.push_back("clang");
-	flag_vec.push_back("-O3");
-	flag_vec.push_back("-mllvm -polly");
-  if(!mCompiler_enabled_options[NOVEC])
-	  flag_vec.push_back("-mllvm -polly-vectorizer=stripmine");
+  /* PLuTo */
+  flag_vec.clear();
+  /* Tiling and parallel code option are off by default */
+  flag_vec.push_back("polycc");
+  flag_vec.push_back("--tile");
+  if (mCompiler_enabled_options[AUTO_PARALLEL])
+    flag_vec.push_back("--parallel");
+  if (mCompiler_enabled_options[NOVEC])
+    flag_vec.push_back("--noprevector ");
+  optimization_flags[compiler_Pluto] = flag_vec;
+
+  /* Polly */
+  flag_vec.clear();
+  flag_vec.push_back("clang");
+  flag_vec.push_back("-O3");
+  flag_vec.push_back("-mllvm -polly");
+  if (!mCompiler_enabled_options[NOVEC])
+    flag_vec.push_back("-mllvm -polly-vectorizer=stripmine");
   else
-	  flag_vec.push_back("-mllvm -polly-vectorizer=none");
-  if(mCompiler_enabled_options[KNL])
-  	flag_vec.push_back("-march=knl");
+    flag_vec.push_back("-mllvm -polly-vectorizer=none");
+  if (mCompiler_enabled_options[KNL])
+    flag_vec.push_back("-march=knl");
   else
     flag_vec.push_back("-march=native");
-  if(mCompiler_enabled_options[PARALLEL])
+  if (mCompiler_enabled_options[PARALLEL])
     flag_vec.push_back("-fopenmp");
-  if(mCompiler_enabled_options[C99])
-  	flag_vec.push_back("-std=c99");
+  if (mCompiler_enabled_options[C99])
+    flag_vec.push_back("-std=c99");
   else
     flag_vec.push_back("-std=c11");
-  if(mCompiler_enabled_options[AUTO_PARALLEL])
+  if (mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("-mllvm -polly-parallel");
-	flag_vec.push_back("-w");
-  if(mCompiler_enabled_options[NOVEC])
+  flag_vec.push_back("-w");
+  if (mCompiler_enabled_options[NOVEC])
     flag_vec.push_back("-fno-vectorize");
-	flag_vec.push_back(mCompiler_include_path);
-	flag_vec.push_back(mCompiler_macro_defs);
-	flag_vec.push_back(mCompiler_extraPreSrcFlags);
-	flag_vec.push_back(mCompiler_extraPostSrcFlags);
-	optimization_flags[compiler_Polly] = flag_vec;	
-	
+  flag_vec.push_back(mCompiler_include_path);
+  flag_vec.push_back(mCompiler_macro_defs);
+  flag_vec.push_back(mCompiler_extraPreSrcFlags);
+  flag_vec.push_back(mCompiler_extraPostSrcFlags);
+  optimization_flags[compiler_Polly] = flag_vec;
 }
 
 // Called inside Profiler
-void addLinkerFlags(){
-	vector<string> flag_vec;
-	/* ICC */
-	flag_vec.clear();
-	flag_vec.push_back("icc");
+void addLinkerFlags() {
+  vector<string> flag_vec;
+  /* ICC */
+  flag_vec.clear();
+  flag_vec.push_back("icc");
   flag_vec.push_back("-xHost");
-	flag_vec.push_back("-qopenmp");
-	flag_vec.push_back("-w");
-  if(mCompiler_enabled_options[AUTO_PARALLEL])
+  flag_vec.push_back("-qopenmp");
+  flag_vec.push_back("-w");
+  if (mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("-parallel");
-	flag_vec.push_back(mCompiler_link_path);
-	flag_vec.push_back(mCompiler_extraPreSrcFlags);
-	linker_flags[compiler_ICC] = flag_vec;	
+  flag_vec.push_back(mCompiler_link_path);
+  flag_vec.push_back(mCompiler_extraPreSrcFlags);
+  linker_flags[compiler_ICC] = flag_vec;
 
-	/* GCC */
-	flag_vec.clear();
-	flag_vec.push_back("gcc");
+  /* GCC */
+  flag_vec.clear();
+  flag_vec.push_back("gcc");
   flag_vec.push_back("-march=native");
-	flag_vec.push_back("-fopenmp");
-	flag_vec.push_back("-w");
-  if(mCompiler_enabled_options[AUTO_PARALLEL]);
-	flag_vec.push_back(mCompiler_link_path);
-	flag_vec.push_back(mCompiler_extraPreSrcFlags);
-	linker_flags[compiler_GCC] = flag_vec;	
-	
-	/* LLVM */
-	flag_vec.clear();
-	flag_vec.push_back("clang");
-  if(mCompiler_enabled_options[KNL])
-  	flag_vec.push_back("-march=knl");
+  flag_vec.push_back("-fopenmp");
+  flag_vec.push_back("-w");
+  if (mCompiler_enabled_options[AUTO_PARALLEL])
+    ;
+  flag_vec.push_back(mCompiler_link_path);
+  flag_vec.push_back(mCompiler_extraPreSrcFlags);
+  linker_flags[compiler_GCC] = flag_vec;
+
+  /* LLVM */
+  flag_vec.clear();
+  flag_vec.push_back("clang");
+  if (mCompiler_enabled_options[KNL])
+    flag_vec.push_back("-march=knl");
   else
     flag_vec.push_back("-march=native");
-	flag_vec.push_back("-fopenmp");
-	flag_vec.push_back("-w");
+  flag_vec.push_back("-fopenmp");
+  flag_vec.push_back("-w");
   /* For Polly Parallel */
-  if(mCompiler_enabled_options[AUTO_PARALLEL])
+  if (mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("-lgomp");
-	flag_vec.push_back(mCompiler_link_path);
-	flag_vec.push_back(mCompiler_extraPreSrcFlags);
-	linker_flags[compiler_LLVM] = flag_vec;	
+  flag_vec.push_back(mCompiler_link_path);
+  flag_vec.push_back(mCompiler_extraPreSrcFlags);
+  linker_flags[compiler_LLVM] = flag_vec;
 
-	/* PGI */
-	flag_vec.clear();
-	flag_vec.push_back("pgcc");
-  if(mCompiler_enabled_options[KNL])
-  	flag_vec.push_back("-tp=knl");
+  /* PGI */
+  flag_vec.clear();
+  flag_vec.push_back("pgcc");
+  if (mCompiler_enabled_options[KNL])
+    flag_vec.push_back("-tp=knl");
   else if (mCompiler_enabled_options[SKYLAKE])
     flag_vec.push_back("-tp=skylake");
-  else 
+  else
     flag_vec.push_back("-tp=haswell");
-	flag_vec.push_back("-Mllvm");
-	flag_vec.push_back("-mp");
-	flag_vec.push_back("-w");
-  if(mCompiler_enabled_options[AUTO_PARALLEL])
+  flag_vec.push_back("-Mllvm");
+  flag_vec.push_back("-mp");
+  flag_vec.push_back("-w");
+  if (mCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("-Mconcur");
-	flag_vec.push_back(mCompiler_link_path);
-	flag_vec.push_back(mCompiler_extraPreSrcFlags);
-	linker_flags[compiler_PGI] = flag_vec;	
+  flag_vec.push_back(mCompiler_link_path);
+  flag_vec.push_back(mCompiler_extraPreSrcFlags);
+  linker_flags[compiler_PGI] = flag_vec;
 }
 
 /* For flags that go at the end of the CL */
-void addPostLinkerFlags(){
-	vector<string> flag_vec;
-	flag_vec.clear();
-	flag_vec.push_back("-lm");
-	flag_vec.push_back(mCompiler_libraries);
-	flag_vec.push_back(mCompiler_extraPostSrcFlags);
-	post_linker_flags[compiler_ICC] = flag_vec;	
-	post_linker_flags[compiler_GCC] = flag_vec;	
-	post_linker_flags[compiler_LLVM] = flag_vec;	
-	post_linker_flags[compiler_PGI] = flag_vec;	
+void addPostLinkerFlags() {
+  vector<string> flag_vec;
+  flag_vec.clear();
+  flag_vec.push_back("-lm");
+  flag_vec.push_back(mCompiler_libraries);
+  flag_vec.push_back(mCompiler_extraPostSrcFlags);
+  post_linker_flags[compiler_ICC]  = flag_vec;
+  post_linker_flags[compiler_GCC]  = flag_vec;
+  post_linker_flags[compiler_LLVM] = flag_vec;
+  post_linker_flags[compiler_PGI]  = flag_vec;
 }
 
-string executeCommand( string cmd_str ){
-	// Since, pipe doesn't capture stderr, redirect it to stdout
-  cmd_str = cmd_str + " 2>&1";
+string executeCommand(string cmd_str) {
+  // Since, pipe doesn't capture stderr, redirect it to stdout
+  cmd_str                  = cmd_str + " 2>&1";
   const char *cmd_char_ptr = cmd_str.c_str();
   array<char, 128> buffer;
   string result;
-  if( mCompiler_enabled_options[MC_INFO] )
+  if (mCompiler_enabled_options[MC_INFO])
     cout << "Executing command:" << endl << cmd_str << endl;
   shared_ptr<FILE> pipe(popen(cmd_char_ptr, "r"), pclose);
 
-  if (!pipe) throw runtime_error("popen() while executing command failed!");
+  if (!pipe)
+    throw runtime_error("popen() while executing command failed!");
 
   while (!feof(pipe.get())) {
-      if (fgets(buffer.data(), 128, pipe.get()) != NULL)
-          result += buffer.data();
+    if (fgets(buffer.data(), 128, pipe.get()) != NULL)
+      result += buffer.data();
   }
-  if( mCompiler_enabled_options[MC_INFO] ){
-    if( !result.empty() ){
+  if (mCompiler_enabled_options[MC_INFO]) {
+    if (!result.empty()) {
       cout << "Result of the previous command:" << endl << result << endl;
-      //if( result.find("error") == string::npos )
+      // if( result.find("error") == string::npos )
       //	exit(EXIT_FAILURE);
     }
   }
   return result;
 }
 
-bool isDirExist( const string &path ){
-	struct stat info;
-	if( stat(path.c_str(), &info) != 0 )
-		return false;
-	else if( info.st_mode & S_IFDIR )
-		return true;
-	else 
-		return false; 
+bool isDirExist(const string &path) {
+  struct stat info;
+  if (stat(path.c_str(), &info) != 0)
+    return false;
+  else if (info.st_mode & S_IFDIR)
+    return true;
+  else
+    return false;
 }
 
-bool isFileExist( const string &filename ){
-  struct stat info;   
-  return (stat (filename.c_str(), &info) == 0); 
+bool isFileExist(const string &filename) {
+  struct stat info;
+  return (stat(filename.c_str(), &info) == 0);
 }
 
-bool isFileRecent( const string &filename ){
-  struct stat info; 
-  if(stat (filename.c_str(), &info) == 0){
+bool isFileRecent(const string &filename) {
+  struct stat info;
+  if (stat(filename.c_str(), &info) == 0) {
     auto mtime = info.st_mtime;
     /* Check if file was modified before 5 seconds */
-    if( time(0) - info.st_mtime > 5 )
+    if (time(0) - info.st_mtime > 5)
       return false;
     return true;
   }
   return false;
 }
 
-bool isEndingWith( string const &fullString, string const &ending ){
-    if( fullString.length() >= ending.length() )
-		return ( fullString.compare( fullString.length() - ending.length(), ending.length(), ending ) == 0 );
-    else 
-        return false;
+bool isEndingWith(string const &fullString, string const &ending) {
+  if (fullString.length() >= ending.length())
+    return (fullString.compare(fullString.length() - ending.length(),
+                               ending.length(), ending) == 0);
+  else
+    return false;
 }
 
-bool isEndingWithCompilerName( string const &fullString ){
-	if( 
-		fullString.compare( fullString.length() - icc_str.length(), icc_str.length(), icc_str ) == 0 ||
-		fullString.compare( fullString.length() - gcc_str.length(), gcc_str.length(), gcc_str ) == 0 ||
-		fullString.compare( fullString.length() - pgi_str.length(), pgi_str.length(), pgi_str ) == 0 ||
-		fullString.compare( fullString.length() - llvm_str.length(), llvm_str.length(), llvm_str ) == 0 ||
-		fullString.compare( fullString.length() - pluto_str.length(), pluto_str.length(), pluto_str ) == 0 ||
-		fullString.compare( fullString.length() - polly_str.length(), polly_str.length(), polly_str ) == 0 ){
-		return true;
-    } else {
-        return false;
-	}
+bool isEndingWithCompilerName(string const &fullString) {
+  if (fullString.compare(fullString.length() - icc_str.length(),
+                         icc_str.length(), icc_str) == 0 ||
+      fullString.compare(fullString.length() - gcc_str.length(),
+                         gcc_str.length(), gcc_str) == 0 ||
+      fullString.compare(fullString.length() - pgi_str.length(),
+                         pgi_str.length(), pgi_str) == 0 ||
+      fullString.compare(fullString.length() - llvm_str.length(),
+                         llvm_str.length(), llvm_str) == 0 ||
+      fullString.compare(fullString.length() - pluto_str.length(),
+                         pluto_str.length(), pluto_str) == 0 ||
+      fullString.compare(fullString.length() - polly_str.length(),
+                         polly_str.length(), polly_str) == 0) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
-double getVectorMean( vector<double>* dataVec ){
-	double sum = accumulate(dataVec->begin(), dataVec->end(), 0.0);
-	double mean = sum / dataVec->size();
-	return mean;
+double getVectorMean(vector<double> *dataVec) {
+  double sum  = accumulate(dataVec->begin(), dataVec->end(), 0.0);
+  double mean = sum / dataVec->size();
+  return mean;
 }
 
-double getVectorStdev( vector<double>* dataVec ){
-	double mean = getVectorMean( dataVec );
-	vector<double> diff(dataVec->size());
-	transform(dataVec->begin(), dataVec->end(), diff.begin(), [mean](double x) { return x - mean; });
-	double sq_sum = inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-	double stdev = sqrt(sq_sum / dataVec->size());
-	return stdev;
+double getVectorStdev(vector<double> *dataVec) {
+  double mean = getVectorMean(dataVec);
+  vector<double> diff(dataVec->size());
+  transform(dataVec->begin(), dataVec->end(), diff.begin(),
+            [mean](double x) { return x - mean; });
+  double sq_sum = inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
+  double stdev  = sqrt(sq_sum / dataVec->size());
+  return stdev;
 }
 
-double getVectorMedian( vector<double>* dataVec ){
-	sort( dataVec->begin(), dataVec->end() );
-	if ( dataVec->size()%2 == 0 ) 
-	{
-	  return ( dataVec->at( ( dataVec->size()/2 ) - 1) + dataVec->at(dataVec->size()/2) )/2.0;
-	} 
-	return dataVec->at( dataVec->size() / 2 );
+double getVectorMedian(vector<double> *dataVec) {
+  sort(dataVec->begin(), dataVec->end());
+  if (dataVec->size() % 2 == 0) {
+    return (dataVec->at((dataVec->size() / 2) - 1) +
+            dataVec->at(dataVec->size() / 2)) /
+           2.0;
+  }
+  return dataVec->at(dataVec->size() / 2);
 }
 
-void genRandomStr( string &str, const int len ){
-	static const char alphanum[] =
-		"0123456789"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz";
+void genRandomStr(string &str, const int len) {
+  static const char alphanum[] = "0123456789"
+                                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                 "abcdefghijklmnopqrstuvwxyz";
 
-    for( int i = 0; i < len; ++i ){
-        str += alphanum[ rand() % (sizeof(alphanum) - 1) ];
-    }
+  for (int i = 0; i < len; ++i) {
+    str += alphanum[rand() % (sizeof(alphanum) - 1)];
+  }
 }
 
-string getAbsolutePath( string const &fullString ){
-	string result = executeCommand("realpath " + fullString);
-	// To remove \n at the end
-	result.pop_back();
-	if( result.find("No such file or directory") == string::npos ){
-		return result;
-	} else {
-		cerr << "Driver: Incorrect Path -> " << fullString << endl;
-		exit(EXIT_FAILURE);
-	}
+string getAbsolutePath(string const &fullString) {
+  string result = executeCommand("realpath " + fullString);
+  // To remove \n at the end
+  result.pop_back();
+  if (result.find("No such file or directory") == string::npos) {
+    return result;
+  } else {
+    cerr << "Driver: Incorrect Path -> " << fullString << endl;
+    exit(EXIT_FAILURE);
+  }
 }

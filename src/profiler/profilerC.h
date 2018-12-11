@@ -2,48 +2,48 @@
 #define PROFILERC_H_
 
 #include "driver/common.h"
-#include <thread> 
+#include <thread>
 using namespace std;
 
-class ProfilerC { 
+class ProfilerC {
 private:
-	string data_folder_path;
-	set<string> files_to_link;
-	set<string> mCompiler_header_obj;
-	set<string> *pluto_files_to_compile = new set<string>();
-	string pluto_success_str = "[Pluto] Output written";	
-	set<string> *pluto_fail_hotspots = new set<string>();
+  string data_folder_path;
+  set<string> files_to_link;
+  set<string> mCompiler_header_obj;
+  set<string> *pluto_files_to_compile = new set<string>();
+  string pluto_success_str            = "[Pluto] Output written";
+  set<string> *pluto_fail_hotspots    = new set<string>();
 
-	void iccOptimize( bool asPlutoBackend ); 
-	void gccOptimize(); 
-	void llvmOptimize( bool withPollyPlugin ); 
-	void pgiOptimize();
-	void plutoOptimize(); 
-	void pollyOptimize(); 
+  void iccOptimize(bool asPlutoBackend);
+  void gccOptimize();
+  void llvmOptimize(bool withPollyPlugin);
+  void pgiOptimize();
+  void plutoOptimize();
+  void pollyOptimize();
 
-	void iccProfile( bool asPlutoBackend ); 
-	void gccProfile(); 
-	void llvmProfile( bool withPollyPlugin ); 
-	void pgiProfile();
-	void plutoProfile(); 
-	void pollyProfile(); 
+  void iccProfile(bool asPlutoBackend);
+  void gccProfile();
+  void llvmProfile(bool withPollyPlugin);
+  void pgiProfile();
+  void plutoProfile();
+  void pollyProfile();
 
 public:
-	ProfilerC();
-	string getDataFolderPath() { return mCompiler_data_folder_path; };
+  ProfilerC();
+  string getDataFolderPath() { return mCompiler_data_folder_path; };
 
-	// Phase 1
-  void Optimize( compiler_type curr_candidate, bool curr_cand_status );
-	void getHotspotFiles();
+  // Phase 1
+  void Optimize(compiler_type curr_candidate, bool curr_cand_status);
+  void getHotspotFiles();
 
-	// Phase 2
-	void Profile( const map< compiler_type, bool >::iterator &curr_candidate );
-	void independentProfile();
-	void getObjectFiles( const string& compiler_str ); 
-	/* getObjectFiles-Only needed if mCompiler started at Profiling phase */ 
-	void linkFiles();
-	void gatherProfilingData( const string& binary_file, compiler_type curr_compiler );
-	
+  // Phase 2
+  void Profile(const map<compiler_type, bool>::iterator &curr_candidate);
+  void independentProfile();
+  void getObjectFiles(const string &compiler_str);
+  /* getObjectFiles-Only needed if mCompiler started at Profiling phase */
+  void linkFiles();
+  void gatherProfilingData(const string &binary_file,
+                           compiler_type curr_compiler);
 };
 
 #endif

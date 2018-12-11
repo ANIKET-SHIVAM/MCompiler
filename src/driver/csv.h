@@ -4,18 +4,21 @@ using namespace std;
 
 typedef istream_iterator<string> CSVIterator;
 
-class CSV
-{
+class CSV {
 private:
   vector<string> row_data;
   const bool read_file;
+
 public:
   ofstream ofs;
   ifstream ifs;
   const string separator;
+
 public:
-  CSV( const string filename, const bool read = true, const string separator = "," ) : ofs(), separator(separator), read_file(read){
-    if(!read_file){
+  CSV(const string filename, const bool read = true,
+      const string separator = ",")
+      : ofs(), separator(separator), read_file(read) {
+    if (!read_file) {
       ofs.exceptions(ios::failbit | ios::badbit);
       ofs.open(filename, ios_base::app);
     } else {
@@ -24,95 +27,95 @@ public:
     }
   }
 
-  ~CSV(){
+  ~CSV() {
     flush();
     ofs.close();
   }
 
-  void flush(){ ofs.flush(); }
+  void flush() { ofs.flush(); }
 
-  void endrow(){ ofs << endl; }
+  void endrow() { ofs << endl; }
 
-  CSV& operator << ( CSV& (* val)(CSV&)){ return val(*this); }
+  CSV &operator<<(CSV &(*val)(CSV &)) { return val(*this); }
 
-  CSV& operator << (const char * val){
+  CSV &operator<<(const char *val) {
     ofs << '"' << val << '"' << separator;
     return *this;
   }
 
-  CSV& operator << (const string & val){
+  CSV &operator<<(const string &val) {
     ofs << '"' << val << '"' << separator;
     return *this;
   }
 
-  CSV& operator << (const vector<string>& vec_str){
+  CSV &operator<<(const vector<string> &vec_str) {
     vector<string>::const_iterator iter;
-    for( iter = vec_str.begin(); iter != vec_str.end(); iter++ ){
+    for (iter = vec_str.begin(); iter != vec_str.end(); iter++) {
       ofs << '"' << *iter << '"' << separator;
     }
-    ofs << endl; 
+    ofs << endl;
     return *this;
   }
-/*
-  template<typename T>
-  CSV& operator << (const T& val){
-        ofs << val << separator;
-        return *this;
-    }
-*/
-  string const& operator[](size_t index) const{ return row_data[index]; }
-  size_t size() const{ return row_data.size(); }
+  /*
+    template<typename T>
+    CSV& operator << (const T& val){
+          ofs << val << separator;
+          return *this;
+      }
+  */
+  string const &operator[](size_t index) const { return row_data[index]; }
+  size_t size() const { return row_data.size(); }
 
-  bool readNextRow(){
+  bool readNextRow() {
     string line;
     try {
-      getline( ifs, line );
-      if(ifs.eof())
+      getline(ifs, line);
+      if (ifs.eof())
         return false;
-    } catch (std::exception& e) {
+    } catch (std::exception &e) {
       return false;
-    } 
-//    stringstream lineStream;
-//    lineStream.str(line);
+    }
+    //    stringstream lineStream;
+    //    lineStream.str(line);
     string cell;
 
     row_data.clear();
-      
-//    char separator_char[1];
-//    strcpy( separator_char, separator.c_str() );
-    boost::split(row_data, line, [](char c){return c == ',';});
-//    while(getline(lineStream, cell, separator_char[0] )){
-//      row_data.push_back(cell);
-//    }
+
+    //    char separator_char[1];
+    //    strcpy( separator_char, separator.c_str() );
+    boost::split(row_data, line, [](char c) { return c == ','; });
+    //    while(getline(lineStream, cell, separator_char[0] )){
+    //      row_data.push_back(cell);
+    //    }
     // This checks for a trailing comma with no data after it.
-//    if (!lineStream && cell.empty()){
-      // If there was a trailing comma then add an empty element.
-//      row_data.push_back("");
-//    }
+    //    if (!lineStream && cell.empty()){
+    // If there was a trailing comma then add an empty element.
+    //      row_data.push_back("");
+    //    }
     return true;
   }
 
-  vector<string> getRowData(){ return row_data; };
-/*  
-  CSV& operator >> (vector<string>& vec_str){
-    readNextRow(ifs);
-    return *;
-  }   
-*/
+  vector<string> getRowData() { return row_data; };
+  /*
+    CSV& operator >> (vector<string>& vec_str){
+      readNextRow(ifs);
+      return *;
+    }
+  */
 };
 
-inline static CSV& endrow(CSV& file){
+inline static CSV &endrow(CSV &file) {
   file.endrow();
   return file;
 }
 
-inline static CSV& flush(CSV& file){
+inline static CSV &flush(CSV &file) {
   file.flush();
   return file;
 }
 
 /*
-class CSVIterator{   
+class CSVIterator{
 private:
   istream* m_str;
   CSV   m_row;
@@ -147,7 +150,7 @@ public:
   CSV const* operator->() const { return &m_row; }
 
   bool operator==(CSVIterator const& rhs){
-    return ( (this == &rhs) || ( (this->m_str == NULL) 
+    return ( (this == &rhs) || ( (this->m_str == NULL)
         && (rhs.m_str == NULL) ) );
   }
   bool operator!=(CSVIterator const& rhs){

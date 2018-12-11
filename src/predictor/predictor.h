@@ -9,14 +9,11 @@ using namespace std;
 using namespace cv;
 using namespace cv::ml;
 
-class Predictor { 
+class Predictor {
 private:
-
-
 public:
   Predictor();
   void trainModel();
   void predictCandidate();
-
 };
 #endif
