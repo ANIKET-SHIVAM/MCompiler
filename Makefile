@@ -3,7 +3,7 @@ ifeq ($(OS), centos)
 	FLAGS = -std=c++11 -g -DOS_CENTOS
 
 	ROSE_PATH = ${CURDIR}/tools/rose_build
-	FLAGS += -DROSE_PATH = $(ROSE_PATH)
+	FLAGS += -DROSE_PATH=$(ROSE_PATH)
 	BOOST_PATH = ${CURDIR}/tools/boost_build
 	ROSE_INCLUDE = -I${ROSE_PATH}/include/ -I${BOOST_PATH}/include/
 	ROSE_LIB = -lROSE_DLL

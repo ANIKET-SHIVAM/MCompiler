@@ -1,7 +1,9 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#ifdef OS_CENTOS
 #include <boost/preprocessor/stringize.hpp>
+#endif
 #include <cctype>
 #include <cstdio>
 #include <ctime>
