@@ -653,8 +653,10 @@ ProfilerC::ProfilerC(){
       }
     }
   }
-  if( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
-      mCompiler_mode == mode_COMPLEX ){
+  /* If making prediction, then skip timed profile runs */
+  if( ( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
+      mCompiler_mode == mode_COMPLEX ) && 
+      !mCompiler_enabled_options[PREDICT] ){
     /* Rotate through compiler candidates for profile */
     map< compiler_type, bool >::iterator iter;
     for( iter = compiler_candidate.begin(); iter != compiler_candidate.end(); iter++ ){

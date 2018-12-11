@@ -132,14 +132,14 @@ int main()
 
     //------------------------- 6. Show support vectors --------------------------------------------
     //! [show_vectors]
-    thick = 2;
-    Mat sv = svm->getUncompressedSupportVectors();
-
-    for (int i = 0; i < sv.rows; i++)
-    {
-        const float* v = sv.ptr<float>(i);
-        circle(I,  Point( (int) v[0], (int) v[1]), 6, Scalar(128, 128, 128), thick);
-    }
+//    thick = 2;
+//    Mat sv = svm->getUncompressedSupportVectors();
+//
+//    for (int i = 0; i < sv.rows; i++)
+//    {
+//        const float* v = sv.ptr<float>(i);
+//        circle(I,  Point( (int) v[0], (int) v[1]), 6, Scalar(128, 128, 128), thick);
+//    }
     //! [show_vectors]
 
     imwrite("result.png", I);                      // save the Image

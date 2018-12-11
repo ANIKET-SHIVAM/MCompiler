@@ -9,3 +9,6 @@ Building Tools:
 GCC/G++ version-4.9 and 5.4
 Recommended ROSE installation method: GNU autotools.
 If CUDA is not installed, add -Denable-cuda:BOOL=off in ROSE CMake build.
+
+Source:
+Formatting Style: clang-format -style="{BasedOnStyle: llvm, AlignConsecutiveAssignments: true}" -i <file>

@@ -339,8 +339,8 @@ int main( int argc, char* argv[] ){
 		}
 		driver->initiateProfiler();
 	}
-
-	if( mCompiler_enabled_options[SYNTHESIZE] && 
+  /* If making prediction, then move Synthesis to the end of the pipeline */
+	if( mCompiler_enabled_options[SYNTHESIZE] && !mCompiler_enabled_options[PREDICT] && 
     ( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT || mCompiler_mode == mode_COMPLEX )){
 		if( mCompiler_data_folder_path.empty() ){
 			cerr << "Driver: Couldn't find the folder to synthesize hotspots" << endl;	
@@ -348,7 +348,7 @@ int main( int argc, char* argv[] ){
 		}	
 		driver->initiateSynthesizer();
 	}
-
+  /* Perform counter profiling after Synthesis, if not making prediction */
 	if( mCompiler_enabled_options[ADV_PROFILE] ){
     driver->initiateAdvProfiler();
   }
@@ -356,6 +356,15 @@ int main( int argc, char* argv[] ){
 	if( mCompiler_enabled_options[PREDICT] ){
     driver->initiatePredictor();
   }
+
+	if( mCompiler_enabled_options[SYNTHESIZE] && mCompiler_enabled_options[PREDICT] && 
+    ( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT || mCompiler_mode == mode_COMPLEX )){
+		if( mCompiler_data_folder_path.empty() ){
+			cerr << "Driver: Couldn't find the folder to synthesize hotspots" << endl;	
+			exit(EXIT_FAILURE);
+		}	
+		driver->initiateSynthesizer();
+	}
 
 	if( mCompiler_enabled_options[TEST] && 
     ( mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT || mCompiler_mode == mode_COMPLEX )){

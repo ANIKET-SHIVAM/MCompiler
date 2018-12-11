@@ -3,9 +3,6 @@
 
 #include "driver/common.h"
 #include <opencv2/core.hpp>
-//#include <opencv2/imgproc.hpp>
-//#include "opencv2/imgcodecs.hpp"
-//#include <opencv2/highgui.hpp>
 #include <opencv2/ml.hpp>
 
 using namespace std;
@@ -18,7 +15,8 @@ private:
 
 public:
   Predictor();
-
+  void trainModel();
+  void predictCandidate();
 
 };
 #endif

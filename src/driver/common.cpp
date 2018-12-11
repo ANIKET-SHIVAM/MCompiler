@@ -50,6 +50,7 @@ string baseline_compiler_str;
 /*TODO: Get from LD_LIBRARY_PATH */
 string pgi_lib_path = "/opt/pgi/linux86-64-llvm/2018/lib/";
 string vtune_path   = "/opt/intel/vtune_amplifier/bin64/";
+string mCompiler_trained_model_path = "mC_trained_model.yml";
 #ifdef OS_CENTOS
 string rose_path    = "/big_mount/mCompiler/tools/rose_build/";
 #endif

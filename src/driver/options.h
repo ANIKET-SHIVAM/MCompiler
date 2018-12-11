@@ -34,35 +34,36 @@ struct Arg: public option::Arg{
 const option::Descriptor usage[] =
 {
 	{UNKNOWN            , 0, ""  , ""              ,Arg::None     , "Usage:  mCompiler <input_files> [options] [-o output]\nOptions:" },
-	{HELP               , 0, "h" , "help"          ,Arg::None     , "    -h,--help            Print usage" },
-	{EXTRACT            , 0, ""  , "noextract"     ,Arg::None     , "    --[no]extract        Extract hotspots" },
-	{PROFILE            , 0, ""  , "noprofile"     ,Arg::None     , "    --[no]profile        Profile extracted hotspots" },
-	{SYNTHESIZE         , 0, ""  , "nosynthesize"  ,Arg::None     , "    --[no]synthesize     Combine best performing hotspots to generate binary" },
-	{ADV_PROFILE        , 0, ""  , "adv-profile"   ,Arg::None     , "    --adv-profile        Advanced Profiling" },
-	{PREDICT            , 0, ""  , "predict"       ,Arg::None     , "    --predict            Predict candidate using ML" },
-	{TEST               , 0, ""  , "test"          ,Arg::None     , "    --test               Test performance compared to other compilers"
-																							                                              " optimized code" },
-	{PARALLEL           , 0, ""  , "parallel"      ,Arg::None     , "    --parallel           Generate multi-threaded code based on OpenMP directives\n"
-																							                    "                         Default: Serial code generation (with vectorization)" },
-	{AUTO_PARALLEL      , 0, ""  , "auto-parallel" ,Arg::None     , "    --auto-parallel      Auto-parallelize the hotspots" },
-	{PREFETCH           , 0, ""  , "prefetch"      ,Arg::None     , "    --prefetch           Enable software data prefetching" },
-	{PROFILE_COUNT      , 0, ""  , "profile-runs"  ,Arg::Numeric  , "    --profile-runs=<num> Number of time profiler should run the program to"
-																							                                              " collect data. Default: 3" },
-	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>       Input to the program"
-																							                                              " Needed to generate profiling information" },
-	{KNL                , 0, ""  , "knl"           ,Arg::None     , "    --knl                Compile for Intel Knights Landing processor. Default: Haswell" },
-	{SKYLAKE            , 0, ""  , "skylake"       ,Arg::None     , "    --skylake            Compile for Intel Skylake processor. Default: Haswell" },
-	{C99                , 0, ""  , "c99"           ,Arg::None     , "    --c99                Conforms to ISO C99 standards. Default: C11" },
-	{JOBS               , 0, "j" , "jobs"          ,Arg::None     , "    -j                   Compile hotspots in parallel" },
-	{COMPILE_TO_OBJECT  , 0, "c" , "compile"       ,Arg::None     , "    -c[<arg>]            Compile to object file" },
-	{OUTPUT_BINARY      , 0, "o" , "output"        ,Arg::Required , "    -o[<arg>]            Output object/binary name" },
-	{INCLUDE_PATH       , 0, "I" , "include"       ,Arg::Required , "    -I[<arg>]            Directory to include file search path" },
-	{LINKER_PATH        , 0, "L" , "link"          ,Arg::Required , "    -L[<arg>]            Directory to search for libraries" },
-	{LIBS_PATH          , 0, "l" , "libs"          ,Arg::Required , "    -l[<arg>]            Instruct the linker to link in the -l<string> library" },
-	{MACRO_DEFS         , 0, "D" , "DEFS"          ,Arg::Required , "    -D[<arg>]            Macro definition" },
-	{MC_DEBUG           , 0, ""  , "debug"         ,Arg::None     , "    --debug              Output mCompiler workflow" },
-	{MC_INFO            , 0, ""  , "info"          ,Arg::None     , "    --info               Print information for mCompiler workflow" },
-	{NOVEC              , 0, ""  , "novec"         ,Arg::None     , "    --novec              Disable vectorizer" },
+	{HELP               , 0, "h" , "help"          ,Arg::None     , "    -h,--help                Print usage" },
+	{EXTRACT            , 0, ""  , "noextract"     ,Arg::None     , "    --[no]extract            Extract hotspots" },
+	{PROFILE            , 0, ""  , "noprofile"     ,Arg::None     , "    --[no]profile            Profile extracted hotspots" },
+	{SYNTHESIZE         , 0, ""  , "nosynthesize"  ,Arg::None     , "    --[no]synthesize         Combine best performing hotspots to generate binary" },
+	{ADV_PROFILE        , 0, ""  , "adv-profile"   ,Arg::None     , "    --adv-profile            Advanced Profiling" },
+	{PREDICT            , 0, ""  , "predict"       ,Arg::None     , "    --predict                Predict candidate using ML" },
+	{TEST               , 0, ""  , "test"          ,Arg::None     , "    --test                   Test performance compared to other compilers"
+																							                                                  " optimized code" },
+	{PARALLEL           , 0, ""  , "parallel"      ,Arg::None     , "    --parallel               Generate multi-threaded code based on OpenMP directives\n"
+																							                    "                             Default: Serial code generation (with vectorization)" },
+	{AUTO_PARALLEL      , 0, ""  , "auto-parallel" ,Arg::None     , "    --auto-parallel          Auto-parallelize the hotspots" },
+	{PREFETCH           , 0, ""  , "prefetch"      ,Arg::None     , "    --prefetch               Enable software data prefetching" },
+	{PROFILE_COUNT      , 0, ""  , "profile-runs"  ,Arg::Numeric  , "    --profile-runs=<num>     Number of time profiler should run the program to"
+																							                                                  " collect data. Default: 3" },
+	{INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>           Input to the program"
+																							                                                  " Needed to generate profiling information" },
+	{FILE_PREDICT       , 0, ""  , "predict-model" ,Arg::Required , "    --predict-model=<args>   Path to the trained ML model. Default: mC_trained_model.yml" },
+	{KNL                , 0, ""  , "knl"           ,Arg::None     , "    --knl                    Compile for Intel Knights Landing processor. Default: Haswell" },
+	{SKYLAKE            , 0, ""  , "skylake"       ,Arg::None     , "    --skylake                Compile for Intel Skylake processor. Default: Haswell" },
+	{C99                , 0, ""  , "c99"           ,Arg::None     , "    --c99                    Conforms to ISO C99 standards. Default: C11" },
+	{JOBS               , 0, "j" , "jobs"          ,Arg::None     , "    -j                       Compile hotspots in parallel" },
+	{COMPILE_TO_OBJECT  , 0, "c" , "compile"       ,Arg::None     , "    -c[<arg>]                Compile to object file" },
+	{OUTPUT_BINARY      , 0, "o" , "output"        ,Arg::Required , "    -o[<arg>]                Output object/binary name" },
+	{INCLUDE_PATH       , 0, "I" , "include"       ,Arg::Required , "    -I[<arg>]                Directory to include file search path" },
+	{LINKER_PATH        , 0, "L" , "link"          ,Arg::Required , "    -L[<arg>]                Directory to search for libraries" },
+	{LIBS_PATH          , 0, "l" , "libs"          ,Arg::Required , "    -l[<arg>]                Instruct the linker to link in the -l<string> library" },
+	{MACRO_DEFS         , 0, "D" , "DEFS"          ,Arg::Required , "    -D[<arg>]                Macro definition" },
+	{MC_DEBUG           , 0, ""  , "debug"         ,Arg::None     , "    --debug                  Output mCompiler workflow" },
+	{MC_INFO            , 0, ""  , "info"          ,Arg::None     , "    --info                   Print information for mCompiler workflow" },
+	{NOVEC              , 0, ""  , "novec"         ,Arg::None     , "    --novec                  Disable vectorizer" },
 	{0,0,0,0,0,0}
 };
 
@@ -157,6 +158,9 @@ void set_mCompiler_options( int argc, char* argv[] ){
 			break;
 		case INPUT_PROFILE:
 			mCompiler_profiler_input = opt.arg;
+			break;
+		case FILE_PREDICT:
+			mCompiler_trained_model_path = opt.arg;
 			break;
 		case KNL:
 			mCompiler_enabled_options[KNL] = true;

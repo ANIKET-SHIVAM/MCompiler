@@ -46,7 +46,7 @@ typedef enum{
 }compiler_mode;
 
 typedef enum{ EXTRACT, PROFILE, SYNTHESIZE, ADV_PROFILE, PREDICT, TEST, REPORT, PARALLEL, AUTO_PARALLEL, PREFETCH, COMPILE_TO_OBJECT,
-			  PROFILE_COUNT, INPUT_PROFILE, OUTPUT_BINARY, OUTPUT_OBJECT, KNL, SKYLAKE, C99,
+			  PROFILE_COUNT, INPUT_PROFILE, FILE_PREDICT, OUTPUT_BINARY, OUTPUT_OBJECT, KNL, SKYLAKE, C99,
 			  JOBS, INCLUDE_PATH, LINKER_PATH, LIBS_PATH, MACRO_DEFS, MC_DEBUG, MC_INFO,
 			  HELP, UNKNOWN,
         NOVEC 
@@ -89,6 +89,7 @@ extern string mCompiler_data_folder_path;
 extern string mCompiler_curr_dir_path;
 extern string pgi_lib_path;
 extern string vtune_path;
+extern string mCompiler_trained_model_path;
 #ifdef OS_CENTOS
 extern string rose_path;
 #endif
