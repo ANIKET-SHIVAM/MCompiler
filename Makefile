@@ -3,6 +3,7 @@ ifeq ($(OS), centos)
 	FLAGS = -std=c++11 -g -DOS_CENTOS
 
 	ROSE_PATH = ${CURDIR}/tools/rose_build
+	FLAGS += -DROSE_PATH = $(ROSE_PATH)
 	BOOST_PATH = ${CURDIR}/tools/boost_build
 	ROSE_INCLUDE = -I${ROSE_PATH}/include/ -I${BOOST_PATH}/include/
 	ROSE_LIB = -lROSE_DLL
@@ -39,20 +40,21 @@ MC_DATA_FOLDER    = /tmp/mCompiler_data
 DIRS := $(shell mkdir -p ${CURDIR}/$(OBJS) &&  mkdir -p ${CURDIR}/$(BIN))
   
 all: extractor profiler synthesizer predictor tester driver
-	
+
 ##### EXTRACTOR #####
 EXTRACTOR_COMPILE_FLAGS = -I${CURDIR}/src $(ROSE_INCLUDE)
 EXTRACTOR_LD_FLAGS = -L${ROSE_PATH}/lib \
-	-L${BOOST_PATH}/lib $(ROSE_LIB) -lboost_iostreams -lboost_system
+                     -L${BOOST_PATH}/lib $(ROSE_LIB) \
+                     -lboost_iostreams -lboost_system
 
 OBJ_EXTRACTOR = $(OBJS)/extractor.o
 SRC_EXTRACTOR  = $(EXTRACTOR_PATH)/extractor.cpp 
 SRC_RUN_EXTRACTOR  = $(EXTRACTOR_PATH)/run_extractor.cpp 
 
 extractor: $(OBJ_EXTRACTOR)
-#	$(CC) $(FLAGS) $(SRC_RUN_EXTRACTOR) $(OBJ_EXTRACTOR) $(OBJ_COMMON) \
-	$(EXTRACTOR_LD_FLAGS) \
-	$(EXTRACTOR_COMPILE_FLAGS) -o $(BIN)/$@
+# $(CC) $(FLAGS) $(SRC_RUN_EXTRACTOR) $(OBJ_EXTRACTOR) $(OBJ_COMMON) \
+  $(EXTRACTOR_LD_FLAGS) \
+  $(EXTRACTOR_COMPILE_FLAGS) -o $(BIN)/$@
 
 $(OBJ_EXTRACTOR): $(SRC_EXTRACTOR)
 	$(CC) $(FLAGS) $(EXTRACTOR_COMPILE_FLAGS) $(SRC_EXTRACTOR) -c -o $@
@@ -60,8 +62,8 @@ $(OBJ_EXTRACTOR): $(SRC_EXTRACTOR)
 ##### PROFILER #####
 
 PROFILER_COMPILE_FLAGS = -I${CURDIR}/src \
-	$(EXTRACTOR_COMPILE_FLAGS) \
-	-pthread
+                         $(EXTRACTOR_COMPILE_FLAGS) \
+                         -pthread
 
 OBJ_PROFILER = $(OBJS)/profilerC.o
 SRC_PROFILER = $(PROFILER_PATH)/profilerC.cpp 
@@ -89,7 +91,7 @@ just_adv_profiler: $(SRC_ADV_PROFILER)
 ##### SYNTHESIZER #####
 
 SYNTHESIZER_COMPILE_FLAGS = -I${CURDIR}/src \
-	$(EXTRACTOR_COMPILE_FLAGS)
+                            $(EXTRACTOR_COMPILE_FLAGS)
 SYNTHESIZER_LD_FLAGS = 
 
 OBJ_SYNTHESIZER = $(OBJS)/synthesizerC.o
@@ -108,8 +110,8 @@ just_synthesizer: $(SRC_SYNTHESIZER)
 ##### PREDICTOR #####
 
 PREDICTOR_COMPILE_FLAGS = -I${CURDIR}/src \
-	$(EXTRACTOR_COMPILE_FLAGS) \
-	$(OPENCV_INCLUDE)
+                          $(EXTRACTOR_COMPILE_FLAGS) \
+                          $(OPENCV_INCLUDE)
   
 PREDICTOR_LD_FLAGS = -L$(OPENCV_PATH)/lib $(OPENCV_LIB) 
 

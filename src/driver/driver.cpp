@@ -80,7 +80,7 @@ void Driver::checkCompilerCandidates() {
 }
 
 bool Driver::checkAdvProfileCandidate() {
-  string result_compiler_found = executeCommand(vtune_path + "amplxe-cl");
+  string result_compiler_found = executeCommand("amplxe-cl");
   if (result_compiler_found.find("not found") != string::npos) {
     cerr << "Intel Vtune not found" << endl;
     cerr << "Driver: Check unsuccesful for the Advanced Profiling Tool" << endl;
@@ -118,6 +118,26 @@ void Driver::setMCompilerMode() {
     cout << "Driver: Starting in complex mode -> Both object and source files "
             "provided"
          << endl;
+  }
+}
+
+void Driver::getPathsToUtils() {
+  char *env_PATH      = getenv("PATH");
+  char *env_LDLIBPATH = getenv("LD_LIBRARY_PATH");
+  /* Search for PGI lib path */
+  if (compiler_candidate[compiler_PGI] == true) {
+    char *token = strtok(env_LDLIBPATH, ":");
+    string tmppath;
+    while (token != NULL) {
+      tmppath = token;
+      if (tmppath.find("pgi") != string::npos &&
+          tmppath.find("lib") != string::npos) {
+        pgi_lib_path = tmppath;
+        cout << "PGI lib path: " << pgi_lib_path << endl;
+        break;
+      }
+      token = strtok(NULL, ":");
+    }
   }
 }
 
@@ -330,6 +350,7 @@ int main(int argc, char *argv[]) {
   driver->fetchProfilerInput();
   driver->checkCompilerCandidates();
   driver->setMCompilerMode();
+  driver->getPathsToUtils();
 
   if (mCompiler_enabled_options[ADV_PROFILE]) {
     if (!driver->checkAdvProfileCandidate()) {

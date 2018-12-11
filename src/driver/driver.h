@@ -39,6 +39,7 @@ public:
   void checkCompilerCandidates();
   bool checkAdvProfileCandidate();
   void setMCompilerMode();
+  void getPathsToUtils();
   void createMCompilerDataFolder();
   void removeMCompilerDataFolder();
   void generateMCompilerHeaderFile();

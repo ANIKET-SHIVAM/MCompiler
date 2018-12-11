@@ -16,7 +16,7 @@ int main() {
 #pragma omp for
     for (i = 0; i < 100; i++) {
       printf("Threads: %d\n", omp_get_thread_num());
-      for (k = 0; k < 1000000; k++)
+      for (k = 0; k < 1000; k++)
         sum1 += i + k + pow(i, k);
 #pragma omp critical
       { glob++; }

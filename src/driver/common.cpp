@@ -46,12 +46,15 @@ map<compiler_type, string> compiler_keyword = {
 /* Set baseline compiler to come from CL */
 string baseline_compiler_str;
 
-/*TODO: Get from LD_LIBRARY_PATH */
-string pgi_lib_path                 = "/opt/pgi/linux86-64-llvm/2018/lib/";
-string vtune_path                   = "/opt/intel/vtune_amplifier/bin64/";
+string pgi_lib_path;
+string vtune_path;
 string mCompiler_trained_model_path = "mC_trained_model.yml";
 #ifdef OS_CENTOS
-string rose_path = "/big_mount/mCompiler/tools/rose_build/";
+#ifdef ROSE_PATH
+string rose_path = BOOST_PP_STRINGIZE(ROSE_PATH);
+#else
+string rose_path = "~/mCompiler/tools/rose_build";
+#endif
 #endif
 
 /* Mode in which mCompiler is working */

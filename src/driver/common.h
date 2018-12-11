@@ -1,6 +1,7 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#include <boost/preprocessor/stringize.hpp>
 #include <cctype>
 #include <cstdio>
 #include <ctime>

@@ -123,7 +123,7 @@ void AdvProfiler::addProfileToolOptions() {
   if (counters.empty())
     cerr << "Vtune Counter list empty" << endl;
 
-  toolCL_collect.push_back(vtune_path + "amplxe-cl" + space_str);
+  toolCL_collect.push_back("amplxe-cl" + space_str);
   toolCL_collect.push_back("-collect-with runsa" + space_str);
   toolCL_collect.push_back("-knob analyze-openmp=true" + space_str);
   toolCL_collect.push_back("-knob event-config=");
@@ -164,7 +164,7 @@ void AdvProfiler::runProfileTool() {
 }
 
 void AdvProfiler::gatherProfileData() {
-  toolCL_report.push_back(vtune_path + "amplxe-cl" + space_str);
+  toolCL_report.push_back("amplxe-cl" + space_str);
   toolCL_report.push_back("-R hotspots" + space_str);
   toolCL_report.push_back("-r" + space_str);
   toolCL_report.push_back(getProfDir() + space_str);
