@@ -61,8 +61,7 @@ $(OBJ_EXTRACTOR): $(SRC_EXTRACTOR)
 
 ##### PROFILER #####
 
-PROFILER_COMPILE_FLAGS = -I${CURDIR}/src \
-                         $(EXTRACTOR_COMPILE_FLAGS) \
+PROFILER_COMPILE_FLAGS = $(EXTRACTOR_COMPILE_FLAGS) \
                          -pthread
 
 OBJ_PROFILER = $(OBJS)/profilerC.o
@@ -90,8 +89,7 @@ just_adv_profiler: $(SRC_ADV_PROFILER)
 
 ##### SYNTHESIZER #####
 
-SYNTHESIZER_COMPILE_FLAGS = -I${CURDIR}/src \
-                            $(EXTRACTOR_COMPILE_FLAGS)
+SYNTHESIZER_COMPILE_FLAGS = $(EXTRACTOR_COMPILE_FLAGS)
 SYNTHESIZER_LD_FLAGS = 
 
 OBJ_SYNTHESIZER = $(OBJS)/synthesizerC.o
@@ -109,8 +107,7 @@ just_synthesizer: $(SRC_SYNTHESIZER)
 
 ##### PREDICTOR #####
 
-PREDICTOR_COMPILE_FLAGS = -I${CURDIR}/src \
-                          $(EXTRACTOR_COMPILE_FLAGS) \
+PREDICTOR_COMPILE_FLAGS = $(EXTRACTOR_COMPILE_FLAGS) \
                           $(OPENCV_INCLUDE)
   
 PREDICTOR_LD_FLAGS = -L$(OPENCV_PATH)/lib $(OPENCV_LIB) 
@@ -127,6 +124,10 @@ just_predictor: $(SRC_PREDICTOR)
 	rm -f $(OBJ_PREDICTOR)
 	$(CC) $(FLAGS) $(PREDICTOR_COMPILE_FLAGS) $(SRC_PREDICTOR) -c -o $(OBJ_PREDICTOR)
 	$(CC) $(OBJ_DRIVER) $(OBJ_EXTRACTOR)  $(OBJ_PROFILER) $(OBJ_SYNTHESIZER) $(OBJ_PREDICTOR) $(OBJ_COMMON) $(DRIVER_LD_FLAGS) -o $(BIN)/mCompiler
+
+SRC_TRAINER = $(PREDICTOR_PATH)/trainer_standalone.cpp
+trainer_standalone:
+	$(CC) $(FLAGS) $(PREDICTOR_COMPILE_FLAGS) $(SRC_TRAINER) $(PREDICTOR_LD_FLAGS) -o $(BIN)/$@
 
 ##### TESTER #####
 OBJ_TESTER = $(OBJS)/tester.o
