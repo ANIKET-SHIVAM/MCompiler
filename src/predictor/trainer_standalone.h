@@ -29,5 +29,3 @@ int instances_count;
 
 Mat trainingDataMat;
 Mat labelMat;
-
-vector<string> features_name_vector;

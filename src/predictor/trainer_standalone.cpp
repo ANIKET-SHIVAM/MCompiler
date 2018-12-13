@@ -11,10 +11,13 @@ void readData() {
   else
     exit(EXIT_FAILURE);
   feature_vector_size = header_row.size();
+
+  ofstream feature_file(trained_model_file + "_features.txt");
+
   vector<string>::iterator iter;
   for (iter = header_row.begin(); iter != header_row.end(); iter++) {
     if ((*iter).compare("Function") != 0 && (*iter).compare("Compiler")) {
-      features_name_vector.push_back(*iter);
+      feature_file << *iter << '\n';
       cout << "Feature: " << *iter << endl;
     }
   }
