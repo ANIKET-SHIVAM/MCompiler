@@ -142,6 +142,8 @@ extern vector<vector<string>> adv_profile_counters;
 extern vector<string> adv_profile_labels;
 /* Extractor to Predictor */
 extern set<string> hotspot_extractor_to_predictor_set;
+/* Predictor to Synthesizer */
+extern map<string, compiler_type> predicted_compiler;
 
 extern int mCompiler_profiler_runs;
 extern string mCompiler_profile_data_csv;

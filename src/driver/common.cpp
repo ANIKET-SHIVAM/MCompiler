@@ -95,6 +95,8 @@ vector<vector<string>> adv_profile_counters;
 vector<string> adv_profile_labels;
 /* Extractor to Predictor */
 set<string> hotspot_extractor_to_predictor_set;
+/* Predictor to Synthesizer */
+map<string, compiler_type> predicted_compiler;
 
 int mCompiler_profiler_runs =
     3; // Default: If CL provided then replaced with that number

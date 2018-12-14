@@ -393,7 +393,13 @@ int main(int argc, char *argv[]) {
     driver->initiateAdvProfiler();
   }
 
-  if (mCompiler_enabled_options[PREDICT]) {
+  if (mCompiler_enabled_options[PREDICT] &&
+      (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
+       mCompiler_mode == mode_COMPLEX)) {
+    if (mCompiler_data_folder_path.empty()) {
+      cerr << "Driver: Couldn't find the folder to predict for hotspots" << endl;
+      exit(EXIT_FAILURE);
+    }
     driver->initiatePredictor();
   }
 
