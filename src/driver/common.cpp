@@ -49,6 +49,7 @@ string baseline_compiler_str;
 string pgi_lib_path;
 string vtune_path;
 string mCompiler_trained_model_path = "mC_trained_model.yml";
+string mCompiler_trained_model_features_path = mCompiler_trained_model_path + "_features.txt";
 #ifdef OS_CENTOS
 #ifdef ROSE_PATH
 string rose_path = BOOST_PP_STRINGIZE(ROSE_PATH);
@@ -89,6 +90,11 @@ set<string> files_to_compile;
 set<string> files_skip_pluto;
 /* Synthesizer to Advanced Profiler */
 map<string, string> hotspot_best_compiler_map;
+/* Adv-Profiler to Predictor */
+vector<vector<string>> adv_profile_counters;
+vector<string> adv_profile_labels;
+/* Extractor to Predictor */
+set<string> hotspot_extractor_to_predictor_set;
 
 int mCompiler_profiler_runs =
     3; // Default: If CL provided then replaced with that number

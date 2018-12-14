@@ -942,6 +942,9 @@ void Extractor::extractLoops(SgNode *astNode) {
     files_skip_pluto.insert(loop_no_profile_file_name);
   }
 
+  if (mCompiler_enabled_options[PREDICT])
+    hotspot_extractor_to_predictor_set.insert(getLoopName(astNode));
+
   // Create loop object
   LoopInfo curr_loop(astNode, loop, getLoopName(astNode), *this);
 

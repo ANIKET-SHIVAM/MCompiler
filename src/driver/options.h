@@ -134,6 +134,7 @@ void set_mCompiler_options(int argc, char *argv[]) {
       break;
     case PREDICT:
       mCompiler_enabled_options[PREDICT] = true;
+      mCompiler_enabled_options[ADV_PROFILE] = true;
       break;
     case TEST:
       mCompiler_enabled_options[TEST] = true;

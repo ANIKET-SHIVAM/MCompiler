@@ -181,7 +181,7 @@ void AdvProfiler::gatherProfileData() {
 
 void AdvProfiler::sanitizeProfileData() {
   bool is_reading_file = true;
-  CSV csv_file_profiler(getProfDir() + ".csv");
+  CSV csv_file_profiler(getProfDir() + ".csv", is_reading_file);
 
   is_reading_file = false;
   CSV csv_file_counters(mCompiler_curr_dir_path +
@@ -214,6 +214,40 @@ void AdvProfiler::sanitizeProfileData() {
   }     // while
 }
 
+void AdvProfiler::gatherPredictionData() {
+  bool is_reading_file = true;
+  CSV csv_file_profiler(getProfDir() + ".csv", is_reading_file);
+
+  vector<string> row_data;
+  csv_file_profiler.readNextRow();
+  row_data = csv_file_profiler.getRowData();
+  vector<string>::iterator iter = row_data.begin();
+  int col = 0;
+  for (;iter != row_data.end(); iter++) {
+    adv_profile_labels.push_back(*iter);
+    col++;
+  }
+  int row = 0;
+  while (csv_file_profiler.readNextRow())
+    row++;
+
+  adv_profile_counters = vector<vector<string>>(row, vector<string>(col));
+
+  csv_file_profiler.~CSV();
+  new(&csv_file_profiler) CSV(getProfDir() + ".csv", is_reading_file);
+  csv_file_profiler.readNextRow(); // skip first row of labels
+  /* Save all profiled functions into a vector of vector */
+  row = 0;
+  while (csv_file_profiler.readNextRow()) {
+    row_data = csv_file_profiler.getRowData();
+    iter = row_data.begin();
+    for (;iter != row_data.end(); iter++) {
+      (adv_profile_counters[row]).push_back(*iter);
+    }
+    row++;
+  } // while
+}
+
 AdvProfiler::AdvProfiler() {
   cout << "Advanced Profiling" << endl;
   if (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_TO_OBJECT ||
@@ -228,6 +262,11 @@ AdvProfiler::AdvProfiler() {
     addProfileToolOptions();
     runProfileTool();
     gatherProfileData();
-    sanitizeProfileData();
-  }
-}
+    /* If making prediction, collect the collected counters/ML features. */
+    if (mCompiler_enabled_options[PREDICT]) {
+      gatherPredictionData();
+    } else {
+      sanitizeProfileData();
+    } // else
+  } // if
+} // Constructor

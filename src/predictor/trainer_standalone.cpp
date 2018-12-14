@@ -21,6 +21,7 @@ void readData() {
       cout << "Feature: " << *iter << endl;
     }
   }
+  feature_file.close();
 
   /* Read instances */
   vector<string> row_data;

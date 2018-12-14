@@ -11,9 +11,17 @@ using namespace cv::ml;
 
 class Predictor {
 private:
+  int feature_vector_size;
+
+  vector<string> feature_labels;
+
+  Mat instanceMat;
+  Ptr<RTrees> rfmodel_trained;
+
 public:
   Predictor();
-  void trainModel();
+  void loadModel();
+  void filterFeatures();
   void predictCandidate();
 };
 #endif
