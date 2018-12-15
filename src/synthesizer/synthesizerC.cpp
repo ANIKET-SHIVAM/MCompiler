@@ -83,6 +83,30 @@ void SynthesizerC::analyzeHotspotProfileData() {
   */
 }
 
+void SynthesizerC::selectPredictedObjs() {
+  /* Select base obj files */
+  string line;
+  ifstream baselistfile(getDataFolderPath()+mCompiler_baselist_file);
+  while (getline(baselistfile,line)) {
+    best_objs_to_link.insert(getDataFolderPath() + line +
+        baseline_compiler_str + dot_o_str );
+  }
+  baselistfile.close();
+
+  /* Select hotspot obj files based on the predictor */
+  for (map<string,compiler_type>::iterator iterm = predicted_compiler.begin();
+       iterm != predicted_compiler.end(); ++iterm) {
+    string hotspot_name = iterm->first;
+    /* All dashes are converted to XunderscoreX in function name, recover them
+     * to match loop file names */
+    while (hotspot_name.find("X_X") != string::npos) {
+      hotspot_name.replace(hotspot_name.find("X_X"), 3, "-");
+    }
+    best_objs_to_link.insert(getDataFolderPath() + hotspot_name +
+        compiler_keyword.find(iterm->second)->second + dot_o_str );
+  }
+}
+
 void SynthesizerC::generateFinalBinary() {
   // TODO: Change linker from ICC to LLD or faster option
   vector<string> CL_flags = linker_flags[compiler_ICC];
@@ -133,6 +157,10 @@ void SynthesizerC::generateFinalBinary() {
 SynthesizerC::SynthesizerC() {
   binary_name = mCompiler_binary_path + mCompiler_binary_name;
 
-  analyzeHotspotProfileData();
+  if (mCompiler_enabled_options[PREDICT])
+    selectPredictedObjs();
+  else
+    analyzeHotspotProfileData();
+
   generateFinalBinary();
 }

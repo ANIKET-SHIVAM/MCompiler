@@ -41,7 +41,8 @@ bool Predictor::filterFeatures(string hotspot_name) {
   int profiled_hotspots_count = adv_profile_counters.size();
   for (int i = 0; i < profiled_hotspots_count; i++) {
     counter_row = adv_profile_counters[i];
-    string tmpfuncname = counter_row.front();
+    string tmpfuncname = (adv_profile_counters[i]).front();
+    cout << "Current func: " << adv_profile_counters[i][0] << endl;
     if (hotspot_name.compare(tmpfuncname) == 0) {
       isHotspotCountersFound = true;
       cout << "Found counters for hotspot: " << hotspot_name << endl;
@@ -52,16 +53,26 @@ bool Predictor::filterFeatures(string hotspot_name) {
 }
 
 void Predictor::predictCandidate() {
+  if (hotspot_extractor_to_predictor_set.begin() == hotspot_extractor_to_predictor_set.end()) {
+    string line;
+    ifstream hotspotlistfile(getDataFolderPath()+mCompiler_hotspotlist_file);
+    while (getline(hotspotlistfile,line)) {
+      hotspot_extractor_to_predictor_set.insert(line);
+    }
+    hotspotlistfile.close();
+  }
 
   set<string>::iterator iters = hotspot_extractor_to_predictor_set.begin();
   /* Loop through every hotspot to make a prediction.
    * If the hotspot was too small/adv-profiler does not have counters for it,
    * then choose the baseline compiler as default.
+   * If the predicted candidate not enabled, choose baseline compiler as well.
    */
   for (; iters != hotspot_extractor_to_predictor_set.end(); iters++){
     string hotspot_name = *iters;
     cout << "Making prediction for hotspot: " << hotspot_name << endl;
     cout << "Filter returns: " << filterFeatures(hotspot_name) << endl;
+    predicted_compiler.insert(pair<string,compiler_type>(hotspot_name,compiler_ICC));
   }
   //int target_compiler = rfmodel_trained->predict(instanceMat);
 }

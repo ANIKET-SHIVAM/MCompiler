@@ -27,6 +27,7 @@ public:
   // void findCandidateBinaries(); -- task moved to Profiler
   void analyzeHotspotProfileData();
   void selectOptimalOptimizedCandidate(string hotspot_name);
+  void selectPredictedObjs();
   void generateFinalBinary();
 };
 #endif

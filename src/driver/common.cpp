@@ -50,6 +50,8 @@ string pgi_lib_path;
 string vtune_path;
 string mCompiler_trained_model_path = "mC_trained_model.yml";
 string mCompiler_trained_model_features_path = mCompiler_trained_model_path + "_features.txt";
+string mCompiler_hotspotlist_file = "mC_hotspot_list.txt";
+string mCompiler_baselist_file = "mC_base_list.txt";
 #ifdef OS_CENTOS
 #ifdef ROSE_PATH
 string rose_path = BOOST_PP_STRINGIZE(ROSE_PATH);

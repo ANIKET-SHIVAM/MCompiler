@@ -241,8 +241,11 @@ void AdvProfiler::gatherPredictionData() {
   while (csv_file_profiler.readNextRow()) {
     row_data = csv_file_profiler.getRowData();
     iter = row_data.begin();
+    cout << "Putting data for " << *iter << endl;
+    col = 0;
     for (;iter != row_data.end(); iter++) {
-      (adv_profile_counters[row]).push_back(*iter);
+      adv_profile_counters[row][col] = (*iter);
+      col++;
     }
     row++;
   } // while
@@ -267,6 +270,6 @@ AdvProfiler::AdvProfiler() {
       gatherPredictionData();
     } else {
       sanitizeProfileData();
-    } // else
+    }
   } // if
 } // Constructor

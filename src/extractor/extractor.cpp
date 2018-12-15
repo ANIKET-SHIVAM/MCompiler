@@ -942,8 +942,12 @@ void Extractor::extractLoops(SgNode *astNode) {
     files_skip_pluto.insert(loop_no_profile_file_name);
   }
 
-  if (mCompiler_enabled_options[PREDICT])
+  if (mCompiler_enabled_options[PREDICT]) {
     hotspot_extractor_to_predictor_set.insert(getLoopName(astNode));
+    ofstream hotspotlistfile(getDataFolderPath()+mCompiler_hotspotlist_file, ofstream::app);
+    hotspotlistfile << getLoopName(astNode) << '\n';
+    hotspotlistfile.close();
+  }
 
   // Create loop object
   LoopInfo curr_loop(astNode, loop, getLoopName(astNode), *this);
@@ -1451,6 +1455,12 @@ Extractor::Extractor(const vector<string> &argv) {
    */
   executeCommand("cp " + base_file + space_str + base_file_profile);
   modifyExtractedFileText(base_file, base_file_profile);
+
+  if (mCompiler_enabled_options[PREDICT]) {
+    ofstream baselistfile(getDataFolderPath()+mCompiler_baselist_file, ofstream::app);
+    baselistfile << (getOrigFileName() + base_str + "_" + relpathcode) << '\n';
+    baselistfile.close();
+  }
 
   files_to_compile.insert(base_file);
   files_to_compile.insert(base_file_profile);

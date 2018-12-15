@@ -23,5 +23,6 @@ public:
   void loadModel();
   bool filterFeatures(string hotspot_name);
   void predictCandidate();
+  string getDataFolderPath() { return mCompiler_data_folder_path; };
 };
 #endif
