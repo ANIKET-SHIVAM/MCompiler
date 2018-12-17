@@ -139,10 +139,6 @@ extern set<string> files_to_compile;
 extern set<string> files_skip_pluto;
 /* Synthesizer to Advanced Profiler */
 extern map<string, string> hotspot_best_compiler_map;
-/* Adv-Profiler to Predictor - size initialized in Adv-Profiler */
-extern vector<vector<string>> adv_profile_counters;
-/* Adv-Profiler to Predictor */
-extern vector<string> adv_profile_labels;
 /* Extractor to Predictor */
 extern set<string> hotspot_extractor_to_predictor_set;
 /* Predictor to Synthesizer */

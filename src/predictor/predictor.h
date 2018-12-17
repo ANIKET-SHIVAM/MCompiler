@@ -18,9 +18,13 @@ private:
   Mat instanceMat;
   Ptr<RTrees> rfmodel_trained;
 
+  vector<string> adv_profile_labels;
+  vector<string> adv_profile_functions;
+
 public:
   Predictor();
   void loadModel();
+  void gatherPredictionData();
   bool filterFeatures(string hotspot_name);
   void predictCandidate();
   string getDataFolderPath() { return mCompiler_data_folder_path; };

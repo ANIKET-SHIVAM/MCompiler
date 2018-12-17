@@ -94,9 +94,6 @@ set<string> files_to_compile;
 set<string> files_skip_pluto;
 /* Synthesizer to Advanced Profiler */
 map<string, string> hotspot_best_compiler_map;
-/* Adv-Profiler to Predictor */
-vector<vector<string>> adv_profile_counters;
-vector<string> adv_profile_labels;
 /* Extractor to Predictor */
 set<string> hotspot_extractor_to_predictor_set;
 /* Predictor to Synthesizer */

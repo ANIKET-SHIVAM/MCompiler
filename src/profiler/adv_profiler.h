@@ -26,7 +26,6 @@ private:
   void runProfileTool();
   void gatherProfileData();
   void sanitizeProfileData();
-  void gatherPredictionData();
 
 public:
   AdvProfiler();

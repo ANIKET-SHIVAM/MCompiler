@@ -21,14 +21,37 @@ void Predictor::loadModel() {
   feature_file.close();
 
   feature_vector_size = model_feature_labels.size();
-  instanceMat         = Mat(1, feature_vector_size, CV_32F);
+  instanceMat.create(1, feature_vector_size, CV_32F);
 
   rfmodel_trained = RTrees::create();
   rfmodel_trained = RTrees::load(mCompiler_trained_model_path);
 }
 
+/* Collect counter labels and function that were adv-profiled */
+void Predictor::gatherPredictionData() {
+  bool is_reading_file = true;
+  CSV csv_file_profiler(getProfDir() + ".csv", is_reading_file);
+
+  vector<string> row_data;
+  csv_file_profiler.readNextRow();
+  row_data                      = csv_file_profiler.getRowData();
+  vector<string>::iterator iter = row_data.begin();
+  int col                       = 0;
+  for (; iter != row_data.end(); iter++) {
+    /* Hardware Counter labels are preceeded by "Hardware Event Count:" */
+    string tmpstr = (*iter).substr((*iter).find(':') + 1);
+    adv_profile_labels.push_back(tmpstr);
+    col++;
+  }
+  int row = 0;
+  while (csv_file_profiler.readNextRow()) {
+    adv_profile_functions.push_back(csv_file_profiler.getRowData().front());
+    row++;
+  }
+}
+
 /* Data coming from Adv-Profile is for all the function it profiled,
- * Find the data relevant to the currect function.
+ * Find the data relevant to the currect function in the CSV.
  * If found return true, else false (choose baseline compiler).
  * Get values for counters that are needed for prediction.
  * If some counter is not available then replace with zero.
@@ -36,21 +59,26 @@ void Predictor::loadModel() {
  */
 bool Predictor::filterFeatures(string hotspot_name) {
 
-  vector<string> counter_row;
   bool isHotspotCountersFound = false;
 
-  for (int i = 0; i < adv_profile_counters.size(); i++) {
-    counter_row        = adv_profile_counters[i];
-    string tmpfuncname = (adv_profile_counters[i]).front();
-    if (hotspot_name.compare(tmpfuncname) == 0) {
-      isHotspotCountersFound = true;
-      cout << "Found counters for hotspot: " << hotspot_name << endl;
-      break;
-    } // if
-  }   // for
+  if (find(adv_profile_functions.begin(), adv_profile_functions.end(),
+           hotspot_name) != adv_profile_functions.end()) {
+    isHotspotCountersFound = true;
+  }
 
   if (!isHotspotCountersFound)
     return false;
+
+  vector<string> counter_row;
+  bool is_reading_file = true;
+  CSV csv_file_profiler(getProfDir() + ".csv", is_reading_file);
+  csv_file_profiler.readNextRow(); // skip labels row
+  while (csv_file_profiler.readNextRow()) {
+    if (hotspot_name.compare(csv_file_profiler.getRowData().front()) == 0) {
+      counter_row = csv_file_profiler.getRowData();
+      break;
+    }
+  } // while
 
   /* Find instruction count to normalize other counters */
   float inst_count = 0;
@@ -79,11 +107,12 @@ bool Predictor::filterFeatures(string hotspot_name) {
       stringstream data_string_to_float(counter_row.at(index));
       float tmpfloat = 0;
       data_string_to_float >> tmpfloat;
-      instanceMat.at<float>(1, col) =
-          (tmpfloat * 1000) / inst_count; // Normalize per kilo instructions
+      instanceMat.at<float>(0, col) =
+          (float)((tmpfloat * 1000) /
+                  inst_count); // Normalize per kilo instructions
     } else {
       /* Put zero if feature is not present in the profile */
-      instanceMat.at<float>(1, col) = 0;
+      instanceMat.at<float>(0, col) = 0;
     }
     col++;
   } // for
@@ -112,23 +141,21 @@ void Predictor::predictCandidate() {
     /* If counters found for this hotspot */
     if (filterFeatures(hotspot_name)) {
       int target_compiler = rfmodel_trained->predict(instanceMat);
-      cout << "Making prediction for hotspot: " << hotspot_name
-           << " ML Predicted: "
+      cout << "Hotspot: " << hotspot_name << ", ML Predicttion: "
            << compiler_keyword[(compiler_type)target_compiler];
       /* Check if predicted compiler is enabled */
       if (compiler_candidate[(compiler_type)target_compiler]) {
-        cout << " Chooses: " << compiler_keyword[(compiler_type)target_compiler]
-             << endl;
+        cout << ", Choosing: "
+             << compiler_keyword[(compiler_type)target_compiler] << endl;
         predicted_compiler.insert(pair<string, compiler_type>(
             hotspot_name, (compiler_type)target_compiler));
       } else {
-        cout << " Chooses: " << compiler_keyword[compiler_ICC] << endl;
+        cout << ", Choosing: " << compiler_keyword[compiler_ICC] << endl;
         predicted_compiler.insert(
             pair<string, compiler_type>(hotspot_name, compiler_ICC));
       }
     } else { // Can't find counters
-      cout << "Making prediction for hotspot: " << hotspot_name
-           << " Can't find counters." << endl;
+      cout << "Hotspot: " << hotspot_name << ", Can't find counters." << endl;
       predicted_compiler.insert(
           pair<string, compiler_type>(hotspot_name, compiler_ICC));
     }
@@ -138,8 +165,6 @@ void Predictor::predictCandidate() {
 
 Predictor::Predictor() {
   loadModel();
+  gatherPredictionData();
   predictCandidate();
-  for (int i = 0; i < adv_profile_counters.size(); i++) {
-    vector<string>().swap(adv_profile_counters[i]);
-  }
 }
