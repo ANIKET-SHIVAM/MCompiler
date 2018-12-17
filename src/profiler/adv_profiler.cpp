@@ -220,11 +220,13 @@ void AdvProfiler::gatherPredictionData() {
 
   vector<string> row_data;
   csv_file_profiler.readNextRow();
-  row_data = csv_file_profiler.getRowData();
+  row_data                      = csv_file_profiler.getRowData();
   vector<string>::iterator iter = row_data.begin();
-  int col = 0;
-  for (;iter != row_data.end(); iter++) {
-    adv_profile_labels.push_back(*iter);
+  int col                       = 0;
+  for (; iter != row_data.end(); iter++) {
+    /* Hardware Counter labels are preceeded by "Hardware Event Count:" */
+    string tmpstr = (*iter).substr((*iter).find(':') + 1);
+    adv_profile_labels.push_back(tmpstr);
     col++;
   }
   int row = 0;
@@ -234,16 +236,15 @@ void AdvProfiler::gatherPredictionData() {
   adv_profile_counters = vector<vector<string>>(row, vector<string>(col));
 
   csv_file_profiler.~CSV();
-  new(&csv_file_profiler) CSV(getProfDir() + ".csv", is_reading_file);
+  new (&csv_file_profiler) CSV(getProfDir() + ".csv", is_reading_file);
   csv_file_profiler.readNextRow(); // skip first row of labels
   /* Save all profiled functions into a vector of vector */
   row = 0;
   while (csv_file_profiler.readNextRow()) {
     row_data = csv_file_profiler.getRowData();
-    iter = row_data.begin();
-    cout << "Putting data for " << *iter << endl;
-    col = 0;
-    for (;iter != row_data.end(); iter++) {
+    iter     = row_data.begin();
+    col      = 0;
+    for (; iter != row_data.end(); iter++) {
       adv_profile_counters[row][col] = (*iter);
       col++;
     }

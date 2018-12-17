@@ -13,7 +13,7 @@ class Predictor {
 private:
   int feature_vector_size;
 
-  vector<string> feature_labels;
+  vector<string> model_feature_labels;
 
   Mat instanceMat;
   Ptr<RTrees> rfmodel_trained;
@@ -24,5 +24,6 @@ public:
   bool filterFeatures(string hotspot_name);
   void predictCandidate();
   string getDataFolderPath() { return mCompiler_data_folder_path; };
+  string getProfDir() { return mCompiler_adv_profile_dir; };
 };
 #endif
