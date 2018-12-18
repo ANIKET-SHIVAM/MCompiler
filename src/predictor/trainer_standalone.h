@@ -29,3 +29,4 @@ int instances_count;
 
 Mat trainingDataMat;
 Mat labelMat;
+Mat testingDataMat;

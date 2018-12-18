@@ -37,6 +37,7 @@ void readData() {
 void prepareTrainData() {
   // Define training data sizes
   trainingDataMat = Mat(instances_count, feature_vector_size, CV_32F);
+  testingDataMat  = Mat(1, feature_vector_size, CV_32F);
   labelMat        = Mat(instances_count, 1, CV_32S);
 
   bool is_reading_file = true;
@@ -80,17 +81,45 @@ void trainModel() {
   cout << "Finished saving trained model." << endl;
 }
 
+void testModel() {
+  cout << "Starting testing." << endl;
+  int correct_prediction = 0;
+  Ptr<RTrees> rfmodel    = RTrees::create();
+  rfmodel                = RTrees::load(trained_model_file);
+  for (int i = 0; i < instances_count; i++) {
+    Mat tmpMat = trainingDataMat.row(i);
+    tmpMat.copyTo(testingDataMat);
+    int prediction = rfmodel->predict(testingDataMat);
+    int label      = labelMat.at<int>(i, 0);
+    cout << "Label: " << label << ", Prediction: " << prediction << endl;
+    if (label == prediction)
+      correct_prediction++;
+  }
+  cout << "Finished testing." << endl;
+  cout << "Testing Accuracy: "
+       << ((float)correct_prediction * 100) / instances_count << endl;
+}
+
 int main(int argc, char **argv) {
   if (argc < 3) {
-    cout << "./trainer_standalone <Input Data File> <ML trained model file>"
+    cout << "./trainer_standalone <Input Data File> <ML trained model file> "
+            "<--test>"
          << endl;
     exit(EXIT_FAILURE);
   }
   input_file         = string(argv[1]);
   trained_model_file = string(argv[2]);
-
+  bool is_testing    = false;
+  if (argc >= 4) {
+    string teststr(argv[3]);
+    if (teststr.compare("--test") == 0)
+      is_testing = true;
+  }
   readData();
   prepareTrainData();
-  trainModel();
+  if (!is_testing)
+    trainModel();
+  else
+    testModel();
   return 0;
 }
