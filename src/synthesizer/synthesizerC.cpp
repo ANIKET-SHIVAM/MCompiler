@@ -61,7 +61,7 @@ void SynthesizerC::analyzeHotspotProfileData() {
   /*
    * Now add the object files that are required for linking but we dont have
    * runtime info about them, since they didn't run while profiling
-*/
+   */
   for (iters = hotspots_skipped_profiling.begin();
        iters != hotspots_skipped_profiling.end(); iters++) {
     best_objs_to_link.insert(*iters);
@@ -86,24 +86,35 @@ void SynthesizerC::analyzeHotspotProfileData() {
 void SynthesizerC::selectPredictedObjs() {
   /* Select base obj files */
   string line;
-  ifstream baselistfile(getDataFolderPath()+mCompiler_baselist_file);
-  while (getline(baselistfile,line)) {
+  ifstream baselistfile(getDataFolderPath() + mCompiler_baselist_file);
+  while (getline(baselistfile, line)) {
     best_objs_to_link.insert(getDataFolderPath() + line +
-        baseline_compiler_str + dot_o_str );
+                             baseline_compiler_str + dot_o_str);
   }
   baselistfile.close();
 
   /* Select hotspot obj files based on the predictor */
-  for (map<string,compiler_type>::iterator iterm = predicted_compiler.begin();
+  for (map<string, compiler_type>::iterator iterm = predicted_compiler.begin();
        iterm != predicted_compiler.end(); ++iterm) {
     string hotspot_name = iterm->first;
+    /* If hotspot name starts with a number, extractor adds a underscore at
+       the beginning of the function name,
+       but not in the filename */
+    if (hotspot_name.substr(0, 1) == "_")
+      hotspot_name = hotspot_name.substr(1, string::npos);
     /* All dashes are converted to XunderscoreX in function name, recover them
      * to match loop file names */
     while (hotspot_name.find("X_X") != string::npos) {
       hotspot_name.replace(hotspot_name.find("X_X"), 3, "-");
     }
-    best_objs_to_link.insert(getDataFolderPath() + hotspot_name +
-        compiler_keyword.find(iterm->second)->second + dot_o_str );
+    string hotspot_file = getDataFolderPath() + hotspot_name +
+                          compiler_keyword.find(iterm->second)->second +
+                          dot_o_str;
+    if ((iterm->second == compiler_Pluto) && !isFileExist(hotspot_file)) {
+      hotspot_file = getDataFolderPath() + hotspot_name +
+                     compiler_keyword.find(compiler_ICC)->second + dot_o_str;
+    }
+    best_objs_to_link.insert(hotspot_file);
   }
 }
 

@@ -51,6 +51,9 @@ string vtune_path;
 string mCompiler_trained_model_path = "mC_trained_model.yml";
 string mCompiler_trained_model_features_path =
     mCompiler_trained_model_path + "_features.txt";
+string mCompiler_trained_autopar_model_path = "mC_trained_autopar_model.yml";
+string mCompiler_trained_autopar_model_features_path =
+    mCompiler_trained_autopar_model_path + "_features.txt";
 string mCompiler_hotspotlist_file = "mC_hotspot_list.txt";
 string mCompiler_baselist_file    = "mC_base_list.txt";
 string mCompiler_adv_profile_dir;

@@ -120,6 +120,8 @@ extern string pgi_lib_path;
 extern string vtune_path;
 extern string mCompiler_trained_model_path;
 extern string mCompiler_trained_model_features_path;
+extern string mCompiler_trained_autopar_model_path;
+extern string mCompiler_trained_autopar_model_features_path;
 extern string mCompiler_hotspotlist_file;
 extern string mCompiler_baselist_file;
 extern string mCompiler_adv_profile_dir;

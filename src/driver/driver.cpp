@@ -139,6 +139,18 @@ void Driver::getPathsToUtils() {
       token = strtok(NULL, ":");
     }
   }
+  char *env_MLmodel = getenv("MC_ML_MODEL");
+  if (env_MLmodel != NULL) {
+    mCompiler_trained_model_path = string(env_MLmodel);
+    mCompiler_trained_model_features_path =
+        mCompiler_trained_model_path + "_features.txt";
+  }
+  char *env_MLautoparmodel = getenv("MC_ML_AUTOPAR_MODEL");
+  if (env_MLautoparmodel != NULL) {
+    mCompiler_trained_autopar_model_path = string(env_MLautoparmodel);
+    mCompiler_trained_autopar_model_features_path =
+        mCompiler_trained_autopar_model_path + "_features.txt";
+  }
 }
 
 /* Create data folder in /tmp */
@@ -397,7 +409,8 @@ int main(int argc, char *argv[]) {
       (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
        mCompiler_mode == mode_COMPLEX)) {
     if (mCompiler_data_folder_path.empty()) {
-      cerr << "Driver: Couldn't find the folder to predict for hotspots" << endl;
+      cerr << "Driver: Couldn't find the folder to predict for hotspots"
+           << endl;
       exit(EXIT_FAILURE);
     }
     driver->initiatePredictor();

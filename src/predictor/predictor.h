@@ -24,6 +24,7 @@ private:
 public:
   Predictor();
   void loadModel();
+  void loadAutoParModel();
   void gatherPredictionData();
   bool filterFeatures(string hotspot_name);
   void predictCandidate();

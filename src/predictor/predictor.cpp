@@ -1,6 +1,6 @@
 #include "predictor.h"
 
-/* Load trained model */
+/* Load trained model for serial code */
 void Predictor::loadModel() {
   if (!isFileExist(mCompiler_trained_model_path)) {
     cerr << "Predictor: No trained model found to make predictions at:"
@@ -25,6 +25,34 @@ void Predictor::loadModel() {
 
   rfmodel_trained = RTrees::create();
   rfmodel_trained = RTrees::load(mCompiler_trained_model_path);
+}
+
+/* Load trained model for auto-par code */
+void Predictor::loadAutoParModel() {
+  if (!isFileExist(mCompiler_trained_autopar_model_path)) {
+    cerr << "Predictor: No trained autopar model found to make predictions at:"
+         << mCompiler_trained_autopar_model_path << endl;
+    exit(EXIT_FAILURE);
+  }
+  if (!isFileExist(mCompiler_trained_autopar_model_features_path)) {
+    cerr << "Predictor: No trained autopar model features found to make "
+            "predictions at:"
+         << mCompiler_trained_autopar_model_features_path << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  string line;
+  ifstream feature_file(mCompiler_trained_autopar_model_features_path);
+  while (getline(feature_file, line)) {
+    model_feature_labels.push_back(line);
+  }
+  feature_file.close();
+
+  feature_vector_size = model_feature_labels.size();
+  instanceMat.create(1, feature_vector_size, CV_32F);
+
+  rfmodel_trained = RTrees::create();
+  rfmodel_trained = RTrees::load(mCompiler_trained_autopar_model_path);
 }
 
 /* Collect counter labels and function that were adv-profiled */
@@ -141,7 +169,7 @@ void Predictor::predictCandidate() {
     /* If counters found for this hotspot */
     if (filterFeatures(hotspot_name)) {
       int target_compiler = rfmodel_trained->predict(instanceMat);
-      cout << "Hotspot: " << hotspot_name << ", ML Predicttion: "
+      cout << "Hotspot: " << hotspot_name << ", ML Prediction: "
            << compiler_keyword[(compiler_type)target_compiler];
       /* Check if predicted compiler is enabled */
       if (compiler_candidate[(compiler_type)target_compiler]) {
@@ -164,7 +192,10 @@ void Predictor::predictCandidate() {
 }
 
 Predictor::Predictor() {
-  loadModel();
+  if (mCompiler_enabled_options[AUTO_PARALLEL])
+    loadAutoParModel();
+  else
+    loadModel();
   gatherPredictionData();
   predictCandidate();
 }
