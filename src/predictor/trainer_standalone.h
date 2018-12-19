@@ -24,9 +24,25 @@ typedef enum {
 string input_file;
 string trained_model_file;
 
+vector<string> feature_labels;
+
 int feature_vector_size;
 int instances_count;
 
 Mat trainingDataMat;
 Mat labelMat;
 Mat testingDataMat;
+
+Ptr<RTrees> rfmodel;
+
+#define MAXCATEGORIES                                                          \
+  15 // max number of categories (use sub-optimal algorithm for larger numbers)
+#define MAXDEPTH 25          // max depth
+#define MINSAMPLECOUNT 5     // min sample count
+#define REGRESSIONACCURACY 0 // N/A here
+#define ACTIVEVARCOUNT                                                         \
+  4 // number of variables randomly selected at node and used to find the best
+    // split(s).
+#define CALCULATEVARIMPORTANCE true // calculate variable importance
+#define TERMCRITERIA                                                           \
+  (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS) // termination criteria

@@ -10,7 +10,7 @@ void readData() {
     header_row = csv_file.getRowData();
   else
     exit(EXIT_FAILURE);
-  feature_vector_size = header_row.size();
+  feature_vector_size = header_row.size() - 2; // Minus Function and Compiler
 
   ofstream feature_file(trained_model_file + "_features.txt");
 
@@ -19,6 +19,7 @@ void readData() {
     if ((*iter).compare("Function") != 0 && (*iter).compare("Compiler")) {
       feature_file << *iter << '\n';
       cout << "Feature: " << *iter << endl;
+      feature_labels.push_back(*iter);
     }
   }
   feature_file.close();
@@ -47,6 +48,7 @@ void prepareTrainData() {
   vector<string> row_data;
   vector<string>::iterator iter;
   int row = 0;
+  int col;
   while (csv_file.readNextRow()) {
     row_data = csv_file.getRowData();
     iter     = row_data.begin();
@@ -59,7 +61,7 @@ void prepareTrainData() {
     labelMat.at<int>(row) = tmpint; // Target compiler
     iter++;                         // move to counters
 
-    int col = 0;
+    col = 0;
     for (; iter != row_data.end(); iter++) {
       stringstream data_string_to_float(*iter);
       float tmpfloat = 0;
@@ -69,22 +71,41 @@ void prepareTrainData() {
     } // for
     row++;
   } // while
+  cout << "Instances: " << row << ", Features: " << col << endl;
+}
+
+void setModelParams() {
+  rfmodel->setMaxCategories(MAXCATEGORIES);
+  rfmodel->setMaxDepth(MAXDEPTH);
+  rfmodel->setMinSampleCount(MINSAMPLECOUNT);
+  rfmodel->setActiveVarCount(ACTIVEVARCOUNT);
+  rfmodel->setCalculateVarImportance(CALCULATEVARIMPORTANCE);
+}
+
+void printVarImportance() {
+  Mat varImp = rfmodel->getVarImportance();
+  Size size  = varImp.size();
+  for (int i = 0; i < size.height; i++) {
+    cout << feature_labels.at(i) << " : " << varImp.at<float>(i) << endl;
+  }
 }
 
 void trainModel() {
   cout << "Starting training." << endl;
-  Ptr<RTrees> rfmodel = RTrees::create();
+  rfmodel = RTrees::create();
+  setModelParams();
   rfmodel->train(trainingDataMat, ROW_SAMPLE,
                  labelMat); // Feature vectors are stored as rows
   cout << "Finished training." << endl;
   rfmodel->save(trained_model_file);
   cout << "Finished saving trained model." << endl;
+  printVarImportance();
 }
 
 void testModel() {
   cout << "Starting testing." << endl;
   int correct_prediction = 0;
-  Ptr<RTrees> rfmodel    = RTrees::create();
+  rfmodel                = RTrees::create();
   rfmodel                = RTrees::load(trained_model_file);
   for (int i = 0; i < instances_count; i++) {
     Mat tmpMat = trainingDataMat.row(i);
