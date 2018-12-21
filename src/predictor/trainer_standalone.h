@@ -41,7 +41,7 @@ Ptr<RTrees> rfmodel;
 #define MINSAMPLECOUNT 5     // min sample count
 #define REGRESSIONACCURACY 0 // N/A here
 #define ACTIVEVARCOUNT                                                         \
-  4 // number of variables randomly selected at node and used to find the best
+  20 // number of variables randomly selected at node and used to find the best
     // split(s).
 #define CALCULATEVARIMPORTANCE true // calculate variable importance
 #define TERMCRITERIA                                                           \
