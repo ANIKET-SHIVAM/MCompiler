@@ -122,11 +122,13 @@ void Driver::setMCompilerMode() {
 }
 
 void Driver::getPathsToUtils() {
-  char *env_PATH      = getenv("PATH");
-  char *env_LDLIBPATH = getenv("LD_LIBRARY_PATH");
+  const char *env_PATH      = getenv("PATH");
+  char *copy_env_PATH       = strdup(env_PATH);
+  const char *env_LDLIBPATH = getenv("LD_LIBRARY_PATH");
+  char *copy_env_LDLIBPATH  = strdup(env_LDLIBPATH);
   /* Search for PGI lib path */
   if (compiler_candidate[compiler_PGI] == true) {
-    char *token = strtok(env_LDLIBPATH, ":");
+    char *token = strtok(copy_env_LDLIBPATH, ":");
     string tmppath;
     while (token != NULL) {
       tmppath = token;
