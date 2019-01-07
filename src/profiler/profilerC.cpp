@@ -416,6 +416,13 @@ void ProfilerC::gatherProfilingData(const string &binary_file,
     string result;
     result = executeCommand(binary_file + space_str + mCompiler_profiler_input);
 
+    /* If runtime error occurs, abort execution */
+    if (result.find("error") != string::npos ||
+        result.find("Segmentation fault") != string::npos) {
+      cout << "Profiler: Binary couldn't execute: " << compiler_str << endl
+           << result;
+    }
+
     /* Store result of execution(loops and their running time) */
     stringstream line_stream(result);
     string cell;
