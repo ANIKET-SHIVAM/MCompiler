@@ -628,9 +628,9 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
   // Entire Loop Body
   string loop_body_str = "";
   if (extr.getSrcType() == src_lang_C) {
-    loop_body_str = loop->unparseToCompleteString();
+    loop_body_str = loop->unparseToString();
   } else if (extr.getSrcType() == src_lang_CPP) {
-    loop_body_str = loop->unparseToCompleteString();
+    loop_body_str = loop->unparseToString();
   }
   if (loop_body_str.find("#else") == 0)
     loop_body_str.erase(0, loop_body_str.find("\n") + 1);
