@@ -628,9 +628,9 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
   // Entire Loop Body
   string loop_body_str = "";
   if (extr.getSrcType() == src_lang_C) {
-    loop_body_str = loop->unparseToString();
+    loop_body_str = loop->unparseToCompleteString();
   } else if (extr.getSrcType() == src_lang_CPP) {
-    loop_body_str = loop->unparseToString();
+    loop_body_str = loop->unparseToCompleteString();
   }
   if (loop_body_str.find("#else") == 0)
     loop_body_str.erase(0, loop_body_str.find("\n") + 1);
@@ -820,7 +820,7 @@ void LoopInfo::addLoopFuncCall() {
   }
   /* Replace for loop with function call */
   SageInterface::replaceStatement(
-      loop, SageBuilder::buildExprStatement(call_expr), true);
+      loop, SageBuilder::buildExprStatement(call_expr), false);
 }
 
 /* Intended to get rid of variable mentioned in OpenMP clauses that are not
