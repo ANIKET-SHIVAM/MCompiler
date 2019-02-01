@@ -810,17 +810,24 @@ void LoopInfo::addLoopFuncCall() {
       func_name, SageBuilder::buildVoidType(),
       SageBuilder::buildExprListExp(expr_list), loop_scope);
   /* Check if previous statement is OMP pragma, then remove it */
+  bool prevStmtRemoved = false;
   SgStatement *prevStmt = SageInterface::getPreviousStatement(loop, false);
   if (prevStmt != NULL && prevStmt->variantT() == V_SgPragmaDeclaration) {
     SgPragmaDeclaration *pragmaDecl =
         dynamic_cast<SgPragmaDeclaration *>(prevStmt);
-    if (SageInterface::extractPragmaKeyword(pragmaDecl) == "omp")
+    if (SageInterface::extractPragmaKeyword(pragmaDecl) == "omp") {
       SageInterface::replaceStatement(prevStmt,
                                       SageBuilder::buildNullStatement());
+      prevStmtRemoved = true;
+    }
   }
   /* Replace for loop with function call */
-  SageInterface::replaceStatement(
-      loop, SageBuilder::buildExprStatement(call_expr), false);
+  if (prevStmtRemoved)
+    SageInterface::replaceStatement(
+        loop, SageBuilder::buildExprStatement(call_expr), false);
+  else
+    SageInterface::replaceStatement(
+        loop, SageBuilder::buildExprStatement(call_expr), true);
 }
 
 /* Intended to get rid of variable mentioned in OpenMP clauses that are not
