@@ -810,22 +810,16 @@ void LoopInfo::addLoopFuncCall() {
       func_name, SageBuilder::buildVoidType(),
       SageBuilder::buildExprListExp(expr_list), loop_scope);
   /* Check if previous statement is OMP pragma, then remove it */
-  bool prevStmtRemoved = false;
   SgStatement *prevStmt = SageInterface::getPreviousStatement(loop, false);
   if (prevStmt != NULL && prevStmt->variantT() == V_SgPragmaDeclaration) {
     SgPragmaDeclaration *pragmaDecl =
         dynamic_cast<SgPragmaDeclaration *>(prevStmt);
     if (SageInterface::extractPragmaKeyword(pragmaDecl) == "omp") {
       SageInterface::replaceStatement(prevStmt,
-                                      SageBuilder::buildNullStatement());
-      prevStmtRemoved = true;
+                                      SageBuilder::buildNullStatement(),true);
     }
   }
-  /* Replace for loop with function call */
-  if (prevStmtRemoved)
-    SageInterface::replaceStatement(
-        loop, SageBuilder::buildExprStatement(call_expr), false);
-  else
+  /* Replace for loop with function call - Keep preprocessing info */
     SageInterface::replaceStatement(
         loop, SageBuilder::buildExprStatement(call_expr), true);
 }
