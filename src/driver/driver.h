@@ -42,6 +42,7 @@ public:
   void getPathsToUtils();
   void createMCompilerDataFolder();
   void removeMCompilerDataFolder();
+  void moveMCompilerDataFolder();
   void generateMCompilerHeaderFile();
   void fetchProfilerInput();
   void copyInFolderHeaders(string folder_path, bool copysourcefiles);

@@ -176,6 +176,12 @@ void Driver::removeMCompilerDataFolder() {
   executeCommand(CL);
 }
 
+void Driver::moveMCompilerDataFolder() {
+  string CL = "mv ";
+  CL += mCompiler_data_folder_path + space_str + mCompiler_curr_dir_path;
+  executeCommand(CL);
+}
+
 void Driver::generateMCompilerHeaderFile() {
   bool isPresent = false;
   if (isFileExist(getDataFolderPath() + mCompiler_header_name))
@@ -439,6 +445,10 @@ int main(int argc, char *argv[]) {
       (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
        mCompiler_mode == mode_COMPLEX)) {
     driver->removeMCompilerDataFolder();
+  } else if (mCompiler_enabled_options[MC_INFO] &&
+      (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
+       mCompiler_mode == mode_COMPLEX)) {
+    driver->moveMCompilerDataFolder();
   }
 
   delete driver;
