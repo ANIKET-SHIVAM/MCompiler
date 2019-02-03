@@ -65,6 +65,8 @@ public:
   vector<string> func_var_str_vec;
   SgScopeStatement *loopParentFuncScope = NULL;
   map<SgStatement *, SgScopeStatement *> externFuncDef;
+  vector<SgForStatement *>
+      consecutiveLoops; // Collection of consecutive loop nests
 
 public:
   Extractor(){};

@@ -48,6 +48,7 @@ const option::Descriptor usage[] = {
   {PARALLEL           , 0, ""  , "parallel"      ,Arg::None     , "    --parallel               Generate multi-threaded code based on OpenMP directives\n"
                                                                   "                             Default: Serial code generation (with vectorization)" },
   {AUTO_PARALLEL      , 0, ""  , "auto-parallel" ,Arg::None     , "    --auto-parallel          Auto-parallelize the hotspots" },
+  {EXTRACTKERNEL      , 0, ""  , "extractkernel" ,Arg::None     , "    --extractkernel          Extract consecutive loop nests, if possible." },
   {PREFETCH           , 0, ""  , "prefetch"      ,Arg::None     , "    --prefetch               Enable software data prefetching" },
   {PROFILE_COUNT      , 0, ""  , "profile-runs"  ,Arg::Numeric  , "    --profile-runs=<num>     Number of time profiler should run the program to"
                                                                                                 " collect data. Default: 3" },
@@ -72,15 +73,12 @@ const option::Descriptor usage[] = {
 // clang-format on
 void set_mCompiler_options(int argc, char *argv[]) {
   mCompiler_enabled_options = {
-      {EXTRACT, true},    {PROFILE, true},
-      {SYNTHESIZE, true}, {ADV_PROFILE, false},
-      {PREDICT, false},   {TEST, false},
-      {PARALLEL, false},  {AUTO_PARALLEL, false},
-      {PREFETCH, false},  {KNL, false},
-      {SKYLAKE, false},   {C99, false},
-      {JOBS, false},      {COMPILE_TO_OBJECT, false},
-      {MC_DEBUG, false},  {MC_INFO, false},
-      {NOVEC, false},
+      {EXTRACT, true},      {PROFILE, true},        {SYNTHESIZE, true},
+      {ADV_PROFILE, false}, {PREDICT, false},       {TEST, false},
+      {PARALLEL, false},    {AUTO_PARALLEL, false}, {EXTRACTKERNEL, false},
+      {PREFETCH, false},    {KNL, false},           {SKYLAKE, false},
+      {C99, false},         {JOBS, false},          {COMPILE_TO_OBJECT, false},
+      {MC_DEBUG, false},    {MC_INFO, false},       {NOVEC, false},
   };
   argc -= (argc > 0);
   argv += (argc > 0); // skip program name argv[0] if present
@@ -133,7 +131,7 @@ void set_mCompiler_options(int argc, char *argv[]) {
       mCompiler_enabled_options[ADV_PROFILE] = true;
       break;
     case PREDICT:
-      mCompiler_enabled_options[PREDICT] = true;
+      mCompiler_enabled_options[PREDICT]     = true;
       mCompiler_enabled_options[ADV_PROFILE] = true;
       break;
     case TEST:
@@ -145,6 +143,9 @@ void set_mCompiler_options(int argc, char *argv[]) {
     case AUTO_PARALLEL:
       mCompiler_enabled_options[AUTO_PARALLEL] = true;
       mCompiler_enabled_options[PARALLEL]      = true;
+      break;
+    case EXTRACTKERNEL:
+      mCompiler_enabled_options[EXTRACTKERNEL] = true;
       break;
     case PREFETCH:
       mCompiler_enabled_options[PREFETCH] = true;

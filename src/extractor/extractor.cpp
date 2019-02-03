@@ -192,8 +192,7 @@ void LoopInfo::getVarsInScope() {
   /* collectVarRefs will collect all variables used in the loop body */
   vector<SgVarRefExp *> sym_table;
   vector<string> temp_vec2;
-  SageInterface::collectVarRefs(dynamic_cast<SgLocatedNode *>(astNode),
-                                sym_table);
+  SageInterface::collectVarRefs(dynamic_cast<SgLocatedNode *>(loop), sym_table);
 
   if (extr.getOMPpragma() != "")
     analyzeOMPprivateArrays(extr.getOMPpragma());
@@ -251,10 +250,9 @@ void LoopInfo::getVarsInScope() {
             int first_square_brac = var_type_str.find_first_of("[");
             if (first_square_brac != string::npos)
               OMParray_type_map.insert(pair<string, string>(
-                  temp_str1,
-                  var_type_str.substr(0, first_square_brac) +
-                      var->get_name().getString() +
-                      var_type_str.substr(first_square_brac)));
+                  temp_str1, var_type_str.substr(0, first_square_brac) +
+                                 var->get_name().getString() +
+                                 var_type_str.substr(first_square_brac)));
             else
               OMParray_type_map.insert(pair<string, string>(
                   temp_str1,
@@ -574,17 +572,23 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
 
   /* Scope of loop body contains the variables needed for this loop to compile
    */
-  loop_scope = (loop->get_loop_body())->get_scope();
+  for (vector<SgForStatement *>::iterator iter = extr.consecutiveLoops.begin();
+       iter != extr.consecutiveLoops.end(); iter++) {
+    loop       = *iter;
+    loop_scope = (loop->get_loop_body())->get_scope();
 
-  if (hasFuncCallInScope()) {
-    string externFuncStr;
-    addScopeFuncAsExtern(externFuncStr);
-    loop_file_buf << externFuncStr;
+    if (hasFuncCallInScope()) {
+      string externFuncStr;
+      addScopeFuncAsExtern(externFuncStr);
+      loop_file_buf << externFuncStr;
+    }
+
+    // getParamatersInFunc - Dont need same analysis twice
+    if (isProfileFile)
+      getVarsInScope();
   }
-
-  // getParamatersInFunc - Dont need same analysis twice
-  if (isProfileFile)
-    getVarsInScope();
+  loop       = *(extr.consecutiveLoops.begin());
+  loop_scope = (loop->get_loop_body())->get_scope();
   /*
    if( !scope_globals_vec.empty() ){
      string externGlobalsStr;
@@ -625,19 +629,27 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
   if (mCompiler_enabled_options[PARALLEL] && extr.getOMPpragma() != "")
     loop_file_buf << endl << sanitizeOMPpragma(extr.getOMPpragma()) << endl;
 
-  // Entire Loop Body
-  string loop_body_str = "";
-  if (extr.getSrcType() == src_lang_C) {
-    loop_body_str = loop->unparseToCompleteString();
-  } else if (extr.getSrcType() == src_lang_CPP) {
-    loop_body_str = loop->unparseToCompleteString();
+  // Print all the loops
+  string kernel_body_str = "";
+  for (vector<SgForStatement *>::iterator iter = extr.consecutiveLoops.begin();
+       iter != extr.consecutiveLoops.end(); iter++) {
+    // Entire Loop Body
+    string loop_body_str = "";
+    if (extr.getSrcType() == src_lang_C) {
+      loop_body_str = (*iter)->unparseToCompleteString();
+    } else if (extr.getSrcType() == src_lang_CPP) {
+      loop_body_str = (*iter)->unparseToCompleteString();
+    }
+    if (loop_body_str.find("#else") == 0)
+      loop_body_str.erase(0, loop_body_str.find("\n") + 1);
+    if (loop_body_str.find("#endif") == 0)
+      loop_body_str.erase(0, loop_body_str.find("\n") + 1);
+    kernel_body_str += loop_body_str + '\n';
   }
-  if (loop_body_str.find("#else") == 0)
-    loop_body_str.erase(0, loop_body_str.find("\n") + 1);
-  if (loop_body_str.find("#endif") == 0)
-    loop_body_str.erase(0, loop_body_str.find("\n") + 1);
+  loop       = *(extr.consecutiveLoops.begin());
+  loop_scope = (loop->get_loop_body())->get_scope();
 
-  loop_file_buf << loop_body_str << endl;
+  loop_file_buf << kernel_body_str << endl;
 
   loop_file_buf << "#pragma endscop" << endl;
 
@@ -816,12 +828,12 @@ void LoopInfo::addLoopFuncCall() {
         dynamic_cast<SgPragmaDeclaration *>(prevStmt);
     if (SageInterface::extractPragmaKeyword(pragmaDecl) == "omp") {
       SageInterface::replaceStatement(prevStmt,
-                                      SageBuilder::buildNullStatement(),true);
+                                      SageBuilder::buildNullStatement(), true);
     }
   }
   /* Replace for loop with function call - Keep preprocessing info */
-    SageInterface::replaceStatement(
-        loop, SageBuilder::buildExprStatement(call_expr), true);
+  SageInterface::replaceStatement(
+      loop, SageBuilder::buildExprStatement(call_expr), true);
 }
 
 /* Intended to get rid of variable mentioned in OpenMP clauses that are not
@@ -831,7 +843,7 @@ void LoopInfo::addLoopFuncCall() {
 //*/
 //	vector<SgVarRefExp *> sym_table;
 //	SageInterface::collectVarRefs( dynamic_cast<SgLocatedNode *>(astNode),
-//sym_table );
+// sym_table );
 //
 //	vector<SgVarRefExp *>::iterator iter;
 //	for( iter = sym_table.begin(); iter != sym_table.end(); iter++ ){
@@ -840,9 +852,11 @@ void LoopInfo::addLoopFuncCall() {
 //)->get_scope();
 //
 //		/* Neither globals variables nor variables declared inside the
-//loop body nor struct members(dirty way - scope name not NULL) should be passed
+// loop body nor struct members(dirty way - scope name not NULL) should be
+// passed
 //*/
-//		if( !( isSgGlobal(var_scope) || isDeclaredInInnerScope(var_scope)
+//		if( !( isSgGlobal(var_scope) ||
+//isDeclaredInInnerScope(var_scope)
 //|| var_scope->get_qualified_name() != "" ) ){
 //      func_var_str_vec.push_back(var->get_name().getString());
 //    }
@@ -945,7 +959,8 @@ void Extractor::extractLoops(SgNode *astNode) {
 
   if (mCompiler_enabled_options[PREDICT]) {
     hotspot_extractor_to_predictor_set.insert(getLoopName(astNode));
-    ofstream hotspotlistfile(getDataFolderPath()+mCompiler_hotspotlist_file, ofstream::app);
+    ofstream hotspotlistfile(getDataFolderPath() + mCompiler_hotspotlist_file,
+                             ofstream::app);
     hotspotlistfile << getLoopName(astNode) << '\n';
     hotspotlistfile.close();
   }
@@ -969,6 +984,16 @@ void Extractor::extractLoops(SgNode *astNode) {
   curr_loop.addLoopFuncCall();
   curr_loop.addLoopFuncAsExtern();
 
+  // to replace remaining consecutive loops with null statements */
+  if (consecutiveLoops.size() > 1) {
+    vector<SgForStatement *>::iterator iter = consecutiveLoops.begin();
+    iter++; // First loop is already removed by addLoopFuncCall()
+    for (; iter != consecutiveLoops.end(); iter++) {
+      SageInterface::replaceStatement((*iter),
+                                      SageBuilder::buildNullStatement(), false);
+    }
+  }
+
   loop_file_buf_profile.close();
   loop_file_buf_no_profile.close();
 
@@ -989,12 +1014,14 @@ void Extractor::extractLoops(SgNode *astNode) {
   /* Change struct access with pointer to struct */
   //	for( auto const &str : curr_loop.scope_struct_str_vec ){
   //		/* change struct access: 'st =' to '(*st) =' */
-  //		string sed_command1 = "sed -i 's/" + str + " =/(*" + str + ") =/g'
+  //		string sed_command1 = "sed -i 's/" + str + " =/(*" + str + ")
+  //=/g'
   //";
   //		executeCommand(sed_command1 + loop_profile_file_name );
   //		executeCommand(sed_command1 + loop_no_profile_file_name );
   //		/* change struct access: st.member to st->member */
-  //		string sed_command2 = "sed -i 's/" + str + " \\./" + str + " ->/g'
+  //		string sed_command2 = "sed -i 's/" + str + " \\./" + str + "
+  //->/g'
   //";
   //		executeCommand(sed_command2 + loop_profile_file_name );
   //		executeCommand(sed_command2 + loop_no_profile_file_name );
@@ -1005,14 +1032,22 @@ void Extractor::extractLoops(SgNode *astNode) {
 void Extractor::collectAdjoiningLoops(SgStatement *loop) {
   if (loop == NULL)
     return;
-  if (SageInterface::getNextStatement(loop)->variantT() &&
-      SageInterface::getNextStatement(loop)->variantT() == V_SgForStatement) {
-    cout << loop->unparseToCompleteString() << endl;
-    collectAdjoiningLoops(SageInterface::getNextStatement(loop));
+  // cout << "Loop: " << loop->class_name() << endl <<
+  // loop->unparseToCompleteString() << endl;
+  consecutiveLoops.push_back(dynamic_cast<SgForStatement *>(loop));
+  SgStatement *nextStmt = SageInterface::getNextStatement(loop);
+  if (nextStmt && nextStmt->variantT() &&
+      nextStmt->variantT() == V_SgForStatement) {
+    collectAdjoiningLoops(nextStmt);
   } else {
-    cout << loop->unparseToCompleteString() << endl;
+    // cout << "Statement: " <<
+    // SageInterface::getNextStatement(loop)->class_name()
+    //     << endl <<
+    //     SageInterface::getNextStatement(loop)->unparseToCompleteString() <<
+    //     endl;
     return;
   }
+  return;
 }
 
 void Extractor::extractFunctions(SgNode *astNode) {}
@@ -1041,9 +1076,14 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
         // if( SageInterface::getNextStatement(loop)->variantT() != NULL &&
         // SageInterface::getNextStatement(loop)->variantT() == V_SgForStatement
         // )
-        //  collectAdjoiningLoops(dynamic_cast<SgStatement *>(astNode));
-        if (!skipLoop(astNode))
+        if (!skipLoop(astNode)) {
+          if (mCompiler_enabled_options[EXTRACTKERNEL])
+            collectAdjoiningLoops(dynamic_cast<SgStatement *>(astNode));
+          else
+            consecutiveLoops.push_back(dynamic_cast<SgForStatement *>(astNode));
           extractLoops(astNode);
+        }
+        consecutiveLoops.clear(); // Clear vector for next kernel
         loopOMPpragma = "";
       }
       break;
@@ -1151,11 +1191,11 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
     }
     //			case V_SgSourceFile: {
     /* add mCompiler header file into the source */
-    //				SgSourceFile *sourceFile = dynamic_cast<SgSourceFile
+    //				SgSourceFile *sourceFile =
+    //dynamic_cast<SgSourceFile
     //*>(astNode);
-    //				SageInterface::insertHeader(sourceFile, mCompiler_header_name,
-    //false, false);
-    //				break;
+    //				SageInterface::insertHeader(sourceFile,
+    //mCompiler_header_name, false, false); 				break;
     //			}
     default: {
       // cerr << "Found node: " << astNode->class_name() << endl;
@@ -1458,7 +1498,8 @@ Extractor::Extractor(const vector<string> &argv) {
   modifyExtractedFileText(base_file, base_file_profile);
 
   if (mCompiler_enabled_options[PREDICT]) {
-    ofstream baselistfile(getDataFolderPath()+mCompiler_baselist_file, ofstream::app);
+    ofstream baselistfile(getDataFolderPath() + mCompiler_baselist_file,
+                          ofstream::app);
     baselistfile << (getOrigFileName() + base_str + "_" + relpathcode) << '\n';
     baselistfile.close();
   }
