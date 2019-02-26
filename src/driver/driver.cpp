@@ -41,7 +41,8 @@ void Driver::checkCompilerCandidates() {
   }
 
   result_compiler_found = executeCommand("polycc");
-  if (result_compiler_found.find("not found") == string::npos) {
+  if (result_compiler_found.find("not found") == string::npos &&
+      !mCompiler_enabled_options[NOPOLYHEDRAL]) {
     compiler_candidate[compiler_Pluto] = true;
     cout << "Found in PATH: polycc (Pluto)" << endl;
   } else {
@@ -49,7 +50,8 @@ void Driver::checkCompilerCandidates() {
   }
 
   result_compiler_found = executeCommand("opt -help | grep \"Polly Options\"");
-  if (result_compiler_found.find("Polly Options") != string::npos) {
+  if (result_compiler_found.find("Polly Options") != string::npos &&
+      !mCompiler_enabled_options[NOPOLYHEDRAL]) {
     compiler_candidate[compiler_Polly] = true;
     cout << "Found in PATH: Polly+LLVM" << endl;
   } else {

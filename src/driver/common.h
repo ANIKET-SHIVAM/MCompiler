@@ -79,9 +79,10 @@ typedef enum {
   MACRO_DEFS,
   MC_DEBUG,
   MC_INFO,
+  NOVEC,
+  NOPOLYHEDRAL,
   HELP,
-  UNKNOWN,
-  NOVEC
+  UNKNOWN
 } mCompiler_options;
 
 extern int profile_binary_err_cnt;

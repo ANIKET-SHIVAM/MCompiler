@@ -70,6 +70,7 @@ const option::Descriptor usage[] = {
   {MC_DEBUG           , 0, ""  , "debug"         ,Arg::None     , "    --debug                  Output mCompiler workflow" },
   {MC_INFO            , 0, ""  , "info"          ,Arg::None     , "    --info                   Print information for mCompiler workflow" },
   {NOVEC              , 0, ""  , "novec"         ,Arg::None     , "    --novec                  Disable vectorizer" },
+  {NOPOLYHEDRAL       , 0, ""  , "disable-polyhedral"  ,Arg::None     , "    --disable-polyhedral     Disable Polyhedral Model based loop optimizers" },
   {0, 0, 0, 0, 0, 0}
 };
 // clang-format on
@@ -95,6 +96,7 @@ void set_mCompiler_options(int argc, char *argv[]) {
       {MC_DEBUG, false},
       {MC_INFO, false},
       {NOVEC, false},
+      {NOPOLYHEDRAL, false},
   };
   argc -= (argc > 0);
   argv += (argc > 0); // skip program name argv[0] if present
@@ -227,6 +229,9 @@ void set_mCompiler_options(int argc, char *argv[]) {
       break;
     case NOVEC:
       mCompiler_enabled_options[NOVEC] = true;
+      break;
+    case NOPOLYHEDRAL:
+      mCompiler_enabled_options[NOPOLYHEDRAL] = true;
       break;
     }
   }
