@@ -56,8 +56,9 @@ const option::Descriptor usage[] = {
   {INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>           Input to the program"
                                                                                                 " Needed to generate profiling information" },
   {FILE_PREDICT       , 0, ""  , "predict-model" ,Arg::Required , "    --predict-model=<args>   Path to the trained ML model. Default: mC_trained_model.yml" },
-  {KNL                , 0, ""  , "knl"           ,Arg::None     , "    --knl                    Compile for Intel Knights Landing processor. Default: Haswell" },
-  {SKYLAKE            , 0, ""  , "skylake"       ,Arg::None     , "    --skylake                Compile for Intel Skylake processor. Default: Haswell" },
+  {HASWELL            , 0, ""  , "haswell"       ,Arg::None     , "    --haswell                Compile for Intel Haswell processor. Default: Skylake" },
+  {KNL                , 0, ""  , "knl"           ,Arg::None     , "    --knl                    Compile for Intel Knights Landing processor. Default: Skylake" },
+  {SKYLAKE            , 0, ""  , "skylake"       ,Arg::None     , "    --skylake                Compile for Intel Skylake processor." },
   {C99                , 0, ""  , "c99"           ,Arg::None     , "    --c99                    Conforms to ISO C99 standards. Default: C11" },
   {JOBS               , 0, "j" , "jobs"          ,Arg::None     , "    -j                       Compile hotspots in parallel" },
   {COMPILE_TO_OBJECT  , 0, "c" , "compile"       ,Arg::None     , "    -c[<arg>]                Compile to object file" },
@@ -74,15 +75,25 @@ const option::Descriptor usage[] = {
 // clang-format on
 void set_mCompiler_options(int argc, char *argv[]) {
   mCompiler_enabled_options = {
-      {EXTRACT, true},        {PROFILE, true},
-      {SYNTHESIZE, true},     {ADV_PROFILE, false},
-      {POWER_PROFILE, false}, {PREDICT, false},
-      {TEST, false},          {PARALLEL, false},
-      {AUTO_PARALLEL, false}, {EXTRACTKERNEL, false},
-      {PREFETCH, false},      {KNL, false},
-      {SKYLAKE, false},       {C99, false},
-      {JOBS, false},          {COMPILE_TO_OBJECT, false},
-      {MC_DEBUG, false},      {MC_INFO, false},
+      {EXTRACT, true},
+      {PROFILE, true},
+      {SYNTHESIZE, true},
+      {ADV_PROFILE, false},
+      {POWER_PROFILE, false},
+      {PREDICT, false},
+      {TEST, false},
+      {PARALLEL, false},
+      {AUTO_PARALLEL, false},
+      {EXTRACTKERNEL, false},
+      {PREFETCH, false},
+      {HASWELL, false},
+      {KNL, false},
+      {SKYLAKE, true},
+      {C99, false},
+      {JOBS, false},
+      {COMPILE_TO_OBJECT, false},
+      {MC_DEBUG, false},
+      {MC_INFO, false},
       {NOVEC, false},
   };
   argc -= (argc > 0);
@@ -171,8 +182,13 @@ void set_mCompiler_options(int argc, char *argv[]) {
     case FILE_PREDICT:
       mCompiler_trained_model_path = opt.arg;
       break;
+    case HASWELL:
+      mCompiler_enabled_options[HASWELL] = true;
+      mCompiler_enabled_options[SKYLAKE] = false;
+      break;
     case KNL:
-      mCompiler_enabled_options[KNL] = true;
+      mCompiler_enabled_options[KNL]     = true;
+      mCompiler_enabled_options[SKYLAKE] = false;
       break;
     case SKYLAKE:
       mCompiler_enabled_options[SKYLAKE] = true;

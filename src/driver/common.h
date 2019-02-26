@@ -68,6 +68,7 @@ typedef enum {
   FILE_PREDICT,
   OUTPUT_BINARY,
   OUTPUT_OBJECT,
+  HASWELL,
   KNL,
   SKYLAKE,
   C99,

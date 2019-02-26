@@ -209,7 +209,7 @@ void addOptimizationFlags() {
     flag_vec.push_back("-tp=knl");
   else if (mCompiler_enabled_options[SKYLAKE])
     flag_vec.push_back("-tp=skylake");
-  else
+  else if (mCompiler_enabled_options[HASWELL])
     flag_vec.push_back("-tp=haswell");
   flag_vec.push_back("-Mllvm");
   if (mCompiler_enabled_options[PARALLEL])
@@ -323,7 +323,7 @@ void addLinkerFlags() {
     flag_vec.push_back("-tp=knl");
   else if (mCompiler_enabled_options[SKYLAKE])
     flag_vec.push_back("-tp=skylake");
-  else
+  else if (mCompiler_enabled_options[HASWELL])
     flag_vec.push_back("-tp=haswell");
   flag_vec.push_back("-Mllvm");
   flag_vec.push_back("-mp");
