@@ -6,16 +6,17 @@ Performs following task:
 
 void PowerProfiler::addProfileToolOptions() {
   toolCL_collect.push_back("likwid-perfctr" + space_str);
-  toolCL_collect.push_back("-C 0 -g ENERGY -m" + space_str);
+  toolCL_collect.push_back("-C 0" + space_str); // Pin process to core 0
+  toolCL_collect.push_back("-g ENERGY" +
+                           space_str); // Measure energy using MSR registers
+  toolCL_collect.push_back(
+      "-O" + space_str); // Print output in easily parseable format
+  toolCL_collect.push_back("-m" +
+                           space_str); // Use Marker APIs in the code regions
 }
 
 void PowerProfiler::gatherProfilingData(const string &binary_file,
                                         compiler_type curr_compiler) {
-  // CSV file open for storing profiler data
-  bool is_reading_file = false;
-  CSV csv_file(mCompiler_curr_dir_path + mCompiler_power_profile_data_csv,
-               is_reading_file);
-
   string compiler_str = compiler_keyword[curr_compiler];
 
   /* Check if binary file is present at all */
@@ -44,66 +45,68 @@ void PowerProfiler::gatherProfilingData(const string &binary_file,
          << result;
   }
 
-  /* Store result of execution(loops and their running time) */
-  stringstream line_stream(result);
-  string cell;
-  while (getline(line_stream, cell)) {
-    int keyword_pos = cell.find(mCompiler_timing_keyword);
-    if (keyword_pos == string::npos)
-      continue;
-    int keyword_colon_pos = keyword_pos + mCompiler_timing_keyword.length();
-    string hotspot_name   = cell.substr(0, keyword_pos);
-    /* If hotspot name starts with a number, extractor adds a underscore at
-       the beginning of the function name,
-       but not in the filename */
-    if (hotspot_name.substr(0, 1) == "_")
-      hotspot_name = hotspot_name.substr(1, string::npos);
-    /* All dashes are converted to XunderscoreX in function name, recover them
-     * to match loop file names */
-    while (hotspot_name.find("X_X") != string::npos) {
-      hotspot_name.replace(hotspot_name.find("X_X"), 3, "-");
-    }
-    double hotspot_time = stod(cell.substr(keyword_colon_pos + 1));
-
-    csv_file << hotspot_name << compiler_str // <<
-        ;
-    csv_file << endrow;
-  }
+  sanitizeProfileData(result, compiler_str);
 }
 
-void PowerProfiler::sanitizeProfileData() {
-  bool is_reading_file = true;
-  CSV csv_file_profiler(getProfDir() + ".csv", is_reading_file);
+void PowerProfiler::sanitizeProfileData(const string &result,
+                                        const string &compiler_str) {
+  // CSV file open for storing profiler data
+  bool is_reading_file = false;
+  CSV csv_file(mCompiler_curr_dir_path + mCompiler_power_profile_data_csv,
+               is_reading_file);
 
-  is_reading_file = false;
-  CSV csv_file_counters(mCompiler_curr_dir_path +
-                            mCompiler_adv_profile_data_csv,
-                        is_reading_file);
-
-  vector<string> func_data;
-  while (csv_file_profiler.readNextRow()) {
-    func_data                     = csv_file_profiler.getRowData();
-    vector<string>::iterator iter = func_data.begin();
-    string hotspot_name           = *iter;
-    /* All dashes are converted to XunderscoreX in function name, recover them
-     * to match loop file names */
-    while (hotspot_name.find("X_X") != string::npos) {
-      hotspot_name.replace(hotspot_name.find("X_X"), 3, "-");
-    }
-    for (map<string, string>::iterator mIter =
-             hotspot_best_compiler_map.begin();
-         mIter != hotspot_best_compiler_map.end(); mIter++) {
-      string curr_hotspot = mIter->first;
-      /* Underscore added before function with number at starting taken care of
-       * automatically, since it a find for smaller string */
-      if (hotspot_name.find(curr_hotspot) != string::npos) {
-        csv_file_counters << curr_hotspot << mIter->second;
-        for (; iter != func_data.end(); iter++)
-          csv_file_counters << *iter;
-        csv_file_counters << endrow;
-      } // if
-    }   // for map iter
-  }     // while
+  stringstream line_stream(result);
+  string cell;
+  string keyword_region1("Region");
+  string keyword_region2("Group 1 Metric,ENERGY");
+  string keyword_runtime("Runtime (RDTSC) [s]");
+  string keyword_CPI("CPI");
+  string keyword_energy("Energy [J]");
+  string keyword_power("Power [W]");
+  string keyword_energy_dram("Energy DRAM [J]");
+  string keyword_power_dram("Power DRAM [W]");
+  while (getline(line_stream, cell)) {
+    int keyword_region1_pos = cell.find(keyword_region1);
+    int keyword_region2_pos =
+        cell.find(keyword_region2); // Skip Raw data for regions
+    if (keyword_region1_pos != string::npos &&
+        keyword_region2_pos != string::npos) {
+      // Format: ",Region <hotspot name>,Group 1 Metric,ENERGY"
+      int hotspot_pos = keyword_region1_pos + keyword_region1.length() + 1;
+      string hotspot_name =
+          cell.substr(hotspot_pos, keyword_region2_pos - 1 - hotspot_pos);
+      /* If hotspot name starts with a number, extractor adds a underscore at
+         the beginning of the function name,
+         but not in the filename */
+      if (hotspot_name.substr(0, 1) == "_")
+        hotspot_name = hotspot_name.substr(1, string::npos);
+      /* All dashes are converted to XunderscoreX in function name, recover them
+       * to match loop file names */
+      while (hotspot_name.find("X_X") != string::npos) {
+        hotspot_name.replace(hotspot_name.find("X_X"), 3, "-");
+      }
+      csv_file << hotspot_name << compiler_str;
+      // To parse the region stats
+      while (getline(line_stream, cell)) {
+        cell.pop_back(); // remove the comma at the end
+        if (cell.find(keyword_runtime) != string::npos)
+          csv_file << cell.substr(keyword_runtime.length() + 1);
+        else if (cell.find(keyword_CPI) != string::npos)
+          csv_file << cell.substr(keyword_CPI.length() + 1);
+        else if (cell.find(keyword_energy) != string::npos)
+          csv_file << cell.substr(keyword_energy.length() + 1);
+        else if (cell.find(keyword_power) != string::npos)
+          csv_file << cell.substr(keyword_power.length() + 1);
+        else if (cell.find(keyword_energy_dram) != string::npos)
+          csv_file << cell.substr(keyword_energy_dram.length() + 1);
+        else if (cell.find(keyword_power_dram) != string::npos) {
+          csv_file << cell.substr(keyword_power_dram.length() + 1);
+          break; // This is the last stat for a region
+        }
+      } // while
+      csv_file << endrow;
+    } // if
+  }   // while
 }
 
 void PowerProfiler::PowerProfile(
@@ -126,6 +129,5 @@ PowerProfiler::PowerProfiler() {
          iter++) {
       PowerProfile(iter);
     }
-    sanitizeProfileData();
   } // if
 } // Constructor

@@ -23,7 +23,7 @@ private:
   void PowerProfile(const map<compiler_type, bool>::iterator &curr_candidate);
   void gatherProfilingData(const string &binary_file,
                            compiler_type curr_compiler);
-  void sanitizeProfileData();
+  void sanitizeProfileData(const string &result, const string &compiler_str);
 
 public:
   PowerProfiler();
