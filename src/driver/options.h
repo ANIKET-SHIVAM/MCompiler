@@ -42,6 +42,7 @@ const option::Descriptor usage[] = {
   {PROFILE            , 0, ""  , "noprofile"     ,Arg::None     , "    --[no]profile            Profile extracted hotspots" },
   {SYNTHESIZE         , 0, ""  , "nosynthesize"  ,Arg::None     , "    --[no]synthesize         Combine best performing hotspots to generate binary" },
   {ADV_PROFILE        , 0, ""  , "adv-profile"   ,Arg::None     , "    --adv-profile            Advanced Profiling" },
+  {POWER_PROFILE      , 0, ""  , "power-profile" ,Arg::None     , "    --power-profile          Power Profiling" },
   {PREDICT            , 0, ""  , "predict"       ,Arg::None     , "    --predict                Predict candidate using ML" },
   {TEST               , 0, ""  , "test"          ,Arg::None     , "    --test                   Test performance compared to other compilers"
                                                                                                 " optimized code" },
@@ -73,12 +74,16 @@ const option::Descriptor usage[] = {
 // clang-format on
 void set_mCompiler_options(int argc, char *argv[]) {
   mCompiler_enabled_options = {
-      {EXTRACT, true},      {PROFILE, true},        {SYNTHESIZE, true},
-      {ADV_PROFILE, false}, {PREDICT, false},       {TEST, false},
-      {PARALLEL, false},    {AUTO_PARALLEL, false}, {EXTRACTKERNEL, false},
-      {PREFETCH, false},    {KNL, false},           {SKYLAKE, false},
-      {C99, false},         {JOBS, false},          {COMPILE_TO_OBJECT, false},
-      {MC_DEBUG, false},    {MC_INFO, false},       {NOVEC, false},
+      {EXTRACT, true},        {PROFILE, true},
+      {SYNTHESIZE, true},     {ADV_PROFILE, false},
+      {POWER_PROFILE, false}, {PREDICT, false},
+      {TEST, false},          {PARALLEL, false},
+      {AUTO_PARALLEL, false}, {EXTRACTKERNEL, false},
+      {PREFETCH, false},      {KNL, false},
+      {SKYLAKE, false},       {C99, false},
+      {JOBS, false},          {COMPILE_TO_OBJECT, false},
+      {MC_DEBUG, false},      {MC_INFO, false},
+      {NOVEC, false},
   };
   argc -= (argc > 0);
   argv += (argc > 0); // skip program name argv[0] if present
@@ -129,6 +134,10 @@ void set_mCompiler_options(int argc, char *argv[]) {
       break;
     case ADV_PROFILE:
       mCompiler_enabled_options[ADV_PROFILE] = true;
+      break;
+    case POWER_PROFILE:
+      mCompiler_enabled_options[POWER_PROFILE] = true;
+      mCompiler_profiler_runs                  = 0;
       break;
     case PREDICT:
       mCompiler_enabled_options[PREDICT]     = true;

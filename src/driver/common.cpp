@@ -104,15 +104,16 @@ map<string, compiler_type> predicted_compiler;
 
 int mCompiler_profiler_runs =
     3; // Default: If CL provided then replaced with that number
-string mCompiler_profile_data_csv     = "profile_data.csv";
-string mCompiler_adv_profile_data_csv = "adv_profile_data.csv";
-string mCompiler_profiler_input       = "";
-string mCompiler_macro_defs           = "";
-string mCompiler_include_path         = "";
-string mCompiler_link_path            = "";
-string mCompiler_libraries            = "";
-string mCompiler_extraPreSrcFlags     = "";
-string mCompiler_extraPostSrcFlags    = "";
+string mCompiler_profile_data_csv       = "profile_data.csv";
+string mCompiler_adv_profile_data_csv   = "adv_profile_data.csv";
+string mCompiler_power_profile_data_csv = "power_profile_data.csv";
+string mCompiler_profiler_input         = "";
+string mCompiler_macro_defs             = "";
+string mCompiler_include_path           = "";
+string mCompiler_link_path              = "";
+string mCompiler_libraries              = "";
+string mCompiler_extraPreSrcFlags       = "";
+string mCompiler_extraPostSrcFlags      = "";
 
 /*** END: Parameter that change based on the CL input ***/
 
@@ -341,6 +342,9 @@ void addPostLinkerFlags() {
   flag_vec.push_back("-lm");
   flag_vec.push_back(mCompiler_libraries);
   flag_vec.push_back(mCompiler_extraPostSrcFlags);
+  if (mCompiler_enabled_options[POWER_PROFILE]) {
+    flag_vec.push_back("-llikwid");
+  }
   post_linker_flags[compiler_ICC]  = flag_vec;
   post_linker_flags[compiler_GCC]  = flag_vec;
   post_linker_flags[compiler_LLVM] = flag_vec;

@@ -148,6 +148,8 @@ void Extractor::printHeaders(ofstream &loop_file_buf, bool isProfileFile) {
   // TODO: if it is a fortran code
   if (isProfileFile)
     loop_file_buf << "#include \"" << mCompiler_header_name << "\"" << endl;
+  if (isProfileFile && mCompiler_enabled_options[POWER_PROFILE])
+    loop_file_buf << "#include <likwid.h>" << endl;
   if (!hasOMP && (src_type == src_lang_C || src_type == src_lang_CPP))
     loop_file_buf << "#include <omp.h>" << endl;
   if (src_type == src_lang_C && !hasIO)
@@ -615,8 +617,13 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
     loop_file_buf << printOMPprivateArrays() << endl;
 
   // Add OMP Timer start
-  if (isProfileFile)
+  if (isProfileFile && !mCompiler_enabled_options[POWER_PROFILE]) {
     loop_file_buf << "double loop_timer_start = omp_get_wtime( );" << endl;
+  } else if (isProfileFile && mCompiler_enabled_options[POWER_PROFILE]) {
+    loop_file_buf << "LIKWID_MARKER_INIT;" << endl;
+    loop_file_buf << "LIKWID_MARKER_START(\"" << getFuncName() << "\");"
+                  << endl;
+  }
 
   if (mCompiler_enabled_options[MC_DEBUG])
     loop_file_buf << "printf (\"__FUNCTION__ = \%s\\n\", __FUNCTION__);"
@@ -654,8 +661,12 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
   loop_file_buf << "#pragma endscop" << endl;
 
   // Add OMP Timer end
-  if (isProfileFile)
+  if (isProfileFile && !mCompiler_enabled_options[POWER_PROFILE]) {
     loop_file_buf << "double loop_timer_end = omp_get_wtime( );" << endl;
+  } else if (isProfileFile && mCompiler_enabled_options[POWER_PROFILE]) {
+    loop_file_buf << "LIKWID_MARKER_STOP(\"" << getFuncName() << "\");" << endl;
+    loop_file_buf << "LIKWID_MARKER_CLOSE;" << endl;
+  }
 
   /* REMOVED: Very important for profiler to run and collect running time of
    * each loop/hotspot */
@@ -680,8 +691,9 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
              temp_str) == extr.loop_funcName_vec->end())
       (extr.loop_funcName_vec)->push_back(temp_str);
     string loopTimingVarStr = extr.getLoopTimingVarSuffix() + getFuncName();
-    loop_file_buf << loopTimingVarStr << " += "
-                  << "loop_timer_end - loop_timer_start;" << endl;
+    if (!mCompiler_enabled_options[POWER_PROFILE])
+      loop_file_buf << loopTimingVarStr << " += "
+                    << "loop_timer_end - loop_timer_start;" << endl;
   }
   // Required only for C, since C++ is passed through reference(&)
   if (extr.getSrcType() == src_lang_C)
@@ -856,7 +868,7 @@ void LoopInfo::addLoopFuncCall() {
 // passed
 //*/
 //		if( !( isSgGlobal(var_scope) ||
-//isDeclaredInInnerScope(var_scope)
+// isDeclaredInInnerScope(var_scope)
 //|| var_scope->get_qualified_name() != "" ) ){
 //      func_var_str_vec.push_back(var->get_name().getString());
 //    }
@@ -1110,7 +1122,8 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
         mainFuncPresent = true;
         main_scope      = dynamic_cast<SgScopeStatement *>(
             (declFunc->get_definition())->get_body());
-        if ((declFunc->get_orig_return_type())->variantT() == V_SgTypeVoid)
+        if ((declFunc->get_orig_return_type())->variantT() == V_SgTypeVoid &&
+            !mCompiler_enabled_options[POWER_PROFILE])
           addTimingFuncCallVoidMain();
         else
           nonVoidMain = true;
@@ -1166,7 +1179,7 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
     case V_SgReturnStmt: {
       SgStatement *returnstmt = dynamic_cast<SgStatement *>(astNode);
       if (mainFuncPresent && returnstmt->get_scope() == main_scope &&
-          nonVoidMain)
+          nonVoidMain && !mCompiler_enabled_options[POWER_PROFILE])
         addTimingFuncCallNonVoidMain(returnstmt);
       break;
     }
@@ -1192,10 +1205,10 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
     //			case V_SgSourceFile: {
     /* add mCompiler header file into the source */
     //				SgSourceFile *sourceFile =
-    //dynamic_cast<SgSourceFile
+    // dynamic_cast<SgSourceFile
     //*>(astNode);
     //				SageInterface::insertHeader(sourceFile,
-    //mCompiler_header_name, false, false); 				break;
+    // mCompiler_header_name, false, false); 				break;
     //			}
     default: {
       // cerr << "Found node: " << astNode->class_name() << endl;

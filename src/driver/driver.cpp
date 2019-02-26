@@ -73,6 +73,9 @@ void Driver::checkCompilerCandidates() {
     exit(EXIT_FAILURE);
   }
 
+  if (mCompiler_enabled_options[POWER_PROFILE])
+    mCompiler_macro_defs += "-DLIKWID_PERFMON";
+
   /* In common.h */
   addOptimizationFlags();
   addLinkerFlags();
@@ -87,6 +90,18 @@ bool Driver::checkAdvProfileCandidate() {
     return false;
   } else {
     cout << "Found in PATH: amplxe-cl" << endl;
+    return true;
+  }
+}
+
+bool Driver::checkPowerProfileCandidate() {
+  string result_compiler_found = executeCommand("likwid-perfctr");
+  if (result_compiler_found.find("not found") != string::npos) {
+    cerr << "LIKWID not found" << endl;
+    cerr << "Driver: Check unsuccesful for the Power Profiling Tool" << endl;
+    return false;
+  } else {
+    cout << "Found in PATH: likwid-perfctr" << endl;
     return true;
   }
 }
@@ -351,6 +366,8 @@ void Driver::initiateProfiler() { prof = new ProfilerC(); }
 
 void Driver::initiateAdvProfiler() { adv_prof = new AdvProfiler(); }
 
+void Driver::initiatePowerProfiler() { power_prof = new PowerProfiler(); }
+
 void Driver::initiatePredictor() { predictor = new Predictor(); }
 
 void Driver::initiateSynthesizer() { synth = new SynthesizerC(); }
@@ -378,6 +395,13 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  if (mCompiler_enabled_options[POWER_PROFILE]) {
+    if (!driver->checkPowerProfileCandidate()) {
+      mCompiler_enabled_options[POWER_PROFILE] = false;
+      mCompiler_macro_defs += "-DLIKWID_PERFMON";
+    }
+  }
+
   /* Send all files in the command line for extraction */
   if (mCompiler_enabled_options[EXTRACT]) {
     vector<string>::iterator iter;
@@ -397,6 +421,7 @@ int main(int argc, char *argv[]) {
     }
     driver->initiateProfiler();
   }
+
   /* If making prediction, then move Synthesis to the end of the pipeline */
   if (mCompiler_enabled_options[SYNTHESIZE] &&
       !mCompiler_enabled_options[PREDICT] &&
@@ -408,9 +433,14 @@ int main(int argc, char *argv[]) {
     }
     driver->initiateSynthesizer();
   }
+
   /* Perform counter profiling after Synthesis, if not making prediction */
   if (mCompiler_enabled_options[ADV_PROFILE]) {
     driver->initiateAdvProfiler();
+  }
+
+  if (mCompiler_enabled_options[POWER_PROFILE]) {
+    driver->initiatePowerProfiler();
   }
 
   if (mCompiler_enabled_options[PREDICT] &&
@@ -446,8 +476,9 @@ int main(int argc, char *argv[]) {
        mCompiler_mode == mode_COMPLEX)) {
     driver->removeMCompilerDataFolder();
   } else if (mCompiler_enabled_options[MC_INFO] &&
-      (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
-       mCompiler_mode == mode_COMPLEX)) {
+             (mCompiler_mode == mode_FULL_PASS ||
+              mCompiler_mode == mode_FROM_OBJECT ||
+              mCompiler_mode == mode_COMPLEX)) {
     driver->moveMCompilerDataFolder();
   }
 
