@@ -271,6 +271,17 @@ void LoopInfo::getVarsInScope() {
           //            var_base_type =
           //            var->get_type()->findBaseType()->unparseToString() +
           //            space_str;
+          /* Add "restrict" keyword for arrays to get rid of aliasing problem */
+          if (mCompiler_enabled_options[RESTRICT] &&
+              first_square_brac != string::npos) {
+            int first_square_close_brac = var_type_str.find_first_of("]");
+            string restrict_keyword     = "restrict";
+            var_type_str.replace(first_square_brac + 1,
+                                 first_square_close_brac - first_square_brac -
+                                     1,
+                                 restrict_keyword);
+          }
+
           /* To change to var_type var_name[][][] */
           if (first_square_brac != string::npos)
             scope_vars_str_vec.push_back(
@@ -321,6 +332,7 @@ void LoopInfo::getVarsInScope() {
         } else {
           scope_vars_str_vec.push_back(
               var_type_str + "* " + var->get_name().getString() + "_primitive");
+          cout << "Primitive var: " << var->get_name() << endl;
         }
       } else if (extr.getSrcType() == src_lang_CPP) {
         scope_vars_str_vec.push_back(var_type_str + "& " +
@@ -1455,6 +1467,67 @@ void Extractor::modifyExtractedFileText(const string &base_file,
   executeCommand(sed_command3);
 }
 
+void Extractor::inlineFunctions(const vector<string> &argv) {
+  SgProject *project = new SgProject(argv);
+  AstTests::runAllTests(project);
+  bool modifiedAST = true;
+  int count        = 0;
+  do {
+    modifiedAST = false;
+    Rose_STL_Container<SgNode *> functionCallList =
+        NodeQuery::querySubTree(project, V_SgFunctionCallExp);
+    // Loop over all function calls
+    Rose_STL_Container<SgNode *>::iterator i = functionCallList.begin();
+    while (modifiedAST == false && i != functionCallList.end()) {
+      SgFunctionCallExp *functionCall = isSgFunctionCallExp(*i);
+      ROSE_ASSERT(functionCall != NULL);
+      // Not all function calls can be inlined in C, so report if successful.
+      bool sucessfullyInlined = doInline(functionCall);
+      if (sucessfullyInlined == true) {
+        // As soon as the AST is modified recompute the list of function
+        // calls (and restart the iterations over the modified list)
+        modifiedAST = true;
+        cout << "Function inlined" << endl;
+      } else {
+        modifiedAST = false;
+      }
+      // Increment the list iterator
+      i++;
+    }
+    // Quite when we have ceased to do any inline transformations
+    // and only do a predefined number of inline transformations
+    count++;
+  } while (modifiedAST == true && count < 10);
+  // Adding check for isTransformed flag consistancy.
+  cout << "AST check 1" << endl;
+  checkTransformedFlagsVisitor(project);
+  // Call function to postprocess the AST and fixup symbol tables
+  cout << "AST check 2" << endl;
+  FixSgProject(*project);
+  // Rename each variable declaration
+  cout << "AST check 3" << endl;
+  renameVariables(project);
+  // Fold up blocks
+  cout << "AST check 4" << endl;
+  flattenBlocks(project);
+  // Adding check for isTransformed flag consistancy.
+  cout << "AST check 5" << endl;
+  checkTransformedFlagsVisitor(project);
+  // Clean up inliner-generated code
+  cout << "AST check 6" << endl;
+  cleanupInlinedCode(project);
+  // Adding check for isTransformed flag consistancy.
+  cout << "AST check 7" << endl;
+  checkTransformedFlagsVisitor(project);
+  // Change members to public
+  cout << "AST check 8" << endl;
+  changeAllMembersToPublic(project);
+  // Adding check for isTransformed flag consistancy.
+  cout << "AST check 9" << endl;
+  checkTransformedFlagsVisitor(project);
+  backend(project);
+}
+
 /* Extractor constructor, for initiating via driver */
 Extractor::Extractor(const vector<string> &argv) {
   /* Get relative path unique code */
@@ -1462,6 +1535,10 @@ Extractor::Extractor(const vector<string> &argv) {
           mCompiler_input_file_relpathcode.end() &&
       !(mCompiler_input_file_relpathcode.find(argv.back())->second).empty())
     relpathcode = mCompiler_input_file_relpathcode.find(argv.back())->second;
+
+  if (mCompiler_enabled_options[STATICANALYSIS]) {
+    // inlineFunctions(argv); // Has bugs bcoz of rose implementation
+  }
 
   SgProject *ast = NULL;
   /* Create AST and pass to the extraction functions */

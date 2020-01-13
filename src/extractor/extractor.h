@@ -110,6 +110,7 @@ public:
   virtual int
   evaluateSynthesizedAttribute(SgNode *astNode, InheritedAttribute inh_attr,
                                SubTreeSynthesizedAttributes syn_attr_list);
+  void inlineFunctions(const vector<string> &argv);
 };
 
 /* Must contain all info regarding the current loop */
