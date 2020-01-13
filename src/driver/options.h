@@ -50,6 +50,8 @@ const option::Descriptor usage[] = {
                                                                   "                             Default: Serial code generation (with vectorization)" },
   {AUTO_PARALLEL      , 0, ""  , "auto-parallel" ,Arg::None     , "    --auto-parallel          Auto-parallelize the hotspots" },
   {EXTRACTKERNEL      , 0, ""  , "extractkernel" ,Arg::None     , "    --extractkernel          Extract consecutive loop nests, if possible." },
+  {RESTRICT           , 0, ""  , "restrict"      ,Arg::None     , "    --restrict               Add restrict keyword." },
+  {STATICANALYSIS     , 0, ""  , "static"        ,Arg::None     , "    --static                 Perform static analysis to determine read-only values." },
   {PREFETCH           , 0, ""  , "prefetch"      ,Arg::None     , "    --prefetch               Enable software data prefetching" },
   {PROFILE_COUNT      , 0, ""  , "profile-runs"  ,Arg::Numeric  , "    --profile-runs=<num>     Number of time profiler should run the program to"
                                                                                                 " collect data. Default: 3" },
@@ -86,6 +88,8 @@ void set_mCompiler_options(int argc, char *argv[]) {
       {PARALLEL, false},
       {AUTO_PARALLEL, false},
       {EXTRACTKERNEL, false},
+      {RESTRICT, false},
+      {STATICANALYSIS, false},
       {PREFETCH, false},
       {HASWELL, false},
       {KNL, false},
@@ -168,6 +172,12 @@ void set_mCompiler_options(int argc, char *argv[]) {
       break;
     case EXTRACTKERNEL:
       mCompiler_enabled_options[EXTRACTKERNEL] = true;
+      break;
+    case RESTRICT:
+      mCompiler_enabled_options[RESTRICT] = true;
+      break;
+    case STATICANALYSIS:
+      mCompiler_enabled_options[STATICANALYSIS] = true;
       break;
     case PREFETCH:
       mCompiler_enabled_options[PREFETCH] = true;
