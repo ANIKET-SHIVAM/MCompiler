@@ -177,7 +177,7 @@ void addOptimizationFlags() {
   /* LLVM */
   flag_vec.clear();
   flag_vec.push_back("clang");
-  flag_vec.push_back("-Ofast");
+  flag_vec.push_back("-O3");
   if (mCompiler_enabled_options[KNL])
     flag_vec.push_back("-march=knl");
   else
