@@ -321,6 +321,11 @@ void LoopInfo::getVarsInScope() {
               scope_vars_str_vec.push_back(var_type_str + space_str +
                                            var->get_name().getString());
           } else if (SageInterface::isStructType(var_pointer_type)) {
+            if (var_type_str.find("{") != string::npos) {
+              var_type_str.erase(var_type_str.find_first_of("{"),
+                                 var_type_str.find_last_of("}") -
+                                     var_type_str.find_first_of("{") + 1);
+            }
             scope_vars_str_vec.push_back(var_type_str + "* " +
                                          var->get_name().getString() +
                                          "_primitive");
@@ -332,7 +337,7 @@ void LoopInfo::getVarsInScope() {
         } else {
           scope_vars_str_vec.push_back(
               var_type_str + "* " + var->get_name().getString() + "_primitive");
-          cout << "Primitive var: " << var->get_name() << endl;
+          //cout << "Primitive var: " << var->get_name() << endl;
         }
       } else if (extr.getSrcType() == src_lang_CPP) {
         scope_vars_str_vec.push_back(var_type_str + "& " +
