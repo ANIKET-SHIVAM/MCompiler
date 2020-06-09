@@ -1,4 +1,9 @@
 #include "header_test.h"
+int X=55;
+int glob=99;
+int yo(int x, int y){
+	return x*y;
+}
 
 int main(){
 	int i,j,k; long long sum1=0,sum2=0;

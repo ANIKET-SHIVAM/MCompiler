@@ -12,7 +12,7 @@ ifeq ($(OS), centos)
 	OPENCV_INCLUDE = -I${OPENCV_PATH}/include/opencv$(OPENCV_VERSION)
 	OPENCV_LIB = -lopencv_ml -lopencv_core
 else
-	CC = g++
+	CC = g++-5
 	FLAGS = -std=c++11 -g
 
 	ROSE_PATH = ${CURDIR}/tools/rose_build
