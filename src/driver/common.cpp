@@ -33,6 +33,7 @@ string polly_str                     = "_polly";
 string test_str                      = "_test";
 string mCompiler_skiplooppragma_str  = "skiploop";
 string mCompiler_skipplutopragma_str = "skippluto";
+string mCompiler_advprofiler_str = "vtune";
 
 map<compiler_type, string> compiler_keyword = {
     {compiler_ICC, icc_str.substr(1, string::npos)},

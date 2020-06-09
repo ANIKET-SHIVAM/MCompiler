@@ -105,6 +105,7 @@ extern string test_str;
 extern string baseline_compiler_str;
 extern string mCompiler_skiplooppragma_str;
 extern string mCompiler_skipplutopragma_str;
+extern string mCompiler_advprofiler_str;
 
 extern compiler_mode mCompiler_mode;
 

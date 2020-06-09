@@ -85,13 +85,13 @@ void Driver::checkCompilerCandidates() {
 }
 
 bool Driver::checkAdvProfileCandidate() {
-  string result_compiler_found = executeCommand("amplxe-cl");
+  string result_compiler_found = executeCommand(mCompiler_advprofiler_str);
   if (result_compiler_found.find("not found") != string::npos) {
     cerr << "Intel Vtune not found" << endl;
     cerr << "Driver: Check unsuccesful for the Advanced Profiling Tool" << endl;
     return false;
   } else {
-    cout << "Found in PATH: amplxe-cl" << endl;
+    cout << "Found in PATH: " << mCompiler_advprofiler_str << endl;
     return true;
   }
 }
