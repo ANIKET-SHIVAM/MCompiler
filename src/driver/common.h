@@ -21,6 +21,7 @@
 // clang-format off
 #include "rose.h"
 #include "ASTtools.hh"
+#include "constantFolding.h"
 // clang-format on
 
 #include "csv.h"

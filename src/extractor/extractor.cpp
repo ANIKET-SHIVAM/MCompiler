@@ -1473,7 +1473,9 @@ void Extractor::modifyExtractedFileText(const string &base_file,
 }
 
 void Extractor::inlineFunctions(const vector<string> &argv) {
+  bool frontendConstantFolding = true;
   SgProject *project = new SgProject(argv);
+  ConstantFolding::constantFoldingOptimization(project);
   AstTests::runAllTests(project);
   bool modifiedAST = true;
   int count        = 0;
