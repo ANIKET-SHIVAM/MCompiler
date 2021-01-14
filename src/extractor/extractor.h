@@ -27,10 +27,10 @@ public:
 };
 
 class Extractor : public SgTopDownBottomUpProcessing<InheritedAttribute, int> {
-  string mCompiler_file_path;
-  string mCompiler_original_file_name;
-  string mCompiler_file_name;
-  string mCompiler_file_extn;
+  string MCompiler_file_path;
+  string MCompiler_original_file_name;
+  string MCompiler_file_name;
+  string MCompiler_file_extn;
   SgScopeStatement *main_scope = NULL;
   bool nonVoidMain             = false;
   int uniqueCounter  = 0;  // for loops at same line number bcoz of macros
@@ -75,14 +75,14 @@ public:
   src_lang getSrcType() { return src_type; }
   SgGlobal *getGlobalNode() { return global_node; }
   SgStatement *getLastIncludeStatement() { return lastIncludeStmt; }
-  string getDataFolderPath() { return mCompiler_data_folder_path; };
+  string getDataFolderPath() { return MCompiler_data_folder_path; };
   string getLoopTimingVarSuffix() { return loopTimingVarSuffix; };
   string getOMPpragma() { return loopOMPpragma; };
 
-  string getFilePath() { return mCompiler_file_path; };
-  string getFileName() { return mCompiler_file_name; };
-  string getOrigFileName() { return mCompiler_original_file_name; };
-  string getFileExtn() { return mCompiler_file_extn; };
+  string getFilePath() { return MCompiler_file_path; };
+  string getFileName() { return MCompiler_file_name; };
+  string getOrigFileName() { return MCompiler_original_file_name; };
+  string getFileExtn() { return MCompiler_file_extn; };
   string getFilePath(const string &fileNameWithPath);
   string getFileName(const string &fileNameWithPath);
   string getOrigFileName(const string &fileNameWithPath);

@@ -47,7 +47,7 @@ typedef enum {
   mode_TO_OBJECT   = 0, // -c
   mode_FROM_OBJECT = 1, // .o only
   mode_COMPLEX     = 2, // both src and obj in CL
-  mode_FULL_PASS   = 3  // full mCompiler pass
+  mode_FULL_PASS   = 3  // full MCompiler pass
 } compiler_mode;
 
 typedef enum {
@@ -86,7 +86,7 @@ typedef enum {
   NOPOLYHEDRAL,
   HELP,
   UNKNOWN
-} mCompiler_options;
+} MCompiler_options;
 
 extern int profile_binary_err_cnt;
 extern string space_str;
@@ -104,44 +104,44 @@ extern string XplutoX_str;
 extern string polly_str;
 extern string test_str;
 extern string baseline_compiler_str;
-extern string mCompiler_skiplooppragma_str;
-extern string mCompiler_skipplutopragma_str;
-extern string mCompiler_advprofiler_str;
+extern string MCompiler_skiplooppragma_str;
+extern string MCompiler_skipplutopragma_str;
+extern string MCompiler_advprofiler_str;
 
-extern compiler_mode mCompiler_mode;
+extern compiler_mode MCompiler_mode;
 
-extern string mCompiler_timing_keyword;
+extern string MCompiler_timing_keyword;
 
-extern string mCompiler_unique_str;
+extern string MCompiler_unique_str;
 
 extern string printTimingVarFuncName;
 extern string loopTimingVarSuffix;
-extern string mCompiler_profile_file_tag;
-extern string mCompiler_header_name;
-extern string mCompiler_header_code_name;
-extern string mCompiler_binary_path;
-extern string mCompiler_binary_name;
-extern string mCompiler_data_folder;
-extern string mCompiler_data_folder_path;
-extern string mCompiler_curr_dir_path;
+extern string MCompiler_profile_file_tag;
+extern string MCompiler_header_name;
+extern string MCompiler_header_code_name;
+extern string MCompiler_binary_path;
+extern string MCompiler_binary_name;
+extern string MCompiler_data_folder;
+extern string MCompiler_data_folder_path;
+extern string MCompiler_curr_dir_path;
 extern string pgi_lib_path;
 extern string vtune_path;
-extern string mCompiler_trained_model_path;
-extern string mCompiler_trained_model_features_path;
-extern string mCompiler_trained_autopar_model_path;
-extern string mCompiler_trained_autopar_model_features_path;
-extern string mCompiler_hotspotlist_file;
-extern string mCompiler_baselist_file;
-extern string mCompiler_adv_profile_dir;
+extern string MCompiler_trained_model_path;
+extern string MCompiler_trained_model_features_path;
+extern string MCompiler_trained_autopar_model_path;
+extern string MCompiler_trained_autopar_model_features_path;
+extern string MCompiler_hotspotlist_file;
+extern string MCompiler_baselist_file;
+extern string MCompiler_adv_profile_dir;
 #ifdef OS_CENTOS
 extern string rose_path;
 #endif
 
 /* For the extractor */
-extern vector<string> mCompiler_input_file;
-extern map<string, string> mCompiler_input_file_relpathcode;
+extern vector<string> MCompiler_input_file;
+extern map<string, string> MCompiler_input_file_relpathcode;
 
-extern vector<string> mCompiler_object_file;
+extern vector<string> MCompiler_object_file;
 
 /* Extractor passes to Profiler */
 extern set<string> files_to_compile;
@@ -154,19 +154,19 @@ extern set<string> hotspot_extractor_to_predictor_set;
 /* Predictor to Synthesizer */
 extern map<string, compiler_type> predicted_compiler;
 
-extern int mCompiler_profiler_runs;
-extern string mCompiler_profile_data_csv;
-extern string mCompiler_adv_profile_data_csv;
-extern string mCompiler_power_profile_data_csv;
-extern string mCompiler_profiler_input;
-extern string mCompiler_macro_defs;
-extern string mCompiler_include_path;
-extern string mCompiler_link_path;
-extern string mCompiler_libraries;
-extern string mCompiler_extraPreSrcFlags;
-extern string mCompiler_extraPostSrcFlags;
+extern int MCompiler_profiler_runs;
+extern string MCompiler_profile_data_csv;
+extern string MCompiler_adv_profile_data_csv;
+extern string MCompiler_power_profile_data_csv;
+extern string MCompiler_profiler_input;
+extern string MCompiler_macro_defs;
+extern string MCompiler_include_path;
+extern string MCompiler_link_path;
+extern string MCompiler_libraries;
+extern string MCompiler_extraPreSrcFlags;
+extern string MCompiler_extraPostSrcFlags;
 
-extern map<mCompiler_options, bool> mCompiler_enabled_options;
+extern map<MCompiler_options, bool> MCompiler_enabled_options;
 extern map<compiler_type, bool> compiler_candidate;
 extern map<compiler_type, string> compiler_keyword;
 extern map<compiler_type, vector<string>> optimization_flags;

@@ -4,7 +4,7 @@
 #define N 100000
 
 int bucket[N];
-/* Comment this and mC works */
+/* Comment this and MC works */
 #pragma omp threadprivate(bucket)
 int bucket2[N];
 

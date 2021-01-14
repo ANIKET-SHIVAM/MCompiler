@@ -17,8 +17,8 @@ private:
 
   void setProfBinary(const string &str) { prof_binary = str; };
   string getProfBinary() { return prof_binary; };
-  void setProfDir(const string &str) { mCompiler_adv_profile_dir = str; };
-  string getProfDir() { return mCompiler_adv_profile_dir; };
+  void setProfDir(const string &str) { MCompiler_adv_profile_dir = str; };
+  string getProfDir() { return MCompiler_adv_profile_dir; };
   void addNoOptCompilerFlags(bool link_phase);
   void addProfileToolOptions();
   void compileSource();
@@ -29,6 +29,6 @@ private:
 
 public:
   AdvProfiler();
-  string getDataFolderPath() { return mCompiler_data_folder_path; };
+  string getDataFolderPath() { return MCompiler_data_folder_path; };
 };
 #endif

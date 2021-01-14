@@ -11,14 +11,14 @@ void AdvProfiler::addNoOptCompilerFlags(bool link_phase) {
   compilerCL.push_back("icc");
   compilerCL.push_back(
       "-O1 -g -no-vec"); //-xHOST generate vector code, even with -no-vec
-  if (link_phase || mCompiler_enabled_options[PARALLEL])
+  if (link_phase || MCompiler_enabled_options[PARALLEL])
     compilerCL.push_back("-qopenmp");
   compilerCL.push_back("-std=c11");
   compilerCL.push_back("-w");
-  compilerCL.push_back(mCompiler_include_path);
-  compilerCL.push_back(mCompiler_macro_defs);
-  compilerCL.push_back(mCompiler_extraPreSrcFlags);
-  compilerCL.push_back(mCompiler_extraPostSrcFlags);
+  compilerCL.push_back(MCompiler_include_path);
+  compilerCL.push_back(MCompiler_macro_defs);
+  compilerCL.push_back(MCompiler_extraPreSrcFlags);
+  compilerCL.push_back(MCompiler_extraPostSrcFlags);
 }
 
 void AdvProfiler::compileSource() {
@@ -29,8 +29,8 @@ void AdvProfiler::compileSource() {
   /* Collect all non profile source to compile for Adv Profiling */
   for (set<string>::iterator iters = files_to_compile.begin();
        iters != files_to_compile.end(); iters++) {
-    if ((*iters).find(mCompiler_profile_file_tag) != string::npos ||
-        (*iters).find(mCompiler_header_code_name) != string::npos)
+    if ((*iters).find(MCompiler_profile_file_tag) != string::npos ||
+        (*iters).find(MCompiler_header_code_name) != string::npos)
       continue;
     string out_file = (*iters).substr(0, (*iters).find_last_of(".")) +
                       adv_profile_str + dot_o_str;
@@ -41,19 +41,19 @@ void AdvProfiler::compileSource() {
 }
 
 void AdvProfiler::linkObjs() {
-  if (mCompiler_mode == mode_FROM_OBJECT || mCompiler_mode == mode_COMPLEX) {
+  if (MCompiler_mode == mode_FROM_OBJECT || MCompiler_mode == mode_COMPLEX) {
     DIR *dir;
     struct dirent *ent;
     /* If in Complex mode, then also fetch from dir */
     files_to_link.clear();
     set<string> filename_keyword;
-    for (auto const &str : mCompiler_object_file) {
+    for (auto const &str : MCompiler_object_file) {
       int lastSlashPos = str.find_last_of('/');
       int lastDotPos   = str.find_last_of('.');
       filename_keyword.insert(
           str.substr(lastSlashPos + 1, lastDotPos - lastSlashPos - 1));
     }
-    for (auto const &str : mCompiler_input_file) {
+    for (auto const &str : MCompiler_input_file) {
       int lastSlashPos = str.find_last_of('/');
       int lastDotPos   = str.find_last_of('.');
       filename_keyword.insert(
@@ -76,7 +76,7 @@ void AdvProfiler::linkObjs() {
         if (filename.at(0) != '.' &&
             isEndingWith(filename, adv_profile_str + dot_o_str)) {
           files_to_link.insert(getDataFolderPath() + ent->d_name);
-          if (mCompiler_enabled_options[MC_INFO])
+          if (MCompiler_enabled_options[MC_INFO])
             cout << "Adding files for Linking: " << ent->d_name << endl;
         }
       }
@@ -97,7 +97,7 @@ void AdvProfiler::linkObjs() {
        iters != files_to_link.end(); iters++) {
     object_files += *iters + space_str;
     out_file =
-        getDataFolderPath() + mCompiler_binary_name + "_" + adv_profile_str;
+        getDataFolderPath() + MCompiler_binary_name + "_" + adv_profile_str;
     setProfBinary(out_file);
   }
   CL +=
@@ -123,7 +123,7 @@ void AdvProfiler::addProfileToolOptions() {
   if (counters.empty())
     cerr << "Vtune Counter list empty" << endl;
 
-  toolCL_collect.push_back(mCompiler_advprofiler_str + space_str);
+  toolCL_collect.push_back(MCompiler_advprofiler_str + space_str);
   toolCL_collect.push_back("-collect-with runsa" + space_str);
   toolCL_collect.push_back("-knob analyze-openmp=true" + space_str);
   toolCL_collect.push_back("-knob event-config=");
@@ -139,7 +139,7 @@ void AdvProfiler::addProfileToolOptions() {
   toolCL_collect.push_back("-no-summary" + space_str);
   toolCL_collect.push_back("--" + space_str);
   toolCL_collect.push_back(getProfBinary());
-  toolCL_collect.push_back(space_str + mCompiler_profiler_input);
+  toolCL_collect.push_back(space_str + MCompiler_profiler_input);
   //  TODO: Handle Input file for profiling
 }
 
@@ -164,7 +164,7 @@ void AdvProfiler::runProfileTool() {
 }
 
 void AdvProfiler::gatherProfileData() {
-  toolCL_report.push_back(mCompiler_advprofiler_str + space_str);
+  toolCL_report.push_back(MCompiler_advprofiler_str + space_str);
   toolCL_report.push_back("-R hotspots" + space_str);
   toolCL_report.push_back("-r" + space_str);
   toolCL_report.push_back(getProfDir() + space_str);
@@ -184,8 +184,8 @@ void AdvProfiler::sanitizeProfileData() {
   CSV csv_file_profiler(getProfDir() + ".csv", is_reading_file);
 
   is_reading_file = false;
-  CSV csv_file_counters(mCompiler_curr_dir_path +
-                            mCompiler_adv_profile_data_csv,
+  CSV csv_file_counters(MCompiler_curr_dir_path +
+                            MCompiler_adv_profile_data_csv,
                         is_reading_file);
 
   vector<string> func_data;
@@ -216,20 +216,20 @@ void AdvProfiler::sanitizeProfileData() {
 
 AdvProfiler::AdvProfiler() {
   cout << "Advanced Profiling" << endl;
-  if (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_TO_OBJECT ||
-      mCompiler_mode == mode_COMPLEX) {
+  if (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_TO_OBJECT ||
+      MCompiler_mode == mode_COMPLEX) {
     addNoOptCompilerFlags(false);
     compileSource(); // Phase 1
   }
-  if (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
-      mCompiler_mode == mode_COMPLEX) {
+  if (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
+      MCompiler_mode == mode_COMPLEX) {
     addNoOptCompilerFlags(true);
     linkObjs(); // Phase 2
     addProfileToolOptions();
     runProfileTool();
     gatherProfileData();
     /* If making prediction, skip generating adv-profile data file */
-    if (!mCompiler_enabled_options[PREDICT]) {
+    if (!MCompiler_enabled_options[PREDICT]) {
       sanitizeProfileData();
     }
   } // if

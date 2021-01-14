@@ -9,7 +9,7 @@ class ProfilerC {
 private:
   string data_folder_path;
   set<string> files_to_link;
-  set<string> mCompiler_header_obj;
+  set<string> MCompiler_header_obj;
   set<string> *pluto_files_to_compile = new set<string>();
   string pluto_success_str            = "[Pluto] Output written";
   set<string> *pluto_fail_hotspots    = new set<string>();
@@ -30,7 +30,7 @@ private:
 
 public:
   ProfilerC();
-  string getDataFolderPath() { return mCompiler_data_folder_path; };
+  string getDataFolderPath() { return MCompiler_data_folder_path; };
 
   // Phase 1
   void Optimize(compiler_type curr_candidate, bool curr_cand_status);
@@ -40,7 +40,7 @@ public:
   void Profile(const map<compiler_type, bool>::iterator &curr_candidate);
   void independentProfile();
   void getObjectFiles(const string &compiler_str);
-  /* getObjectFiles-Only needed if mCompiler started at Profiling phase */
+  /* getObjectFiles-Only needed if MCompiler started at Profiling phase */
   void linkFiles();
   void gatherProfilingData(const string &binary_file,
                            compiler_type curr_compiler);

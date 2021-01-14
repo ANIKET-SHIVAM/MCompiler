@@ -36,7 +36,7 @@ struct Arg : public option::Arg {
 };
 // clang-format off
 const option::Descriptor usage[] = {
-  {UNKNOWN            , 0, ""  , ""              ,Arg::None     , "Usage:  mCompiler <input_files> [options] [-o output]\nOptions:" },
+  {UNKNOWN            , 0, ""  , ""              ,Arg::None     , "Usage:  MCompiler <input_files> [options] [-o output]\nOptions:" },
   {HELP               , 0, "h" , "help"          ,Arg::None     , "    -h,--help                Print usage" },
   {EXTRACT            , 0, ""  , "noextract"     ,Arg::None     , "    --[no]extract            Extract hotspots" },
   {PROFILE            , 0, ""  , "noprofile"     ,Arg::None     , "    --[no]profile            Profile extracted hotspots" },
@@ -57,7 +57,7 @@ const option::Descriptor usage[] = {
                                                                                                 " collect data. Default: 3" },
   {INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>           Input to the program"
                                                                                                 " Needed to generate profiling information" },
-  {FILE_PREDICT       , 0, ""  , "predict-model" ,Arg::Required , "    --predict-model=<args>   Path to the trained ML model. Default: mC_trained_model.yml" },
+  {FILE_PREDICT       , 0, ""  , "predict-model" ,Arg::Required , "    --predict-model=<args>   Path to the trained ML model. Default: MC_trained_model.yml" },
   {HASWELL            , 0, ""  , "haswell"       ,Arg::None     , "    --haswell                Compile for Intel Haswell processor. Default: Skylake" },
   {KNL                , 0, ""  , "knl"           ,Arg::None     , "    --knl                    Compile for Intel Knights Landing processor. Default: Skylake" },
   {SKYLAKE            , 0, ""  , "skylake"       ,Arg::None     , "    --skylake                Compile for Intel Skylake processor." },
@@ -69,15 +69,15 @@ const option::Descriptor usage[] = {
   {LINKER_PATH        , 0, "L" , "link"          ,Arg::Required , "    -L[<arg>]                Directory to search for libraries" },
   {LIBS_PATH          , 0, "l" , "libs"          ,Arg::Required , "    -l[<arg>]                Instruct the linker to link in the -l<string> library" },
   {MACRO_DEFS         , 0, "D" , "DEFS"          ,Arg::Required , "    -D[<arg>]                Macro definition" },
-  {MC_DEBUG           , 0, ""  , "debug"         ,Arg::None     , "    --debug                  Output mCompiler workflow" },
-  {MC_INFO            , 0, ""  , "info"          ,Arg::None     , "    --info                   Print information for mCompiler workflow" },
+  {MC_DEBUG           , 0, ""  , "debug"         ,Arg::None     , "    --debug                  Output MCompiler workflow" },
+  {MC_INFO            , 0, ""  , "info"          ,Arg::None     , "    --info                   Print information for MCompiler workflow" },
   {NOVEC              , 0, ""  , "novec"         ,Arg::None     , "    --novec                  Disable vectorizer" },
   {NOPOLYHEDRAL       , 0, ""  , "disable-polyhedral"  ,Arg::None     , "    --disable-polyhedral     Disable Polyhedral Model based loop optimizers" },
   {0, 0, 0, 0, 0, 0}
 };
 // clang-format on
-void set_mCompiler_options(int argc, char *argv[]) {
-  mCompiler_enabled_options = {
+void set_MCompiler_options(int argc, char *argv[]) {
+  MCompiler_enabled_options = {
       {EXTRACT, true},
       {PROFILE, true},
       {SYNTHESIZE, true},
@@ -137,111 +137,111 @@ void set_mCompiler_options(int argc, char *argv[]) {
     option::Option &opt = buffer[i];
     switch (opt.index()) {
     case EXTRACT:
-      mCompiler_enabled_options[EXTRACT]    = false;
-      mCompiler_enabled_options[PROFILE]    = false;
-      mCompiler_enabled_options[SYNTHESIZE] = false;
+      MCompiler_enabled_options[EXTRACT]    = false;
+      MCompiler_enabled_options[PROFILE]    = false;
+      MCompiler_enabled_options[SYNTHESIZE] = false;
       break;
     case PROFILE:
-      mCompiler_enabled_options[PROFILE]    = false;
-      mCompiler_enabled_options[SYNTHESIZE] = false;
+      MCompiler_enabled_options[PROFILE]    = false;
+      MCompiler_enabled_options[SYNTHESIZE] = false;
       break;
     case SYNTHESIZE:
-      mCompiler_enabled_options[SYNTHESIZE] = false;
+      MCompiler_enabled_options[SYNTHESIZE] = false;
       fprintf(stdout, "--numeric with argument '%s'\n", opt.arg);
       break;
     case ADV_PROFILE:
-      mCompiler_enabled_options[ADV_PROFILE] = true;
+      MCompiler_enabled_options[ADV_PROFILE] = true;
       break;
     case POWER_PROFILE:
-      mCompiler_enabled_options[POWER_PROFILE] = true;
-      mCompiler_profiler_runs                  = 0;
+      MCompiler_enabled_options[POWER_PROFILE] = true;
+      MCompiler_profiler_runs                  = 0;
       break;
     case PREDICT:
-      mCompiler_enabled_options[PREDICT]     = true;
-      mCompiler_enabled_options[ADV_PROFILE] = true;
+      MCompiler_enabled_options[PREDICT]     = true;
+      MCompiler_enabled_options[ADV_PROFILE] = true;
       break;
     case TEST:
-      mCompiler_enabled_options[TEST] = true;
+      MCompiler_enabled_options[TEST] = true;
       break;
     case PARALLEL:
-      mCompiler_enabled_options[PARALLEL] = true;
+      MCompiler_enabled_options[PARALLEL] = true;
       break;
     case AUTO_PARALLEL:
-      mCompiler_enabled_options[AUTO_PARALLEL] = true;
-      mCompiler_enabled_options[PARALLEL]      = true;
+      MCompiler_enabled_options[AUTO_PARALLEL] = true;
+      MCompiler_enabled_options[PARALLEL]      = true;
       break;
     case EXTRACTKERNEL:
-      mCompiler_enabled_options[EXTRACTKERNEL] = true;
+      MCompiler_enabled_options[EXTRACTKERNEL] = true;
       break;
     case RESTRICT:
-      mCompiler_enabled_options[RESTRICT] = true;
+      MCompiler_enabled_options[RESTRICT] = true;
       break;
     case STATICANALYSIS:
-      mCompiler_enabled_options[STATICANALYSIS] = true;
+      MCompiler_enabled_options[STATICANALYSIS] = true;
       break;
     case PREFETCH:
-      mCompiler_enabled_options[PREFETCH] = true;
+      MCompiler_enabled_options[PREFETCH] = true;
       break;
     case COMPILE_TO_OBJECT:
-      mCompiler_enabled_options[COMPILE_TO_OBJECT] = true;
+      MCompiler_enabled_options[COMPILE_TO_OBJECT] = true;
       break;
     case PROFILE_COUNT:
-      mCompiler_profiler_runs = atoi(opt.arg);
+      MCompiler_profiler_runs = atoi(opt.arg);
       break;
     case INPUT_PROFILE:
-      mCompiler_profiler_input = opt.arg;
+      MCompiler_profiler_input = opt.arg;
       break;
     case FILE_PREDICT:
-      mCompiler_trained_model_path = opt.arg;
+      MCompiler_trained_model_path = opt.arg;
       break;
     case HASWELL:
-      mCompiler_enabled_options[HASWELL] = true;
-      mCompiler_enabled_options[SKYLAKE] = false;
+      MCompiler_enabled_options[HASWELL] = true;
+      MCompiler_enabled_options[SKYLAKE] = false;
       break;
     case KNL:
-      mCompiler_enabled_options[KNL]     = true;
-      mCompiler_enabled_options[SKYLAKE] = false;
+      MCompiler_enabled_options[KNL]     = true;
+      MCompiler_enabled_options[SKYLAKE] = false;
       break;
     case SKYLAKE:
-      mCompiler_enabled_options[SKYLAKE] = true;
+      MCompiler_enabled_options[SKYLAKE] = true;
       break;
     case C99:
-      mCompiler_enabled_options[C99] = true;
+      MCompiler_enabled_options[C99] = true;
       break;
     case JOBS:
-      mCompiler_enabled_options[JOBS] = true;
+      MCompiler_enabled_options[JOBS] = true;
       break;
     case OUTPUT_BINARY:
       tmpstr                = opt.arg;
-      mCompiler_binary_path = tmpstr.substr(0, tmpstr.find_last_of('/') + 1);
-      mCompiler_binary_name = tmpstr.substr(tmpstr.find_last_of('/') + 1);
+      MCompiler_binary_path = tmpstr.substr(0, tmpstr.find_last_of('/') + 1);
+      MCompiler_binary_name = tmpstr.substr(tmpstr.find_last_of('/') + 1);
       break;
     case INCLUDE_PATH:
-      mCompiler_include_path += space_str + "-I" + mCompiler_curr_dir_path +
+      MCompiler_include_path += space_str + "-I" + MCompiler_curr_dir_path +
                                 string(opt.arg) + space_str;
       break;
     case LINKER_PATH:
-      mCompiler_link_path += space_str + "-L" + mCompiler_curr_dir_path +
+      MCompiler_link_path += space_str + "-L" + MCompiler_curr_dir_path +
                              string(opt.arg) + space_str;
       break;
     case LIBS_PATH:
-      mCompiler_libraries += space_str + "-l" + string(opt.arg) + space_str;
+      MCompiler_libraries += space_str + "-l" + string(opt.arg) + space_str;
       break;
     case MACRO_DEFS:
-      mCompiler_macro_defs += space_str + "-D" + string(opt.arg) + space_str;
+      MCompiler_macro_defs += space_str + "-D" + string(opt.arg) + space_str;
       break;
     case MC_DEBUG:
-      mCompiler_enabled_options[MC_DEBUG] = true;
-      mCompiler_enabled_options[MC_INFO]  = true;
+      MCompiler_enabled_options[MC_DEBUG] = true;
+      MCompiler_enabled_options[MC_INFO]  = true;
       break;
     case MC_INFO:
-      mCompiler_enabled_options[MC_INFO] = true;
+      MCompiler_enabled_options[MC_INFO] = true;
       break;
     case NOVEC:
-      mCompiler_enabled_options[NOVEC] = true;
+      MCompiler_enabled_options[NOVEC] = true;
       break;
     case NOPOLYHEDRAL:
-      mCompiler_enabled_options[NOPOLYHEDRAL] = true;
+      MCompiler_enabled_options[NOPOLYHEDRAL] = true;
       break;
     }
   }
@@ -253,29 +253,29 @@ void set_mCompiler_options(int argc, char *argv[]) {
         isEndingWith(str, ".f") || isEndingWith(str, ".f77") ||
         isEndingWith(str, ".f90") || isEndingWith(str, ".f95")) {
       /* Search for source files in the name */
-      mCompiler_input_file.push_back(getAbsolutePath(str));
+      MCompiler_input_file.push_back(getAbsolutePath(str));
       postSourceFlags = true;
 
       string srcparentdir = str.substr(0, str.find_last_of("/"));
       if (srcparentdir.compare(str) != 0) {
         boost::erase_all(srcparentdir, "/");
         boost::erase_all(srcparentdir, ".");
-        mCompiler_input_file_relpathcode.insert(
+        MCompiler_input_file_relpathcode.insert(
             pair<string, string>(getAbsolutePath(str), srcparentdir));
       } else {
-        mCompiler_input_file_relpathcode.insert(
+        MCompiler_input_file_relpathcode.insert(
             pair<string, string>(getAbsolutePath(str), ""));
       }
 
     } else if (isEndingWith(str, ".o")) {
       /* Search for object files in the name */
-      mCompiler_object_file.push_back(str);
+      MCompiler_object_file.push_back(str);
     } else {
       cout << "Non-option argument: " << str << endl;
       if (postSourceFlags)
-        mCompiler_extraPostSrcFlags += space_str + str;
+        MCompiler_extraPostSrcFlags += space_str + str;
       else
-        mCompiler_extraPreSrcFlags += space_str + str;
+        MCompiler_extraPreSrcFlags += space_str + str;
     }
   }
 }

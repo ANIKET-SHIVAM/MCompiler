@@ -2,19 +2,19 @@
 
 /* Load trained model for serial code */
 void Predictor::loadModel() {
-  if (!isFileExist(mCompiler_trained_model_path)) {
+  if (!isFileExist(MCompiler_trained_model_path)) {
     cerr << "Predictor: No trained model found to make predictions at:"
-         << mCompiler_trained_model_path << endl;
+         << MCompiler_trained_model_path << endl;
     exit(EXIT_FAILURE);
   }
-  if (!isFileExist(mCompiler_trained_model_features_path)) {
+  if (!isFileExist(MCompiler_trained_model_features_path)) {
     cerr << "Predictor: No trained model features found to make predictions at:"
-         << mCompiler_trained_model_features_path << endl;
+         << MCompiler_trained_model_features_path << endl;
     exit(EXIT_FAILURE);
   }
 
   string line;
-  ifstream feature_file(mCompiler_trained_model_features_path);
+  ifstream feature_file(MCompiler_trained_model_features_path);
   while (getline(feature_file, line)) {
     model_feature_labels.push_back(line);
   }
@@ -24,25 +24,25 @@ void Predictor::loadModel() {
   instanceMat.create(1, feature_vector_size, CV_32F);
 
   rfmodel_trained = RTrees::create();
-  rfmodel_trained = RTrees::load(mCompiler_trained_model_path);
+  rfmodel_trained = RTrees::load(MCompiler_trained_model_path);
 }
 
 /* Load trained model for auto-par code */
 void Predictor::loadAutoParModel() {
-  if (!isFileExist(mCompiler_trained_autopar_model_path)) {
+  if (!isFileExist(MCompiler_trained_autopar_model_path)) {
     cerr << "Predictor: No trained autopar model found to make predictions at:"
-         << mCompiler_trained_autopar_model_path << endl;
+         << MCompiler_trained_autopar_model_path << endl;
     exit(EXIT_FAILURE);
   }
-  if (!isFileExist(mCompiler_trained_autopar_model_features_path)) {
+  if (!isFileExist(MCompiler_trained_autopar_model_features_path)) {
     cerr << "Predictor: No trained autopar model features found to make "
             "predictions at:"
-         << mCompiler_trained_autopar_model_features_path << endl;
+         << MCompiler_trained_autopar_model_features_path << endl;
     exit(EXIT_FAILURE);
   }
 
   string line;
-  ifstream feature_file(mCompiler_trained_autopar_model_features_path);
+  ifstream feature_file(MCompiler_trained_autopar_model_features_path);
   while (getline(feature_file, line)) {
     model_feature_labels.push_back(line);
   }
@@ -52,7 +52,7 @@ void Predictor::loadAutoParModel() {
   instanceMat.create(1, feature_vector_size, CV_32F);
 
   rfmodel_trained = RTrees::create();
-  rfmodel_trained = RTrees::load(mCompiler_trained_autopar_model_path);
+  rfmodel_trained = RTrees::load(MCompiler_trained_autopar_model_path);
 }
 
 /* Collect counter labels and function that were adv-profiled */
@@ -151,7 +151,7 @@ void Predictor::predictCandidate() {
   if (hotspot_extractor_to_predictor_set.begin() ==
       hotspot_extractor_to_predictor_set.end()) {
     string line;
-    ifstream hotspotlistfile(getDataFolderPath() + mCompiler_hotspotlist_file);
+    ifstream hotspotlistfile(getDataFolderPath() + MCompiler_hotspotlist_file);
     while (getline(hotspotlistfile, line)) {
       hotspot_extractor_to_predictor_set.insert(line);
     }
@@ -192,7 +192,7 @@ void Predictor::predictCandidate() {
 }
 
 Predictor::Predictor() {
-  if (mCompiler_enabled_options[AUTO_PARALLEL])
+  if (MCompiler_enabled_options[AUTO_PARALLEL])
     loadAutoParModel();
   else
     loadModel();

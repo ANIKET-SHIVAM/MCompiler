@@ -28,7 +28,7 @@ public:
   void gatherPredictionData();
   bool filterFeatures(string hotspot_name);
   void predictCandidate();
-  string getDataFolderPath() { return mCompiler_data_folder_path; };
-  string getProfDir() { return mCompiler_adv_profile_dir; };
+  string getDataFolderPath() { return MCompiler_data_folder_path; };
+  string getProfDir() { return MCompiler_adv_profile_dir; };
 };
 #endif

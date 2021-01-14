@@ -16,7 +16,7 @@ void SynthesizerC::selectOptimalOptimizedCandidate(string hotspot_name) {
       if (dataIter != profiler_hotspot_data.end()) {
         hotspot_timing_set.insert(pair<string, double>(
             compiler_keyword[curr_compiler], getVectorMean(dataIter->second)));
-        if (mCompiler_enabled_options[MC_INFO]) {
+        if (MCompiler_enabled_options[MC_INFO]) {
           cout << "Synthesizer: " << hotspot_name << " + "
                << compiler_keyword[curr_compiler] << ":"
                << getVectorMean(dataIter->second) << endl;
@@ -36,10 +36,10 @@ void SynthesizerC::selectOptimalOptimizedCandidate(string hotspot_name) {
           ->second;
   best_objs_to_link.insert(best_option_path);
   if ((hotspot_timing_set.begin())->second != 0)
-    cout << "mCompiler chose: " << hotspot_name << " + " << best_compiler_option
+    cout << "MCompiler chose: " << hotspot_name << " + " << best_compiler_option
          << " (" << (hotspot_timing_set.begin())->second << "s)" << endl;
   else
-    cout << "mCompiler chose: " << hotspot_name << " + "
+    cout << "MCompiler chose: " << hotspot_name << " + "
          << "baseline (lacks profile info)" << endl;
 }
 
@@ -86,7 +86,7 @@ void SynthesizerC::analyzeHotspotProfileData() {
 void SynthesizerC::selectPredictedObjs() {
   /* Select base obj files */
   string line;
-  ifstream baselistfile(getDataFolderPath() + mCompiler_baselist_file);
+  ifstream baselistfile(getDataFolderPath() + MCompiler_baselist_file);
   while (getline(baselistfile, line)) {
     best_objs_to_link.insert(getDataFolderPath() + line +
                              baseline_compiler_str + dot_o_str);
@@ -166,9 +166,9 @@ void SynthesizerC::generateFinalBinary() {
 }
 
 SynthesizerC::SynthesizerC() {
-  binary_name = mCompiler_binary_path + mCompiler_binary_name;
+  binary_name = MCompiler_binary_path + MCompiler_binary_name;
 
-  if (mCompiler_enabled_options[PREDICT])
+  if (MCompiler_enabled_options[PREDICT])
     selectPredictedObjs();
   else
     analyzeHotspotProfileData();

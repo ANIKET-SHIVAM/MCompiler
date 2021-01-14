@@ -22,31 +22,31 @@ int main() {
   C = (double**)malloc(sizeof(DATA_TYPE*)*nj);
   D = (double**)malloc(sizeof(DATA_TYPE*)*ni);
   tmp = (double**)malloc(sizeof(DATA_TYPE*)*ni);
-  #pragma mC skiploop
+  #pragma MC skiploop
   for (i = 0; i < ni; i++){
     A[i] = (double*)malloc(sizeof(DATA_TYPE)*nk);
     for (j = 0; j < nk; j++)
       A[i][j] = (DATA_TYPE) ((i*j+1) % ni) / ni;
   }
-  #pragma mC skiploop
+  #pragma MC skiploop
   for (i = 0; i < nk; i++){
     B[i] = (double*)malloc(sizeof(DATA_TYPE)*nj);
     for (j = 0; j < nj; j++)
       B[i][j] = (DATA_TYPE) (i*(j+1) % nj) / nj;
   }
-  #pragma mC skiploop
+  #pragma MC skiploop
   for (i = 0; i < nj; i++){
     C[i] = (double*)malloc(sizeof(DATA_TYPE)*nl);
     for (j = 0; j < nl; j++)
       C[i][j] = (DATA_TYPE) ((i*(j+3)+1) % nl) / nl;
   }
-  #pragma mC skiploop
+  #pragma MC skiploop
   for (i = 0; i < ni; i++){
     D[i] = (double*)malloc(sizeof(DATA_TYPE)*nl);
     for (j = 0; j < nl; j++)
       D[i][j] = (DATA_TYPE) (i*(j+2) % nk) / nk;
   }
-  #pragma mC skiploop
+  #pragma MC skiploop
   for (i = 0; i < ni; i++)
     tmp[i] = (double*)malloc(sizeof(DATA_TYPE)*nj);
 
@@ -71,7 +71,7 @@ int main() {
   end = omp_get_wtime();
 
   double checksum = 0;
-  #pragma mC skiploop
+  #pragma MC skiploop
   for (i = 0; i < ni; i++)
     for (j = 0; j < nl; j++)
       checksum += D[i][j]/1000;

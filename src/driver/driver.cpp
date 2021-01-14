@@ -15,7 +15,7 @@ void Driver::checkCompilerCandidates() {
   } else {
     cout << "Couldn't find in PATH: icc (Intel)" << endl;
   }
-  if (!mCompiler_enabled_options[AUTO_PARALLEL]) {
+  if (!MCompiler_enabled_options[AUTO_PARALLEL]) {
     result_compiler_found = executeCommand("gcc");
     if (result_compiler_found.find("not found") == string::npos) {
       compiler_candidate[compiler_GCC] = true;
@@ -42,7 +42,7 @@ void Driver::checkCompilerCandidates() {
 
   result_compiler_found = executeCommand("polycc");
   if (result_compiler_found.find("not found") == string::npos &&
-      !mCompiler_enabled_options[NOPOLYHEDRAL]) {
+      !MCompiler_enabled_options[NOPOLYHEDRAL]) {
     compiler_candidate[compiler_Pluto] = true;
     cout << "Found in PATH: polycc (Pluto)" << endl;
   } else {
@@ -51,7 +51,7 @@ void Driver::checkCompilerCandidates() {
 
   result_compiler_found = executeCommand("opt -help | grep \"Polly Options\"");
   if (result_compiler_found.find("Polly Options") != string::npos &&
-      !mCompiler_enabled_options[NOPOLYHEDRAL]) {
+      !MCompiler_enabled_options[NOPOLYHEDRAL]) {
     compiler_candidate[compiler_Polly] = true;
     cout << "Found in PATH: Polly+LLVM" << endl;
   } else {
@@ -75,8 +75,8 @@ void Driver::checkCompilerCandidates() {
     exit(EXIT_FAILURE);
   }
 
-  if (mCompiler_enabled_options[POWER_PROFILE])
-    mCompiler_macro_defs += "-DLIKWID_PERFMON";
+  if (MCompiler_enabled_options[POWER_PROFILE])
+    MCompiler_macro_defs += "-DLIKWID_PERFMON";
 
   /* In common.h */
   addOptimizationFlags();
@@ -85,13 +85,13 @@ void Driver::checkCompilerCandidates() {
 }
 
 bool Driver::checkAdvProfileCandidate() {
-  string result_compiler_found = executeCommand(mCompiler_advprofiler_str);
+  string result_compiler_found = executeCommand(MCompiler_advprofiler_str);
   if (result_compiler_found.find("not found") != string::npos) {
     cerr << "Intel Vtune not found" << endl;
     cerr << "Driver: Check unsuccesful for the Advanced Profiling Tool" << endl;
     return false;
   } else {
-    cout << "Found in PATH: " << mCompiler_advprofiler_str << endl;
+    cout << "Found in PATH: " << MCompiler_advprofiler_str << endl;
     return true;
   }
 }
@@ -110,28 +110,28 @@ bool Driver::checkPowerProfileCandidate() {
 
 void Driver::setMCompilerMode() {
   /* Check if CL had neither object file nor source files */
-  if (mCompiler_object_file.empty() && mCompiler_input_file.empty()) {
+  if (MCompiler_object_file.empty() && MCompiler_input_file.empty()) {
     cerr << "Driver: Neither source files nor object files provided. See -help."
          << endl;
     exit(EXIT_FAILURE);
   }
 
   /* Enable step compilation flag if -c provided */
-  if (mCompiler_enabled_options[COMPILE_TO_OBJECT]) {
-    mCompiler_mode = mode_TO_OBJECT;
+  if (MCompiler_enabled_options[COMPILE_TO_OBJECT]) {
+    MCompiler_mode = mode_TO_OBJECT;
     cout << "Driver: Starting -c phase -> Only source files provided" << endl;
   }
 
   /* Check if CL had object file but no source files -- Linking phase */
-  if (!mCompiler_object_file.empty() && mCompiler_input_file.empty()) {
-    mCompiler_mode                     = mode_FROM_OBJECT;
-    mCompiler_enabled_options[EXTRACT] = false;
+  if (!MCompiler_object_file.empty() && MCompiler_input_file.empty()) {
+    MCompiler_mode                     = mode_FROM_OBJECT;
+    MCompiler_enabled_options[EXTRACT] = false;
     cout << "Driver: Starting link phase -> Only object files provided" << endl;
   }
 
   /* Check if CL have both object and source files - Complex mode */
-  if (!(mCompiler_object_file.empty() || mCompiler_input_file.empty())) {
-    mCompiler_mode = mode_FROM_OBJECT;
+  if (!(MCompiler_object_file.empty() || MCompiler_input_file.empty())) {
+    MCompiler_mode = mode_FROM_OBJECT;
     cout << "Driver: Starting in complex mode -> Both object and source files "
             "provided"
          << endl;
@@ -160,28 +160,28 @@ void Driver::getPathsToUtils() {
   }
   char *env_MLmodel = getenv("MC_ML_MODEL");
   if (env_MLmodel != NULL) {
-    mCompiler_trained_model_path = string(env_MLmodel);
-    mCompiler_trained_model_features_path =
-        mCompiler_trained_model_path + "_features.txt";
+    MCompiler_trained_model_path = string(env_MLmodel);
+    MCompiler_trained_model_features_path =
+        MCompiler_trained_model_path + "_features.txt";
   }
   char *env_MLautoparmodel = getenv("MC_ML_AUTOPAR_MODEL");
   if (env_MLautoparmodel != NULL) {
-    mCompiler_trained_autopar_model_path = string(env_MLautoparmodel);
-    mCompiler_trained_autopar_model_features_path =
-        mCompiler_trained_autopar_model_path + "_features.txt";
+    MCompiler_trained_autopar_model_path = string(env_MLautoparmodel);
+    MCompiler_trained_autopar_model_features_path =
+        MCompiler_trained_autopar_model_path + "_features.txt";
   }
 }
 
 /* Create data folder in /tmp */
 void Driver::createMCompilerDataFolder() {
-  mCompiler_data_folder_path =
-      "/tmp/" + mCompiler_data_folder + forward_slash_str;
-  if (!isDirExist(mCompiler_data_folder_path)) {
-    const int dir_err = mkdir(mCompiler_data_folder_path.c_str(),
+  MCompiler_data_folder_path =
+      "/tmp/" + MCompiler_data_folder + forward_slash_str;
+  if (!isDirExist(MCompiler_data_folder_path)) {
+    const int dir_err = mkdir(MCompiler_data_folder_path.c_str(),
                               S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     if (dir_err == -1) {
-      cout << "Error creating mCompiler data directory:"
-           << mCompiler_data_folder_path << endl;
+      cout << "Error creating MCompiler data directory:"
+           << MCompiler_data_folder_path << endl;
       exit(EXIT_FAILURE);
     }
   }
@@ -189,34 +189,34 @@ void Driver::createMCompilerDataFolder() {
 
 void Driver::removeMCompilerDataFolder() {
   string CL = "rm -rf ";
-  CL += mCompiler_data_folder_path;
+  CL += MCompiler_data_folder_path;
   executeCommand(CL);
 }
 
 void Driver::moveMCompilerDataFolder() {
   string CL = "mv ";
-  CL += mCompiler_data_folder_path + space_str + mCompiler_curr_dir_path;
+  CL += MCompiler_data_folder_path + space_str + MCompiler_curr_dir_path;
   executeCommand(CL);
 }
 
 void Driver::generateMCompilerHeaderFile() {
   bool isPresent = false;
-  if (isFileExist(getDataFolderPath() + mCompiler_header_name))
+  if (isFileExist(getDataFolderPath() + MCompiler_header_name))
     isPresent = true;
   // header_file_buf.close();
 
   string temp_str = "void " + printTimingVarFuncName + "();";
   if (isPresent)
     executeCommand("sed -i '/" + temp_str + "/d;/" + "#endif" + "/d' " +
-                   getDataFolderPath() + mCompiler_header_name);
+                   getDataFolderPath() + MCompiler_header_name);
 
-  /* Create/Append mCompiler header file */
-  if (mCompiler_mode == mode_FULL_PASS) {
-    header_file_buf.open((getDataFolderPath() + mCompiler_header_name).c_str(),
+  /* Create/Append MCompiler header file */
+  if (MCompiler_mode == mode_FULL_PASS) {
+    header_file_buf.open((getDataFolderPath() + MCompiler_header_name).c_str(),
                          ofstream::out);
     isPresent = false;
   } else {
-    header_file_buf.open((getDataFolderPath() + mCompiler_header_name).c_str(),
+    header_file_buf.open((getDataFolderPath() + MCompiler_header_name).c_str(),
                          ofstream::app);
   }
 
@@ -240,21 +240,21 @@ void Driver::generateMCompilerHeaderFile() {
   temp_str = "}";
   if (isPresent)
     executeCommand("sed -i '/" + temp_str + "/d' " + getDataFolderPath() +
-                   mCompiler_header_code_name);
-  /* Now open/append mCompiler header's code file */
-  if (mCompiler_mode == mode_FULL_PASS) {
+                   MCompiler_header_code_name);
+  /* Now open/append MCompiler header's code file */
+  if (MCompiler_mode == mode_FULL_PASS) {
     header_code_file_buf.open(
-        (getDataFolderPath() + mCompiler_header_code_name).c_str(),
+        (getDataFolderPath() + MCompiler_header_code_name).c_str(),
         ofstream::out);
     isPresent = false;
   } else {
     header_code_file_buf.open(
-        (getDataFolderPath() + mCompiler_header_code_name).c_str(),
+        (getDataFolderPath() + MCompiler_header_code_name).c_str(),
         ofstream::app);
   }
 
   if (!isPresent) {
-    header_code_file_buf << "#include \"" << mCompiler_header_name << "\""
+    header_code_file_buf << "#include \"" << MCompiler_header_name << "\""
                          << endl;
     header_code_file_buf << "void " << printTimingVarFuncName << "(){" << endl;
   }
@@ -263,11 +263,11 @@ void Driver::generateMCompilerHeaderFile() {
        iter++) {
     if (getSrcType() == src_lang_C) {
       header_code_file_buf << "printf(\"\\n"
-                           << *iter + mCompiler_timing_keyword << " \%.9f\\n\","
+                           << *iter + MCompiler_timing_keyword << " \%.9f\\n\","
                            << getLoopTimingVarSuffix() + *iter << ");" << endl;
     } else if (getSrcType() == src_lang_CPP) {
       header_code_file_buf << "std::cout << std::endl \""
-                           << *iter + mCompiler_timing_keyword
+                           << *iter + MCompiler_timing_keyword
                            << " \" << std::setprecision(9) << "
                            << getLoopTimingVarSuffix() + *iter
                            << " << std::endl;" << endl;
@@ -275,7 +275,7 @@ void Driver::generateMCompilerHeaderFile() {
   }
   header_code_file_buf << temp_str << endl;
   header_code_file_buf.close();
-  files_to_compile.insert(getDataFolderPath() + mCompiler_header_code_name);
+  files_to_compile.insert(getDataFolderPath() + MCompiler_header_code_name);
 }
 
 void Driver::copyInFolderHeaders(string folder_path, bool copysourcefiles) {
@@ -291,10 +291,10 @@ void Driver::copyInFolderHeaders(string folder_path, bool copysourcefiles) {
 
 /* Fetch profiler input args and required data files */
 void Driver::fetchProfilerInput() {
-  if (mCompiler_profiler_input.empty())
+  if (MCompiler_profiler_input.empty())
     return;
   vector<string> temp_vec;
-  string temp = getAbsolutePath(mCompiler_profiler_input);
+  string temp = getAbsolutePath(MCompiler_profiler_input);
   string line;
   ifstream input_file(temp);
   if (input_file.is_open()) {
@@ -306,9 +306,9 @@ void Driver::fetchProfilerInput() {
     }
     input_file.close();
   }
-  mCompiler_profiler_input = "";
+  MCompiler_profiler_input = "";
   for (auto const &arg : temp_vec) {
-    mCompiler_profiler_input += arg + space_str;
+    MCompiler_profiler_input += arg + space_str;
   }
 }
 
@@ -330,16 +330,16 @@ void Driver::initiateExtractor(string file_name) {
   filename_vec.push_back(dummy_arg_for_extractor_frontend);
 #endif
   /* Rose frontend needs each include path in different vector entry */
-  istringstream bufI(mCompiler_include_path);
+  istringstream bufI(MCompiler_include_path);
   istream_iterator<string> begI(bufI), endI;
   vector<string> tokensI(begI, endI);
   for (auto &sI : tokensI)
     filename_vec.push_back(sI);
 
   /* Rose frontend needs each Macro definition in different vector entry */
-  if (mCompiler_enabled_options[PARALLEL])
+  if (MCompiler_enabled_options[PARALLEL])
     filename_vec.push_back("-D_OPENMP");
-  istringstream bufM(mCompiler_macro_defs);
+  istringstream bufM(MCompiler_macro_defs);
   istream_iterator<string> begM(bufM), endM;
   vector<string> tokensM(begM, endM);
   for (auto &sM : tokensM)
@@ -356,11 +356,11 @@ void Driver::initiateExtractor(string file_name) {
   loop_funcName_vec->insert(loop_funcName_vec->end(),
                             (extr->loop_funcName_vec)->begin(),
                             (extr->loop_funcName_vec)->end());
-  /* mCompiler header must be printed at last */
+  /* MCompiler header must be printed at last */
   if (isLastSrcFile) {
     generateMCompilerHeaderFile();
   }
-  /* Copy headers that are in same folder as Source to mC data folder */
+  /* Copy headers that are in same folder as Source to MC data folder */
   copyInFolderHeaders(extr->getFilePath(), extr->copysourcefiles);
 }
 
@@ -376,48 +376,48 @@ void Driver::initiateSynthesizer() { synth = new SynthesizerC(); }
 
 int main(int argc, char *argv[]) {
   Driver *driver = new Driver();
-  set_mCompiler_options(argc, argv);
+  set_MCompiler_options(argc, argv);
 
   /* Get current working directory path */
-  mCompiler_curr_dir_path = getAbsolutePath(".") + forward_slash_str;
-  if (mCompiler_binary_path.empty())
-    mCompiler_binary_path = mCompiler_curr_dir_path;
+  MCompiler_curr_dir_path = getAbsolutePath(".") + forward_slash_str;
+  if (MCompiler_binary_path.empty())
+    MCompiler_binary_path = MCompiler_curr_dir_path;
   driver->createMCompilerDataFolder();
 
-  genRandomStr(mCompiler_unique_str, 5);
+  genRandomStr(MCompiler_unique_str, 5);
 
   driver->fetchProfilerInput();
   driver->checkCompilerCandidates();
   driver->setMCompilerMode();
   driver->getPathsToUtils();
 
-  if (mCompiler_enabled_options[ADV_PROFILE]) {
+  if (MCompiler_enabled_options[ADV_PROFILE]) {
     if (!driver->checkAdvProfileCandidate()) {
-      mCompiler_enabled_options[ADV_PROFILE] = false;
+      MCompiler_enabled_options[ADV_PROFILE] = false;
     }
   }
 
-  if (mCompiler_enabled_options[POWER_PROFILE]) {
+  if (MCompiler_enabled_options[POWER_PROFILE]) {
     if (!driver->checkPowerProfileCandidate()) {
-      mCompiler_enabled_options[POWER_PROFILE] = false;
-      mCompiler_macro_defs += "-DLIKWID_PERFMON";
+      MCompiler_enabled_options[POWER_PROFILE] = false;
+      MCompiler_macro_defs += "-DLIKWID_PERFMON";
     }
   }
 
   /* Send all files in the command line for extraction */
-  if (mCompiler_enabled_options[EXTRACT]) {
+  if (MCompiler_enabled_options[EXTRACT]) {
     vector<string>::iterator iter;
-    for (iter = mCompiler_input_file.begin();
-         iter != mCompiler_input_file.end(); iter++) {
-      if (*iter == mCompiler_input_file.back()) {
+    for (iter = MCompiler_input_file.begin();
+         iter != MCompiler_input_file.end(); iter++) {
+      if (*iter == MCompiler_input_file.back()) {
         driver->isLastSrcFile = true;
       }
       driver->initiateExtractor(*iter);
     }
   }
 
-  if (mCompiler_enabled_options[PROFILE]) {
-    if (mCompiler_data_folder_path.empty()) {
+  if (MCompiler_enabled_options[PROFILE]) {
+    if (MCompiler_data_folder_path.empty()) {
       cerr << "Driver: Couldn't find the folder to profile hotspots" << endl;
       exit(EXIT_FAILURE);
     }
@@ -425,11 +425,11 @@ int main(int argc, char *argv[]) {
   }
 
   /* If making prediction, then move Synthesis to the end of the pipeline */
-  if (mCompiler_enabled_options[SYNTHESIZE] &&
-      !mCompiler_enabled_options[PREDICT] &&
-      (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
-       mCompiler_mode == mode_COMPLEX)) {
-    if (mCompiler_data_folder_path.empty()) {
+  if (MCompiler_enabled_options[SYNTHESIZE] &&
+      !MCompiler_enabled_options[PREDICT] &&
+      (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
+       MCompiler_mode == mode_COMPLEX)) {
+    if (MCompiler_data_folder_path.empty()) {
       cerr << "Driver: Couldn't find the folder to synthesize hotspots" << endl;
       exit(EXIT_FAILURE);
     }
@@ -437,18 +437,18 @@ int main(int argc, char *argv[]) {
   }
 
   /* Perform counter profiling after Synthesis, if not making prediction */
-  if (mCompiler_enabled_options[ADV_PROFILE]) {
+  if (MCompiler_enabled_options[ADV_PROFILE]) {
     driver->initiateAdvProfiler();
   }
 
-  if (mCompiler_enabled_options[POWER_PROFILE]) {
+  if (MCompiler_enabled_options[POWER_PROFILE]) {
     driver->initiatePowerProfiler();
   }
 
-  if (mCompiler_enabled_options[PREDICT] &&
-      (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
-       mCompiler_mode == mode_COMPLEX)) {
-    if (mCompiler_data_folder_path.empty()) {
+  if (MCompiler_enabled_options[PREDICT] &&
+      (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
+       MCompiler_mode == mode_COMPLEX)) {
+    if (MCompiler_data_folder_path.empty()) {
       cerr << "Driver: Couldn't find the folder to predict for hotspots"
            << endl;
       exit(EXIT_FAILURE);
@@ -456,31 +456,31 @@ int main(int argc, char *argv[]) {
     driver->initiatePredictor();
   }
 
-  if (mCompiler_enabled_options[SYNTHESIZE] &&
-      mCompiler_enabled_options[PREDICT] &&
-      (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
-       mCompiler_mode == mode_COMPLEX)) {
-    if (mCompiler_data_folder_path.empty()) {
+  if (MCompiler_enabled_options[SYNTHESIZE] &&
+      MCompiler_enabled_options[PREDICT] &&
+      (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
+       MCompiler_mode == mode_COMPLEX)) {
+    if (MCompiler_data_folder_path.empty()) {
       cerr << "Driver: Couldn't find the folder to synthesize hotspots" << endl;
       exit(EXIT_FAILURE);
     }
     driver->initiateSynthesizer();
   }
 
-  if (mCompiler_enabled_options[TEST] &&
-      (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
-       mCompiler_mode == mode_COMPLEX)) {
+  if (MCompiler_enabled_options[TEST] &&
+      (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
+       MCompiler_mode == mode_COMPLEX)) {
     Tester *tester = new Tester();
   }
 
-  if (!mCompiler_enabled_options[MC_INFO] &&
-      (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
-       mCompiler_mode == mode_COMPLEX)) {
+  if (!MCompiler_enabled_options[MC_INFO] &&
+      (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
+       MCompiler_mode == mode_COMPLEX)) {
     driver->removeMCompilerDataFolder();
-  } else if (mCompiler_enabled_options[MC_INFO] &&
-             (mCompiler_mode == mode_FULL_PASS ||
-              mCompiler_mode == mode_FROM_OBJECT ||
-              mCompiler_mode == mode_COMPLEX)) {
+  } else if (MCompiler_enabled_options[MC_INFO] &&
+             (MCompiler_mode == mode_FULL_PASS ||
+              MCompiler_mode == mode_FROM_OBJECT ||
+              MCompiler_mode == mode_COMPLEX)) {
     driver->moveMCompilerDataFolder();
   }
 

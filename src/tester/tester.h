@@ -8,12 +8,12 @@ using namespace std;
 class Tester {
 private:
   string binary_name;
-  string mCompiler_timing;
+  string MCompiler_timing;
   map<compiler_type, string> binaries_time;
 
 public:
   Tester();
-  string getDataFolderPath() { return mCompiler_data_folder_path; };
+  string getDataFolderPath() { return MCompiler_data_folder_path; };
 
   void testCompilerCandidates();
   void printCompilerTimings();

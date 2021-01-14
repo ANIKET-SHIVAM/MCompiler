@@ -18,7 +18,7 @@ int main(){
 	}
   printf("sum = %d\n", sum1);
   if(sum1 = 0){
-    #pragma mC skiploop
+    #pragma MC skiploop
     for(j=0;j<10;j++){
       sum2 = yo(sum2,j);
       foo(sum2);

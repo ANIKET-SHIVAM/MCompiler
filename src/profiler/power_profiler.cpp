@@ -32,7 +32,7 @@ void PowerProfiler::gatherProfilingData(const string &binary_file,
        iterv != toolCL_collect.end(); iterv++)
     CL += *iterv;
   CL += binary_file + space_str;
-  CL += mCompiler_profiler_input;
+  CL += MCompiler_profiler_input;
 
   cout << "Power Profiler: " << compiler_str << endl;
   string result;
@@ -52,7 +52,7 @@ void PowerProfiler::sanitizeProfileData(const string &result,
                                         const string &compiler_str) {
   // CSV file open for storing profiler data
   bool is_reading_file = false;
-  CSV csv_file(mCompiler_curr_dir_path + mCompiler_power_profile_data_csv,
+  CSV csv_file(MCompiler_curr_dir_path + MCompiler_power_profile_data_csv,
                is_reading_file);
 
   stringstream line_stream(result);
@@ -112,7 +112,7 @@ void PowerProfiler::sanitizeProfileData(const string &result,
 void PowerProfiler::PowerProfile(
     const map<compiler_type, bool>::iterator &curr_candidate) {
   if (curr_candidate->second == true) {
-    string out_file = getDataFolderPath() + mCompiler_binary_name + "_" +
+    string out_file = getDataFolderPath() + MCompiler_binary_name + "_" +
                       compiler_keyword[curr_candidate->first];
     gatherProfilingData(out_file, curr_candidate->first);
   }
@@ -120,8 +120,8 @@ void PowerProfiler::PowerProfile(
 
 PowerProfiler::PowerProfiler() {
   cout << "Power Profiling" << endl;
-  if (mCompiler_mode == mode_FULL_PASS || mCompiler_mode == mode_FROM_OBJECT ||
-      mCompiler_mode == mode_COMPLEX) {
+  if (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
+      MCompiler_mode == mode_COMPLEX) {
     addProfileToolOptions();
     /* Rotate through compiler candidates for profile */
     map<compiler_type, bool>::iterator iter;

@@ -12,14 +12,14 @@ int bar(int*,int);
 
 int main(){
 	int i,j,k,sum1=0,sum2=0;
-  #pragma mC skiploop
+  #pragma MC skiploop
 	for(i=0;i<10;i++){
 		for(k=0;k<1000;k++)
 			sum1+=i+k+pow(i,k);
 	}
   printf("sum = %d\n", sum1);
   if(sum1 = 0){
-    #pragma mC skiploop
+    #pragma MC skiploop
     for(j=0;j<10;j++){
       sum2 = yo(sum2,j);
       foo(sum2);

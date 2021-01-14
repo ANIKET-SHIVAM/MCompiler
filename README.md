@@ -1,4 +1,4 @@
-mCompiler Project
+MCompiler Project
 Installation:
 1. Clone repo
 2. Build ROSE(version: 0.9.8.8 or above)

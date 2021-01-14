@@ -22,7 +22,7 @@ private:
 
 public:
   SynthesizerC();
-  string getDataFolderPath() { return mCompiler_data_folder_path; };
+  string getDataFolderPath() { return MCompiler_data_folder_path; };
 
   // void findCandidateBinaries(); -- task moved to Profiler
   void analyzeHotspotProfileData();

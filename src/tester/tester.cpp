@@ -13,12 +13,12 @@ void Tester::testCompilerCandidates() {
         CL += *iterv + space_str;
       }
 
-      for (iterv = mCompiler_input_file.begin();
-           iterv != mCompiler_input_file.end(); iterv++) {
+      for (iterv = MCompiler_input_file.begin();
+           iterv != MCompiler_input_file.end(); iterv++) {
         CL += *iterv + space_str;
       }
 
-      CL += mCompiler_macro_defs + mCompiler_link_path + mCompiler_libraries;
+      CL += MCompiler_macro_defs + MCompiler_link_path + MCompiler_libraries;
       string curr_binary = getDataFolderPath() + binary_name + test_str +
                            compiler_keyword[curr_compiler];
       CL += minus_o_str + space_str + curr_binary + " -lm ";
@@ -30,7 +30,7 @@ void Tester::testCompilerCandidates() {
       CL.clear();
       CL = "time " + curr_binary;
       string result_execution =
-          executeCommand(CL + space_str + mCompiler_profiler_input);
+          executeCommand(CL + space_str + MCompiler_profiler_input);
 
       stringstream line_stream(result_execution);
       string cell;
@@ -46,8 +46,8 @@ void Tester::testCompilerCandidates() {
       }
     }
   }
-  // Get mCompiler generated binary timing
-  string CL = "time " + mCompiler_curr_dir_path + mCompiler_binary_name;
+  // Get MCompiler generated binary timing
+  string CL = "time " + MCompiler_curr_dir_path + MCompiler_binary_name;
   string result_execution = executeCommand(CL);
 
   stringstream line_stream(result_execution);
@@ -56,7 +56,7 @@ void Tester::testCompilerCandidates() {
     if (cell.find("user") != string::npos) {
       int pos_system   = cell.find("system");
       int pos_elapsed  = cell.find("elapsed");
-      mCompiler_timing = cell.substr(pos_system + string("system").length() + 1,
+      MCompiler_timing = cell.substr(pos_system + string("system").length() + 1,
                                      string("h:mm.ss").length());
     }
   }
@@ -72,13 +72,13 @@ void Tester::printCompilerTimings() {
            << binaries_time[iter->first] << endl;
     }
   }
-  if (!mCompiler_timing.empty())
-    cout << "mCompiler -> " << mCompiler_timing << endl;
+  if (!MCompiler_timing.empty())
+    cout << "MCompiler -> " << MCompiler_timing << endl;
 }
 
 Tester::Tester() {
 
-  binary_name = mCompiler_binary_name;
+  binary_name = MCompiler_binary_name;
 
   testCompilerCandidates();
   printCompilerTimings();

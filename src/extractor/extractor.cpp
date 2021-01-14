@@ -57,15 +57,15 @@ int Extractor::getAstNodeLineNum(SgNode *const &astNode) {
 
 string Extractor::getExtractionFileName(SgNode *astNode, bool isProfileFile) {
   string fileNameWithPath = (astNode->get_file_info())->get_filenameString();
-  mCompiler_file_path     = getFilePath(fileNameWithPath);
-  mCompiler_file_name     = getFileName(fileNameWithPath);
-  mCompiler_original_file_name = getOrigFileName(fileNameWithPath);
-  mCompiler_file_extn          = getFileExtn(fileNameWithPath);
+  MCompiler_file_path     = getFilePath(fileNameWithPath);
+  MCompiler_file_name     = getFileName(fileNameWithPath);
+  MCompiler_original_file_name = getOrigFileName(fileNameWithPath);
+  MCompiler_file_extn          = getFileExtn(fileNameWithPath);
   int lineNumber               = getAstNodeLineNum(astNode);
 
   string output_path = getDataFolderPath();
-  string file_name   = mCompiler_original_file_name;
-  string file_extn   = mCompiler_file_extn;
+  string file_name   = MCompiler_original_file_name;
+  string file_extn   = MCompiler_file_extn;
 
   string enclosingFuncName =
       (SageInterface::getEnclosingFunctionDeclaration(astNode)
@@ -82,9 +82,9 @@ string Extractor::getExtractionFileName(SgNode *astNode, bool isProfileFile) {
     file_name += "_" + relpathcode;
 
   if (isProfileFile)
-    file_name += mCompiler_profile_file_tag + "." + file_extn;
+    file_name += MCompiler_profile_file_tag + "." + file_extn;
   else
-    file_name += "." + mCompiler_file_extn;
+    file_name += "." + MCompiler_file_extn;
 
   return output_path + file_name;
 }
@@ -93,13 +93,13 @@ void Extractor::updateUniqueCounter(SgNode *astNode) {
   uniqueCounter    = 0;
   string file_name = getExtractionFileName(astNode, false);
   boost::erase_all(file_name, getDataFolderPath());
-  boost::erase_all(file_name, "." + mCompiler_file_extn);
+  boost::erase_all(file_name, "." + MCompiler_file_extn);
   boost::erase_all(file_name, relpathcode);
 
   /* check for loops at same line number bcoz of macros and add suffix*/
   for (auto const &funcstr : files_to_compile) {
     if (funcstr.find(file_name) != string::npos &&
-        funcstr.find(mCompiler_profile_file_tag) == string::npos)
+        funcstr.find(MCompiler_profile_file_tag) == string::npos)
       uniqueCounter++;
   }
 }
@@ -113,7 +113,7 @@ string Extractor::getLoopName(SgNode *astNode) {
   /* Since you cannot start Function name with a digit */
   if (isdigit(loopName[0]))
     loopName.insert(0, 1, '_');
-  boost::erase_all(loopName, "." + mCompiler_file_extn);
+  boost::erase_all(loopName, "." + MCompiler_file_extn);
   return loopName;
 }
 
@@ -125,7 +125,7 @@ void Extractor::printHeaders(ofstream &loop_file_buf, bool isProfileFile) {
 
   for (iter = header_vec.begin(); iter != header_vec.end(); iter++) {
     string header_str = *iter;
-    /* If including a .c file then copy to mC data folder */
+    /* If including a .c file then copy to MC data folder */
     if (header_str.find(".c") != string::npos) {
       continue;
     }
@@ -147,8 +147,8 @@ void Extractor::printHeaders(ofstream &loop_file_buf, bool isProfileFile) {
 
   // TODO: if it is a fortran code
   if (isProfileFile)
-    loop_file_buf << "#include \"" << mCompiler_header_name << "\"" << endl;
-  if (isProfileFile && mCompiler_enabled_options[POWER_PROFILE])
+    loop_file_buf << "#include \"" << MCompiler_header_name << "\"" << endl;
+  if (isProfileFile && MCompiler_enabled_options[POWER_PROFILE])
     loop_file_buf << "#include <likwid.h>" << endl;
   if (!hasOMP && (src_type == src_lang_C || src_type == src_lang_CPP))
     loop_file_buf << "#include <omp.h>" << endl;
@@ -272,7 +272,7 @@ void LoopInfo::getVarsInScope() {
           //            var->get_type()->findBaseType()->unparseToString() +
           //            space_str;
           /* Add "restrict" keyword for arrays to get rid of aliasing problem */
-          if (mCompiler_enabled_options[RESTRICT] &&
+          if (MCompiler_enabled_options[RESTRICT] &&
               first_square_brac != string::npos) {
             int first_square_close_brac = var_type_str.find_first_of("]");
             string restrict_keyword     = "restrict";
@@ -630,19 +630,19 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
   if (extr.getSrcType() == src_lang_C)
     pushPointersToLocalVars(loop_file_buf);
 
-  if (mCompiler_enabled_options[PARALLEL] && extr.getOMPpragma() != "")
+  if (MCompiler_enabled_options[PARALLEL] && extr.getOMPpragma() != "")
     loop_file_buf << printOMPprivateArrays() << endl;
 
   // Add OMP Timer start
-  if (isProfileFile && !mCompiler_enabled_options[POWER_PROFILE]) {
+  if (isProfileFile && !MCompiler_enabled_options[POWER_PROFILE]) {
     loop_file_buf << "double loop_timer_start = omp_get_wtime( );" << endl;
-  } else if (isProfileFile && mCompiler_enabled_options[POWER_PROFILE]) {
+  } else if (isProfileFile && MCompiler_enabled_options[POWER_PROFILE]) {
     loop_file_buf << "LIKWID_MARKER_INIT;" << endl;
     loop_file_buf << "LIKWID_MARKER_START(\"" << getFuncName() << "\");"
                   << endl;
   }
 
-  if (mCompiler_enabled_options[MC_DEBUG])
+  if (MCompiler_enabled_options[MC_DEBUG])
     loop_file_buf << "printf (\"__FUNCTION__ = \%s\\n\", __FUNCTION__);"
                   << endl;
 
@@ -650,7 +650,7 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
   loop_file_buf << "#pragma scop" << endl;
 
   // Get OMP pragma for this loop
-  if (mCompiler_enabled_options[PARALLEL] && extr.getOMPpragma() != "")
+  if (MCompiler_enabled_options[PARALLEL] && extr.getOMPpragma() != "")
     loop_file_buf << endl << sanitizeOMPpragma(extr.getOMPpragma()) << endl;
 
   // Print all the loops
@@ -678,9 +678,9 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
   loop_file_buf << "#pragma endscop" << endl;
 
   // Add OMP Timer end
-  if (isProfileFile && !mCompiler_enabled_options[POWER_PROFILE]) {
+  if (isProfileFile && !MCompiler_enabled_options[POWER_PROFILE]) {
     loop_file_buf << "double loop_timer_end = omp_get_wtime( );" << endl;
-  } else if (isProfileFile && mCompiler_enabled_options[POWER_PROFILE]) {
+  } else if (isProfileFile && MCompiler_enabled_options[POWER_PROFILE]) {
     loop_file_buf << "LIKWID_MARKER_STOP(\"" << getFuncName() << "\");" << endl;
     loop_file_buf << "LIKWID_MARKER_CLOSE;" << endl;
   }
@@ -691,11 +691,11 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
   /*
           if( extr.getSrcType() == src_lang_C ){
                   loop_file_buf << "printf(\"\\n" << getFuncName() +
-     mCompiler_timing_keyword << " \%.9f\\n\", loop_timer_end - loop_timer_start
+     MCompiler_timing_keyword << " \%.9f\\n\", loop_timer_end - loop_timer_start
      );" << endl;
           } else if( extr.getSrcType() == src_lang_CPP ){
                   loop_file_buf << "std::cout << std::endl \"" << getFuncName()
-     + mCompiler_timing_keyword << " \" << std::setprecision(9) <<
+     + MCompiler_timing_keyword << " \" << std::setprecision(9) <<
      (loop_timer_end - loop_timer_start) << std::endl;" << endl;
           }
   */
@@ -708,7 +708,7 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
              temp_str) == extr.loop_funcName_vec->end())
       (extr.loop_funcName_vec)->push_back(temp_str);
     string loopTimingVarStr = extr.getLoopTimingVarSuffix() + getFuncName();
-    if (!mCompiler_enabled_options[POWER_PROFILE])
+    if (!MCompiler_enabled_options[POWER_PROFILE])
       loop_file_buf << loopTimingVarStr << " += "
                     << "loop_timer_end - loop_timer_start;" << endl;
   }
@@ -894,7 +894,7 @@ void LoopInfo::addLoopFuncCall() {
 
 bool Extractor::skipLoop(SgNode *astNode) {
   if (!loopSkipPragma.empty() &&
-      loopSkipPragma.find(mCompiler_skiplooppragma_str) != string::npos) {
+      loopSkipPragma.find(MCompiler_skiplooppragma_str) != string::npos) {
     loopSkipPragma = "";
     return true;
   }
@@ -978,17 +978,17 @@ void Extractor::extractLoops(SgNode *astNode) {
   files_to_compile.insert(loop_profile_file_name);
   files_to_compile.insert(loop_no_profile_file_name);
 
-  /* Handle mC skippluto directive to stop pluto from optimizing hotspot */
+  /* Handle MC skippluto directive to stop pluto from optimizing hotspot */
   if (!loopSkipPragma.empty() &&
-      loopSkipPragma.find(mCompiler_skipplutopragma_str) != string::npos) {
+      loopSkipPragma.find(MCompiler_skipplutopragma_str) != string::npos) {
     loopSkipPragma = "";
     files_skip_pluto.insert(loop_profile_file_name);
     files_skip_pluto.insert(loop_no_profile_file_name);
   }
 
-  if (mCompiler_enabled_options[PREDICT]) {
+  if (MCompiler_enabled_options[PREDICT]) {
     hotspot_extractor_to_predictor_set.insert(getLoopName(astNode));
-    ofstream hotspotlistfile(getDataFolderPath() + mCompiler_hotspotlist_file,
+    ofstream hotspotlistfile(getDataFolderPath() + MCompiler_hotspotlist_file,
                              ofstream::app);
     hotspotlistfile << getLoopName(astNode) << '\n';
     hotspotlistfile.close();
@@ -1106,7 +1106,7 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
         // SageInterface::getNextStatement(loop)->variantT() == V_SgForStatement
         // )
         if (!skipLoop(astNode)) {
-          if (mCompiler_enabled_options[EXTRACTKERNEL])
+          if (MCompiler_enabled_options[EXTRACTKERNEL])
             collectAdjoiningLoops(dynamic_cast<SgStatement *>(astNode));
           else
             consecutiveLoops.push_back(dynamic_cast<SgForStatement *>(astNode));
@@ -1140,7 +1140,7 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
         main_scope      = dynamic_cast<SgScopeStatement *>(
             (declFunc->get_definition())->get_body());
         if ((declFunc->get_orig_return_type())->variantT() == V_SgTypeVoid &&
-            !mCompiler_enabled_options[POWER_PROFILE])
+            !MCompiler_enabled_options[POWER_PROFILE])
           addTimingFuncCallVoidMain();
         else
           nonVoidMain = true;
@@ -1185,7 +1185,7 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
           loopOMPpragma = "#pragma " + pragmaString;
         }
       }
-      if (SageInterface::extractPragmaKeyword(pragmaDecl) == "mC") {
+      if (SageInterface::extractPragmaKeyword(pragmaDecl) == "MC") {
         SgPragma *pragmaNode = pragmaDecl->get_pragma();
         string pragmaString  = pragmaNode->get_pragma();
         loopSkipPragma       = "#pragma " + pragmaString;
@@ -1196,7 +1196,7 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
     case V_SgReturnStmt: {
       SgStatement *returnstmt = dynamic_cast<SgStatement *>(astNode);
       if (mainFuncPresent && returnstmt->get_scope() == main_scope &&
-          nonVoidMain && !mCompiler_enabled_options[POWER_PROFILE])
+          nonVoidMain && !MCompiler_enabled_options[POWER_PROFILE])
         addTimingFuncCallNonVoidMain(returnstmt);
       break;
     }
@@ -1220,12 +1220,12 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
       break;
     }
     //			case V_SgSourceFile: {
-    /* add mCompiler header file into the source */
+    /* add MCompiler header file into the source */
     //				SgSourceFile *sourceFile =
     // dynamic_cast<SgSourceFile
     //*>(astNode);
     //				SageInterface::insertHeader(sourceFile,
-    // mCompiler_header_name, false, false); 				break;
+    // MCompiler_header_name, false, false); 				break;
     //			}
     default: {
       // cerr << "Found node: " << astNode->class_name() << endl;
@@ -1263,7 +1263,7 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
               find(header_vec.begin(), header_vec.end(), headerName) ==
                   header_vec.end()) {
             header_vec.push_back(headerName);
-            /* If including a .c file then copy to mC data folder */
+            /* If including a .c file then copy to MC data folder */
             if (headerName.find(".c") != string::npos) {
               copysourcefiles = true;
             }
@@ -1465,9 +1465,9 @@ void Extractor::modifyExtractedFileText(const string &base_file,
           sed_command2 = "sed -i '/omp for/d' " + base_file_profile;
           executeCommand( sed_command2 );
   */
-  /* Remove mCompile header and accumulater timing var print function from non
+  /* Remove MCompile header and accumulater timing var print function from non
    * profile base file */
-  string sed_command3 = "sed -i '/" + mCompiler_header_name + "/d;/" +
+  string sed_command3 = "sed -i '/" + MCompiler_header_name + "/d;/" +
                         printTimingVarFuncName + "/d' " + base_file;
   executeCommand(sed_command3);
 }
@@ -1538,12 +1538,12 @@ void Extractor::inlineFunctions(const vector<string> &argv) {
 /* Extractor constructor, for initiating via driver */
 Extractor::Extractor(const vector<string> &argv) {
   /* Get relative path unique code */
-  if (mCompiler_input_file_relpathcode.find(argv.back()) !=
-          mCompiler_input_file_relpathcode.end() &&
-      !(mCompiler_input_file_relpathcode.find(argv.back())->second).empty())
-    relpathcode = mCompiler_input_file_relpathcode.find(argv.back())->second;
+  if (MCompiler_input_file_relpathcode.find(argv.back()) !=
+          MCompiler_input_file_relpathcode.end() &&
+      !(MCompiler_input_file_relpathcode.find(argv.back())->second).empty())
+    relpathcode = MCompiler_input_file_relpathcode.find(argv.back())->second;
 
-  if (mCompiler_enabled_options[STATICANALYSIS]) {
+  if (MCompiler_enabled_options[STATICANALYSIS]) {
     // inlineFunctions(argv); // Has bugs bcoz of rose implementation
   }
 
@@ -1562,40 +1562,40 @@ Extractor::Extractor(const vector<string> &argv) {
   ast->unparse();
   delete ast;
 
-  /* If file doesn't have any loop, then mCompiler_file_name,_file_extn would be
+  /* If file doesn't have any loop, then MCompiler_file_name,_file_extn would be
    * empty at this point */
-  if (mCompiler_file_name.empty()) {
-    mCompiler_file_path          = getFilePath(argv.back());
-    mCompiler_original_file_name = getOrigFileName(argv.back());
-    mCompiler_file_extn          = getFileExtn(argv.back());
+  if (MCompiler_file_name.empty()) {
+    MCompiler_file_path          = getFilePath(argv.back());
+    MCompiler_original_file_name = getOrigFileName(argv.back());
+    MCompiler_file_extn          = getFileExtn(argv.back());
   }
   string base_file = getDataFolderPath() + getOrigFileName() + base_str + "_" +
                      relpathcode + "." + getFileExtn();
   string base_file_profile = getDataFolderPath() + getOrigFileName() +
                              base_str + "_" + relpathcode +
-                             mCompiler_profile_file_tag + "." + getFileExtn();
+                             MCompiler_profile_file_tag + "." + getFileExtn();
 
-  if (mCompiler_file_name.empty() && !mainFuncPresent) {
-    /* Copy original file to the mCompiler data folder:
-     * cp filename.x mCompiler_data/filename_base.x
+  if (MCompiler_file_name.empty() && !mainFuncPresent) {
+    /* Copy original file to the MCompiler data folder:
+     * cp filename.x MCompiler_data/filename_base.x
      * rm rose_filename.x
      */
     executeCommand("cp " + argv.back() + space_str + base_file);
     executeCommand("rm rose_" + getOrigFileName() + "." + getFileExtn());
   } else {
-    /* Move base file to the mCompiler data folder:
-     * mv rose_filename.x mCompiler_data/filename_base.x
+    /* Move base file to the MCompiler data folder:
+     * mv rose_filename.x MCompiler_data/filename_base.x
      */
     executeCommand("mv rose_" + getOrigFileName() + "." + getFileExtn() +
                    space_str + base_file);
   }
-  /* cp mCompiler_data/filename_base.x mCompiler_data/filename_base_profile_.x
+  /* cp MCompiler_data/filename_base.x MCompiler_data/filename_base_profile_.x
    */
   executeCommand("cp " + base_file + space_str + base_file_profile);
   modifyExtractedFileText(base_file, base_file_profile);
 
-  if (mCompiler_enabled_options[PREDICT]) {
-    ofstream baselistfile(getDataFolderPath() + mCompiler_baselist_file,
+  if (MCompiler_enabled_options[PREDICT]) {
+    ofstream baselistfile(getDataFolderPath() + MCompiler_baselist_file,
                           ofstream::app);
     baselistfile << (getOrigFileName() + base_str + "_" + relpathcode) << '\n';
     baselistfile.close();
