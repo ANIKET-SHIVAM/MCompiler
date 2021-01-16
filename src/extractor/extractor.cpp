@@ -52,7 +52,8 @@ string Extractor::getFileExtn(const string &fileNameWithPath) {
 int Extractor::getAstNodeLineNum(SgNode *const &astNode) {
   ROSE_ASSERT(astNode != NULL);
   SgLocatedNode *locatedNode = isSgLocatedNode(astNode);
-  return rose::getLineNumber(locatedNode);
+  // Deprecated: return rose::getLineNumber(locatedNode);
+  return astNode->get_file_info()->get_line();
 }
 
 string Extractor::getExtractionFileName(SgNode *astNode, bool isProfileFile) {
@@ -660,9 +661,9 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
     // Entire Loop Body
     string loop_body_str = "";
     if (extr.getSrcType() == src_lang_C) {
-      loop_body_str = (*iter)->unparseToCompleteString();
+      loop_body_str = (*iter)->unparseToString();
     } else if (extr.getSrcType() == src_lang_CPP) {
-      loop_body_str = (*iter)->unparseToCompleteString();
+      loop_body_str = (*iter)->unparseToString();
     }
     if (loop_body_str.find("#else") == 0)
       loop_body_str.erase(0, loop_body_str.find("\n") + 1);
@@ -907,7 +908,7 @@ bool Extractor::skipLoop(SgNode *astNode) {
 
   /* Skip loop with macro def in the body, Rose will extract the first instance
    * of complete loop */
-  string loop_body_orig = loop->unparseToCompleteString();
+  string loop_body_orig = loop->unparseToString();
   string loop_body = loop_body_orig.substr(loop_body_orig.find_first_of("for"));
   if (loop_body.find("#if") != string::npos ||
       loop_body.find("#else") != string::npos ||
@@ -1510,7 +1511,7 @@ void Extractor::inlineFunctions(const vector<string> &argv) {
   checkTransformedFlagsVisitor(project);
   // Call function to postprocess the AST and fixup symbol tables
   cout << "AST check 2" << endl;
-  FixSgProject(*project);
+  //FixSgProject(*project);
   // Rename each variable declaration
   cout << "AST check 3" << endl;
   renameVariables(project);

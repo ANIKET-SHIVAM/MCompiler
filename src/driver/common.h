@@ -16,6 +16,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <numeric>
+#include <functional>
 
 // For Extractor especially
 // clang-format off
