@@ -1,0 +1,4 @@
+apt-get install software-properties-common
+add-apt-repository ppa:rosecompiler/rose-development # Replace rose-development with rose-stable for release version
+apt-get install rose
+apt-get install rose-tools # Optional: Installs ROSE tools in addition to ROSE Core
