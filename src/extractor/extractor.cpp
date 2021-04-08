@@ -674,6 +674,10 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
   loop       = *(extr.consecutiveLoops.begin());
   loop_scope = (loop->get_loop_body())->get_scope();
 
+  stringReplaceAll(kernel_body_str,"{","\n{\n"); 
+  stringReplaceAll(kernel_body_str,"}","\n}\n"); 
+  stringReplaceAll(kernel_body_str,";",";\n"); 
+
   loop_file_buf << kernel_body_str << endl;
 
   loop_file_buf << "#pragma endscop" << endl;

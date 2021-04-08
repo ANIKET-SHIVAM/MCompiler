@@ -25,7 +25,7 @@ string base_str            = "_base";
 string icc_str             = "_icc";
 string gcc_str             = "_gcc";
 string llvm_str            = "_llvm";
-string pgi_str             = "_pgi";
+//string pgi_str             = "_pgi";
 string pluto_str           = "_pluto";
 /* Case where PLuTo doesn't recognize the SCoP, so source fed to ICC as it is */
 string XplutoX_str                   = "_XplutoX";
@@ -33,13 +33,12 @@ string polly_str                     = "_polly";
 string test_str                      = "_test";
 string MCompiler_skiplooppragma_str  = "skiploop";
 string MCompiler_skipplutopragma_str = "skippluto";
-string MCompiler_advprofiler_str = "vtune";
 
 map<compiler_type, string> compiler_keyword = {
     {compiler_ICC, icc_str.substr(1, string::npos)},
     {compiler_GCC, gcc_str.substr(1, string::npos)},
     {compiler_LLVM, llvm_str.substr(1, string::npos)},
-    {compiler_PGI, pgi_str.substr(1, string::npos)},
+//    {compiler_PGI, pgi_str.substr(1, string::npos)},
     {compiler_Pluto, pluto_str.substr(1, string::npos)},
     {compiler_Polly, polly_str.substr(1, string::npos)},
 };
@@ -47,8 +46,23 @@ map<compiler_type, string> compiler_keyword = {
 /* Set baseline compiler to come from CL */
 string baseline_compiler_str;
 
-string pgi_lib_path;
-string vtune_path;
+//string pgi_lib_path;
+
+#define XSTR(s) STR(s)
+#define STR(s) #s
+
+#ifndef VTUNE_PATH
+#define VTUNE_PATH /opt/intel/vtune_profiler/bin64/
+#endif
+string vtune_path = XSTR(VTUNE_PATH);
+string MCompiler_advprofiler_str = vtune_path + forward_slash_str + "vtune";
+
+#ifndef LIKWID_PATH
+#define LIKWID_PATH /usr/bin/
+#endif
+string likwid_path = XSTR(LIKWID_PATH);
+string MCompiler_powerprofiler_str = likwid_path + forward_slash_str + "bin" + forward_slash_str+ "likwid-perfctr";
+
 string MCompiler_trained_model_path = "MC_trained_model.yml";
 string MCompiler_trained_model_features_path =
     MCompiler_trained_model_path + "_features.txt";
@@ -344,7 +358,7 @@ void addPostLinkerFlags() {
   flag_vec.push_back(MCompiler_libraries);
   flag_vec.push_back(MCompiler_extraPostSrcFlags);
   if (MCompiler_enabled_options[POWER_PROFILE]) {
-    flag_vec.push_back("-llikwid");
+    flag_vec.push_back("-L" + likwid_path + forward_slash_str + "lib" + space_str + "-llikwid");
   }
   post_linker_flags[compiler_ICC]  = flag_vec;
   post_linker_flags[compiler_GCC]  = flag_vec;
@@ -419,8 +433,8 @@ bool isEndingWithCompilerName(string const &fullString) {
                          icc_str.length(), icc_str) == 0 ||
       fullString.compare(fullString.length() - gcc_str.length(),
                          gcc_str.length(), gcc_str) == 0 ||
-      fullString.compare(fullString.length() - pgi_str.length(),
-                         pgi_str.length(), pgi_str) == 0 ||
+//      fullString.compare(fullString.length() - pgi_str.length(),
+//                         pgi_str.length(), pgi_str) == 0 ||
       fullString.compare(fullString.length() - llvm_str.length(),
                          llvm_str.length(), llvm_str) == 0 ||
       fullString.compare(fullString.length() - pluto_str.length(),
@@ -467,6 +481,14 @@ void genRandomStr(string &str, const int len) {
   for (int i = 0; i < len; ++i) {
     str += alphanum[rand() % (sizeof(alphanum) - 1)];
   }
+}
+
+void stringReplaceAll(string& str, const string& from, const string& to) {
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+    }   
 }
 
 string getAbsolutePath(string const &fullString) {
