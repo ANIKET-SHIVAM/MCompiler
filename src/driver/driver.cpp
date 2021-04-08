@@ -32,6 +32,7 @@ void Driver::checkCompilerCandidates() {
       cout << "Couldn't find in PATH: clang (LLVM)" << endl;
     }
   }
+#if 0
   result_compiler_found = executeCommand("pgcc");
   if (result_compiler_found.find("not found") == string::npos) {
     compiler_candidate[compiler_PGI] = true;
@@ -39,7 +40,7 @@ void Driver::checkCompilerCandidates() {
   } else {
     cout << "Couldn't find in PATH: pgcc (PGI)" << endl;
   }
-
+#endif
   result_compiler_found = executeCommand("polycc");
   if (result_compiler_found.find("not found") == string::npos &&
       !MCompiler_enabled_options[NOPOLYHEDRAL]) {
@@ -76,7 +77,7 @@ void Driver::checkCompilerCandidates() {
   }
 
   if (MCompiler_enabled_options[POWER_PROFILE])
-    MCompiler_macro_defs += "-DLIKWID_PERFMON";
+    MCompiler_macro_defs += "-I" + likwid_path + forward_slash_str + "include" + space_str + "-DLIKWID_PERFMON";
 
   /* In common.h */
   addOptimizationFlags();
@@ -97,13 +98,13 @@ bool Driver::checkAdvProfileCandidate() {
 }
 
 bool Driver::checkPowerProfileCandidate() {
-  string result_compiler_found = executeCommand("likwid-perfctr");
+  string result_compiler_found = executeCommand(MCompiler_powerprofiler_str);
   if (result_compiler_found.find("not found") != string::npos) {
     cerr << "LIKWID not found" << endl;
     cerr << "Driver: Check unsuccesful for the Power Profiling Tool" << endl;
     return false;
   } else {
-    cout << "Found in PATH: likwid-perfctr" << endl;
+    cout << "Found in PATH: " << MCompiler_powerprofiler_str << endl;
     return true;
   }
 }
@@ -143,6 +144,7 @@ void Driver::getPathsToUtils() {
   char *copy_env_PATH       = strdup(env_PATH);
   const char *env_LDLIBPATH = getenv("LD_LIBRARY_PATH");
   char *copy_env_LDLIBPATH  = strdup(env_LDLIBPATH);
+#if 0
   /* Search for PGI lib path */
   if (compiler_candidate[compiler_PGI] == true) {
     char *token = strtok(copy_env_LDLIBPATH, ":");
@@ -158,6 +160,7 @@ void Driver::getPathsToUtils() {
       token = strtok(NULL, ":");
     }
   }
+#endif
   char *env_MLmodel = getenv("MC_ML_MODEL");
   if (env_MLmodel != NULL) {
     MCompiler_trained_model_path = string(env_MLmodel);
@@ -205,7 +208,7 @@ void Driver::generateMCompilerHeaderFile() {
     isPresent = true;
   // header_file_buf.close();
 
-  string temp_str = "void " + printTimingVarFuncName + "();";
+  string temp_str = "extern void " + printTimingVarFuncName + "();";
   if (isPresent)
     executeCommand("sed -i '/" + temp_str + "/d;/" + "#endif" + "/d' " +
                    getDataFolderPath() + MCompiler_header_name);
@@ -228,7 +231,7 @@ void Driver::generateMCompilerHeaderFile() {
   vector<string>::iterator iter;
   for (iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end();
        iter++) {
-    header_file_buf << "double " << getLoopTimingVarSuffix() + *iter << ";"
+    header_file_buf << "extern double " << getLoopTimingVarSuffix() + *iter << ";"
                     << endl;
   }
 
@@ -238,9 +241,24 @@ void Driver::generateMCompilerHeaderFile() {
   header_file_buf.close();
 
   temp_str = "}";
-  if (isPresent)
+
+  string timingFuncDef = "void " + printTimingVarFuncName + "(){";
+
+  if (isPresent) {
+    /* add global timing vars to the header */
+    vector<string>::iterator iter;
+    for (iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end();
+         iter++) {
+      executeCommand("sed -i 's/" + timingFuncDef + "/" + 
+                     "double " + getLoopTimingVarSuffix() + *iter + ";" + "\\n" + timingFuncDef +
+                     "/g' " + getDataFolderPath() +
+                     MCompiler_header_code_name);
+    }
+
     executeCommand("sed -i '/" + temp_str + "/d' " + getDataFolderPath() +
                    MCompiler_header_code_name);
+  }
+
   /* Now open/append MCompiler header's code file */
   if (MCompiler_mode == mode_FULL_PASS) {
     header_code_file_buf.open(
@@ -256,7 +274,16 @@ void Driver::generateMCompilerHeaderFile() {
   if (!isPresent) {
     header_code_file_buf << "#include \"" << MCompiler_header_name << "\""
                          << endl;
-    header_code_file_buf << "void " << printTimingVarFuncName << "(){" << endl;
+
+    /* add global timing vars to the header */
+    vector<string>::iterator iter;
+    for (iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end();
+         iter++) {
+      header_code_file_buf << "double " << getLoopTimingVarSuffix() + *iter << ";"
+                      << endl;
+    }
+
+    header_code_file_buf << timingFuncDef << endl;
   }
 
   for (iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end();
@@ -400,7 +427,6 @@ int main(int argc, char *argv[]) {
   if (MCompiler_enabled_options[POWER_PROFILE]) {
     if (!driver->checkPowerProfileCandidate()) {
       MCompiler_enabled_options[POWER_PROFILE] = false;
-      MCompiler_macro_defs += "-DLIKWID_PERFMON";
     }
   }
 
