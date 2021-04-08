@@ -1,11 +1,11 @@
-#include "power_profiler.h"
+#include "energy_profiler.h"
 /*
 Performs following task:
 -Collects power/energy consumption stats for hotspots using LIKWID
 */
 
-void PowerProfiler::addProfileToolOptions() {
-  toolCL_collect.push_back(MCompiler_powerprofiler_str + space_str);
+void EnergyProfiler::addProfileToolOptions() {
+  toolCL_collect.push_back(MCompiler_energyprofiler_str + space_str);
   toolCL_collect.push_back("-C 0" + space_str); // Pin process to core 0
   toolCL_collect.push_back("-g ENERGY" +
                            space_str); // Measure energy using MSR registers
@@ -15,7 +15,7 @@ void PowerProfiler::addProfileToolOptions() {
                            space_str); // Use Marker APIs in the code regions
 }
 
-void PowerProfiler::gatherProfilingData(const string &binary_file,
+void EnergyProfiler::gatherProfilingData(const string &binary_file,
                                         compiler_type curr_compiler) {
   string compiler_str = compiler_keyword[curr_compiler];
 
@@ -34,7 +34,7 @@ void PowerProfiler::gatherProfilingData(const string &binary_file,
   CL += binary_file + space_str;
   CL += MCompiler_profiler_input;
 
-  cout << "Power Profiler: " << compiler_str << endl;
+  cout << "Energy Profiler: " << compiler_str << endl;
   string result;
   result = executeCommand(CL);
 
@@ -48,11 +48,11 @@ void PowerProfiler::gatherProfilingData(const string &binary_file,
   sanitizeProfileData(result, compiler_str);
 }
 
-void PowerProfiler::sanitizeProfileData(const string &result,
+void EnergyProfiler::sanitizeProfileData(const string &result,
                                         const string &compiler_str) {
   // CSV file open for storing profiler data
   bool is_reading_file = false;
-  CSV csv_file(MCompiler_curr_dir_path + MCompiler_power_profile_data_csv,
+  CSV csv_file(MCompiler_curr_dir_path + MCompiler_energy_profile_data_csv,
                is_reading_file);
 
   stringstream line_stream(result);
@@ -109,7 +109,7 @@ void PowerProfiler::sanitizeProfileData(const string &result,
   }   // while
 }
 
-void PowerProfiler::PowerProfile(
+void EnergyProfiler::EnergyProfile(
     const map<compiler_type, bool>::iterator &curr_candidate) {
   if (curr_candidate->second == true) {
     string out_file = getDataFolderPath() + MCompiler_binary_name + "_" +
@@ -118,8 +118,8 @@ void PowerProfiler::PowerProfile(
   }
 }
 
-PowerProfiler::PowerProfiler() {
-  cout << "Power Profiling" << endl;
+EnergyProfiler::EnergyProfiler() {
+  cout << "Energy Profiling" << endl;
   if (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
       MCompiler_mode == mode_COMPLEX) {
     addProfileToolOptions();
@@ -127,7 +127,7 @@ PowerProfiler::PowerProfiler() {
     map<compiler_type, bool>::iterator iter;
     for (iter = compiler_candidate.begin(); iter != compiler_candidate.end();
          iter++) {
-      PowerProfile(iter);
+      EnergyProfile(iter);
     }
   } // if
 } // Constructor

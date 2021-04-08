@@ -57,7 +57,7 @@ typedef enum {
   PROFILE,
   SYNTHESIZE,
   ADV_PROFILE,
-  POWER_PROFILE,
+  ENERGY_PROFILE,
   PREDICT,
   TEST,
   REPORT,
@@ -109,7 +109,7 @@ extern string baseline_compiler_str;
 extern string MCompiler_skiplooppragma_str;
 extern string MCompiler_skipplutopragma_str;
 extern string MCompiler_advprofiler_str;
-extern string MCompiler_powerprofiler_str;
+extern string MCompiler_energyprofiler_str;
 
 extern compiler_mode MCompiler_mode;
 
@@ -161,7 +161,7 @@ extern map<string, compiler_type> predicted_compiler;
 extern int MCompiler_profiler_runs;
 extern string MCompiler_profile_data_csv;
 extern string MCompiler_adv_profile_data_csv;
-extern string MCompiler_power_profile_data_csv;
+extern string MCompiler_energy_profile_data_csv;
 extern string MCompiler_profiler_input;
 extern string MCompiler_macro_defs;
 extern string MCompiler_include_path;

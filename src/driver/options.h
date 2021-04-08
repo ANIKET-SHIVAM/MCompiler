@@ -42,7 +42,7 @@ const option::Descriptor usage[] = {
   {PROFILE            , 0, ""  , "noprofile"     ,Arg::None     , "    --[no]profile            Profile extracted hotspots" },
   {SYNTHESIZE         , 0, ""  , "nosynthesize"  ,Arg::None     , "    --[no]synthesize         Combine best performing hotspots to generate binary" },
   {ADV_PROFILE        , 0, ""  , "adv-profile"   ,Arg::None     , "    --adv-profile            Advanced Profiling" },
-  {POWER_PROFILE      , 0, ""  , "power-profile" ,Arg::None     , "    --power-profile          Power Profiling" },
+  {ENERGY_PROFILE     , 0, ""  , "energy-profile",Arg::None     , "    --energy-profile         Energy Profiling" },
   {PREDICT            , 0, ""  , "predict"       ,Arg::None     , "    --predict                Predict candidate using ML" },
   {TEST               , 0, ""  , "test"          ,Arg::None     , "    --test                   Test performance compared to other compilers"
                                                                                                 " optimized code" },
@@ -82,7 +82,7 @@ void set_MCompiler_options(int argc, char *argv[]) {
       {PROFILE, true},
       {SYNTHESIZE, true},
       {ADV_PROFILE, false},
-      {POWER_PROFILE, false},
+      {ENERGY_PROFILE, false},
       {PREDICT, false},
       {TEST, false},
       {PARALLEL, false},
@@ -152,8 +152,8 @@ void set_MCompiler_options(int argc, char *argv[]) {
     case ADV_PROFILE:
       MCompiler_enabled_options[ADV_PROFILE] = true;
       break;
-    case POWER_PROFILE:
-      MCompiler_enabled_options[POWER_PROFILE] = true;
+    case ENERGY_PROFILE:
+      MCompiler_enabled_options[ENERGY_PROFILE] = true;
       MCompiler_profiler_runs                  = 0;
       break;
     case PREDICT:

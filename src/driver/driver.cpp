@@ -76,7 +76,7 @@ void Driver::checkCompilerCandidates() {
     exit(EXIT_FAILURE);
   }
 
-  if (MCompiler_enabled_options[POWER_PROFILE])
+  if (MCompiler_enabled_options[ENERGY_PROFILE])
     MCompiler_macro_defs += "-I" + likwid_path + forward_slash_str + "include" + space_str + "-DLIKWID_PERFMON";
 
   /* In common.h */
@@ -97,14 +97,14 @@ bool Driver::checkAdvProfileCandidate() {
   }
 }
 
-bool Driver::checkPowerProfileCandidate() {
-  string result_compiler_found = executeCommand(MCompiler_powerprofiler_str);
+bool Driver::checkEnergyProfileCandidate() {
+  string result_compiler_found = executeCommand(MCompiler_energyprofiler_str);
   if (result_compiler_found.find("not found") != string::npos) {
     cerr << "LIKWID not found" << endl;
-    cerr << "Driver: Check unsuccesful for the Power Profiling Tool" << endl;
+    cerr << "Driver: Check unsuccesful for the Energy Profiling Tool" << endl;
     return false;
   } else {
-    cout << "Found in PATH: " << MCompiler_powerprofiler_str << endl;
+    cout << "Found in PATH: " << MCompiler_energyprofiler_str << endl;
     return true;
   }
 }
@@ -395,7 +395,7 @@ void Driver::initiateProfiler() { prof = new ProfilerC(); }
 
 void Driver::initiateAdvProfiler() { adv_prof = new AdvProfiler(); }
 
-void Driver::initiatePowerProfiler() { power_prof = new PowerProfiler(); }
+void Driver::initiateEnergyProfiler() { energy_prof = new EnergyProfiler(); }
 
 void Driver::initiatePredictor() { predictor = new Predictor(); }
 
@@ -424,9 +424,9 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (MCompiler_enabled_options[POWER_PROFILE]) {
-    if (!driver->checkPowerProfileCandidate()) {
-      MCompiler_enabled_options[POWER_PROFILE] = false;
+  if (MCompiler_enabled_options[ENERGY_PROFILE]) {
+    if (!driver->checkEnergyProfileCandidate()) {
+      MCompiler_enabled_options[ENERGY_PROFILE] = false;
     }
   }
 
@@ -467,8 +467,8 @@ int main(int argc, char *argv[]) {
     driver->initiateAdvProfiler();
   }
 
-  if (MCompiler_enabled_options[POWER_PROFILE]) {
-    driver->initiatePowerProfiler();
+  if (MCompiler_enabled_options[ENERGY_PROFILE]) {
+    driver->initiateEnergyProfiler();
   }
 
   if (MCompiler_enabled_options[PREDICT] &&

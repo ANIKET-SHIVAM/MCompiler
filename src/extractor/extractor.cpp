@@ -149,7 +149,7 @@ void Extractor::printHeaders(ofstream &loop_file_buf, bool isProfileFile) {
   // TODO: if it is a fortran code
   if (isProfileFile)
     loop_file_buf << "#include \"" << MCompiler_header_name << "\"" << endl;
-  if (isProfileFile && MCompiler_enabled_options[POWER_PROFILE])
+  if (isProfileFile && MCompiler_enabled_options[ENERGY_PROFILE])
     loop_file_buf << "#include <likwid.h>" << endl;
   if (!hasOMP && (src_type == src_lang_C || src_type == src_lang_CPP))
     loop_file_buf << "#include <omp.h>" << endl;
@@ -635,9 +635,9 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
     loop_file_buf << printOMPprivateArrays() << endl;
 
   // Add OMP Timer start
-  if (isProfileFile && !MCompiler_enabled_options[POWER_PROFILE]) {
+  if (isProfileFile && !MCompiler_enabled_options[ENERGY_PROFILE]) {
     loop_file_buf << "double loop_timer_start = omp_get_wtime( );" << endl;
-  } else if (isProfileFile && MCompiler_enabled_options[POWER_PROFILE]) {
+  } else if (isProfileFile && MCompiler_enabled_options[ENERGY_PROFILE]) {
     loop_file_buf << "LIKWID_MARKER_INIT;" << endl;
     loop_file_buf << "LIKWID_MARKER_START(\"" << getFuncName() << "\");"
                   << endl;
@@ -683,9 +683,9 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
   loop_file_buf << "#pragma endscop" << endl;
 
   // Add OMP Timer end
-  if (isProfileFile && !MCompiler_enabled_options[POWER_PROFILE]) {
+  if (isProfileFile && !MCompiler_enabled_options[ENERGY_PROFILE]) {
     loop_file_buf << "double loop_timer_end = omp_get_wtime( );" << endl;
-  } else if (isProfileFile && MCompiler_enabled_options[POWER_PROFILE]) {
+  } else if (isProfileFile && MCompiler_enabled_options[ENERGY_PROFILE]) {
     loop_file_buf << "LIKWID_MARKER_STOP(\"" << getFuncName() << "\");" << endl;
     loop_file_buf << "LIKWID_MARKER_CLOSE;" << endl;
   }
@@ -713,7 +713,7 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
              temp_str) == extr.loop_funcName_vec->end())
       (extr.loop_funcName_vec)->push_back(temp_str);
     string loopTimingVarStr = extr.getLoopTimingVarSuffix() + getFuncName();
-    if (!MCompiler_enabled_options[POWER_PROFILE])
+    if (!MCompiler_enabled_options[ENERGY_PROFILE])
       loop_file_buf << loopTimingVarStr << " += "
                     << "loop_timer_end - loop_timer_start;" << endl;
   }
@@ -1145,7 +1145,7 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
         main_scope      = dynamic_cast<SgScopeStatement *>(
             (declFunc->get_definition())->get_body());
         if ((declFunc->get_orig_return_type())->variantT() == V_SgTypeVoid &&
-            !MCompiler_enabled_options[POWER_PROFILE])
+            !MCompiler_enabled_options[ENERGY_PROFILE])
           addTimingFuncCallVoidMain();
         else
           nonVoidMain = true;
@@ -1201,7 +1201,7 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
     case V_SgReturnStmt: {
       SgStatement *returnstmt = dynamic_cast<SgStatement *>(astNode);
       if (mainFuncPresent && returnstmt->get_scope() == main_scope &&
-          nonVoidMain && !MCompiler_enabled_options[POWER_PROFILE])
+          nonVoidMain && !MCompiler_enabled_options[ENERGY_PROFILE])
         addTimingFuncCallNonVoidMain(returnstmt);
       break;
     }

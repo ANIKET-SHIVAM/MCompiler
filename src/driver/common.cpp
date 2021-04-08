@@ -61,7 +61,7 @@ string MCompiler_advprofiler_str = vtune_path + forward_slash_str + "vtune";
 #define LIKWID_PATH /usr/bin/
 #endif
 string likwid_path = XSTR(LIKWID_PATH);
-string MCompiler_powerprofiler_str = likwid_path + forward_slash_str + "bin" + forward_slash_str+ "likwid-perfctr";
+string MCompiler_energyprofiler_str = likwid_path + forward_slash_str + "bin" + forward_slash_str+ "likwid-perfctr";
 
 string MCompiler_trained_model_path = "MC_trained_model.yml";
 string MCompiler_trained_model_features_path =
@@ -121,7 +121,7 @@ int MCompiler_profiler_runs =
     3; // Default: If CL provided then replaced with that number
 string MCompiler_profile_data_csv       = "profile_data.csv";
 string MCompiler_adv_profile_data_csv   = "adv_profile_data.csv";
-string MCompiler_power_profile_data_csv = "power_profile_data.csv";
+string MCompiler_energy_profile_data_csv = "energy_profile_data.csv";
 string MCompiler_profiler_input         = "";
 string MCompiler_macro_defs             = "";
 string MCompiler_include_path           = "";
@@ -357,7 +357,7 @@ void addPostLinkerFlags() {
   flag_vec.push_back("-lm");
   flag_vec.push_back(MCompiler_libraries);
   flag_vec.push_back(MCompiler_extraPostSrcFlags);
-  if (MCompiler_enabled_options[POWER_PROFILE]) {
+  if (MCompiler_enabled_options[ENERGY_PROFILE]) {
     flag_vec.push_back("-L" + likwid_path + forward_slash_str + "lib" + space_str + "-llikwid");
   }
   post_linker_flags[compiler_ICC]  = flag_vec;

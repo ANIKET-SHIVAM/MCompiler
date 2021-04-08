@@ -6,7 +6,7 @@
 #include "options.h"
 #include "predictor/predictor.h"
 #include "profiler/adv_profiler.h"
-#include "profiler/power_profiler.h"
+#include "profiler/energy_profiler.h"
 #include "profiler/profilerC.h"
 #include "synthesizer/synthesizerC.h"
 #include "tester/tester.h"
@@ -25,7 +25,7 @@ class Driver {
   Extractor *extr;
   ProfilerC *prof;
   AdvProfiler *adv_prof;
-  PowerProfiler *power_prof;
+  EnergyProfiler *energy_prof;
   Predictor *predictor;
   SynthesizerC *synth;
 
@@ -40,7 +40,7 @@ public:
   string getDataFolderPath() { return MCompiler_data_folder_path; };
   void checkCompilerCandidates();
   bool checkAdvProfileCandidate();
-  bool checkPowerProfileCandidate();
+  bool checkEnergyProfileCandidate();
   void setMCompilerMode();
   void getPathsToUtils();
   void createMCompilerDataFolder();
@@ -52,7 +52,7 @@ public:
   void initiateExtractor(string file_name);
   void initiateProfiler();
   void initiateAdvProfiler();
-  void initiatePowerProfiler();
+  void initiateEnergyProfiler();
   void initiatePredictor();
   void initiateSynthesizer();
 };
