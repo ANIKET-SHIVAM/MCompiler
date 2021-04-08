@@ -11,6 +11,8 @@ ifeq ($(OS), centos)
 	OPENCV_VERSION = 4
 	OPENCV_INCLUDE = -I${OPENCV_PATH}/include/opencv$(OPENCV_VERSION)
 	OPENCV_LIB = -lopencv_ml -lopencv_core
+	VTUNE_PATH = /super_big_mount/intel/vtune_profiler/bin64/
+	LIKWID_PATH = /super_big_mount/likwid-5.1.0/install/
 else
 	CC = g++
 	FLAGS = -std=c++11 -g
@@ -23,6 +25,8 @@ else
 	OPENCV_VERSION = 4
 	OPENCV_INCLUDE = -I${OPENCV_PATH}/include/opencv$(OPENCV_VERSION)
 	OPENCV_LIB = -lopencv_ml -lopencv_core
+	VTUNE_PATH = /super_big_mount/intel/vtune_profiler/bin64/
+	LIKWID_PATH = /super_big_mount/likwid-5.1.0/install/
 endif
 
 OBJS = obj
@@ -158,7 +162,7 @@ SRC_DRIVER = $(DRIVER_PATH)/driver.cpp
 
 OBJ_COMMON = $(OBJS)/common.o
 $(OBJ_COMMON): src/driver/common.cpp
-	$(CC) $(FLAGS) src/driver/common.cpp $(ROSE_INCLUDE) -c -o $@
+	$(CC) $(FLAGS) src/driver/common.cpp $(ROSE_INCLUDE) -DVTUNE_PATH=$(VTUNE_PATH) -DLIKWID_PATH=$(LIKWID_PATH) -c -o $@
 
 driver: $(OBJ_DRIVER) $(OBJ_EXTRACTOR) $(OBJ_PROFILER) $(OBJ_ADV_PROFILER) $(OBJ_POWER_PROFILER) $(OBJ_PREDICTOR) $(OBJ_SYNTHESIZER) $(OBJ_COMMON) $(OBJ_TESTER)
 	$(CC) $^ $(DRIVER_LD_FLAGS) -o $(BIN)/MCompiler

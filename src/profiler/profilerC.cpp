@@ -27,6 +27,8 @@ void ProfilerC::getHotspotFiles() {
   }
 }
 
+//TODO: Change Optimize and Profile functions to C++ templates. Improve code quality.
+
 // TODO: Check if compilation command failed in optimize functions
 void ProfilerC::iccOptimize(bool asPlutoBackend) {
   files_to_link.clear();
@@ -188,6 +190,8 @@ void ProfilerC::llvmOptimize(bool withPollyPlugin) {
   }
 }
 
+#if 0
+Disable PGI now - end of product
 void ProfilerC::pgiOptimize() {
   files_to_link.clear();
   vector<string> CL_flags = optimization_flags[compiler_PGI];
@@ -228,6 +232,7 @@ void ProfilerC::pgiOptimize() {
     }
   }
 }
+#endif
 
 void ProfilerC::plutoOptimize() {
   vector<string> CL_flags = optimization_flags[compiler_Pluto];
@@ -295,9 +300,9 @@ void ProfilerC::Optimize(compiler_type curr_candidate, bool curr_cand_status) {
     case compiler_LLVM:
       llvmOptimize(withPollyPlugin);
       break;
-    case compiler_PGI:
-      pgiOptimize();
-      break;
+    //case compiler_PGI:
+    //  pgiOptimize();
+    //  break;
     case compiler_Pluto:
       plutoOptimize();
       break;
@@ -632,6 +637,7 @@ void ProfilerC::llvmProfile(bool withPollyPlugin) {
   gatherProfilingData(out_file, compiler_in_action);
 }
 
+#if 0
 void ProfilerC::pgiProfile() {
   string CL;
 
@@ -661,6 +667,7 @@ void ProfilerC::pgiProfile() {
   /* Send binary for profiling and storing profiling data */
   gatherProfilingData(out_file, compiler_PGI);
 }
+#endif
 
 void ProfilerC::plutoProfile() {
   // Run iccProfile as PLuTo backend
@@ -691,9 +698,9 @@ void ProfilerC::Profile(
     case compiler_LLVM:
       llvmProfile(withPollyPlugin);
       break;
-    case compiler_PGI:
-      pgiProfile();
-      break;
+//    case compiler_PGI:
+//      pgiProfile();
+//      break;
     case compiler_Pluto:
       plutoProfile();
       break;

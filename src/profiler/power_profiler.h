@@ -13,7 +13,6 @@ private:
   vector<string> toolCL_report;
   set<string> files_to_link;
   string prof_binary              = "";
-  string vtune_default_dir_naming = "r@@@runAT";
 
   void setProfBinary(const string &str) { prof_binary = str; };
   string getProfBinary() { return prof_binary; };

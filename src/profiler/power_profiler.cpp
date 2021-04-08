@@ -5,7 +5,7 @@ Performs following task:
 */
 
 void PowerProfiler::addProfileToolOptions() {
-  toolCL_collect.push_back("likwid-perfctr" + space_str);
+  toolCL_collect.push_back(MCompiler_powerprofiler_str + space_str);
   toolCL_collect.push_back("-C 0" + space_str); // Pin process to core 0
   toolCL_collect.push_back("-g ENERGY" +
                            space_str); // Measure energy using MSR registers
