@@ -157,7 +157,8 @@ void AdvProfiler::runProfileTool() {
     setProfDir(result.substr(result.find(getDataFolderPath()),
                              getDataFolderPath().length() +
                                  vtune_default_dir_naming.length()));
-    cout << "Profiler Data Folder:" << getProfDir() << endl;
+    if (MCompiler_enabled_options[MC_INFO])
+      cout << "Profiler Data Folder:" << getProfDir() << endl;
   } else {
     cerr << "Couldn't locate the profiler data directory" << endl;
   }

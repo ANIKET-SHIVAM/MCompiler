@@ -4,7 +4,7 @@ void SynthesizerC::selectOptimalOptimizedCandidate(string hotspot_name) {
   // pair< compiler_string, running time >
   set<pair<string, double>, less_than_cmp_set> hotspot_timing_set;
 
-  /* Add Mean timing for eligible compilers into comparision set */
+  /* Add Mean timing for eligible compilers into comparison set */
   map<compiler_type, bool>::iterator iter;
   for (iter = compiler_candidate.begin(); iter != compiler_candidate.end();
        iter++) {

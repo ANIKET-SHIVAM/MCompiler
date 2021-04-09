@@ -121,6 +121,7 @@ int MCompiler_profiler_runs =
     3; // Default: If CL provided then replaced with that number
 string MCompiler_profile_data_csv       = "profile_data.csv";
 string MCompiler_adv_profile_data_csv   = "adv_profile_data.csv";
+int MCompiler_energy_profiler_runs = 1; // Will be replaced by MCompiler_profiler_runs value
 string MCompiler_energy_profile_data_csv = "energy_profile_data.csv";
 string MCompiler_profiler_input         = "";
 string MCompiler_macro_defs             = "";

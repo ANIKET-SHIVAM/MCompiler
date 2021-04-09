@@ -421,12 +421,18 @@ int main(int argc, char *argv[]) {
   if (MCompiler_enabled_options[ADV_PROFILE]) {
     if (!driver->checkAdvProfileCandidate()) {
       MCompiler_enabled_options[ADV_PROFILE] = false;
+      MCompiler_enabled_options[PREDICT] = false;
     }
   }
 
   if (MCompiler_enabled_options[ENERGY_PROFILE]) {
     if (!driver->checkEnergyProfileCandidate()) {
       MCompiler_enabled_options[ENERGY_PROFILE] = false;
+      MCompiler_enabled_options[ENERGY] = false;
+    } else {
+      MCompiler_energy_profiler_runs = MCompiler_profiler_runs;
+      /* If energy profiling is on, then loops are only instrumented with Likwid APIs */
+      MCompiler_profiler_runs = 0;
     }
   }
 
@@ -450,25 +456,9 @@ int main(int argc, char *argv[]) {
     driver->initiateProfiler();
   }
 
-  /* If making prediction, then move Synthesis to the end of the pipeline */
-  if (MCompiler_enabled_options[SYNTHESIZE] &&
-      !MCompiler_enabled_options[PREDICT] &&
-      (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
-       MCompiler_mode == mode_COMPLEX)) {
-    if (MCompiler_data_folder_path.empty()) {
-      cerr << "Driver: Couldn't find the folder to synthesize hotspots" << endl;
-      exit(EXIT_FAILURE);
-    }
-    driver->initiateSynthesizer();
-  }
-
   /* Perform counter profiling after Synthesis, if not making prediction */
   if (MCompiler_enabled_options[ADV_PROFILE]) {
     driver->initiateAdvProfiler();
-  }
-
-  if (MCompiler_enabled_options[ENERGY_PROFILE]) {
-    driver->initiateEnergyProfiler();
   }
 
   if (MCompiler_enabled_options[PREDICT] &&
@@ -482,8 +472,11 @@ int main(int argc, char *argv[]) {
     driver->initiatePredictor();
   }
 
+  if (MCompiler_enabled_options[ENERGY_PROFILE]) {
+    driver->initiateEnergyProfiler();
+  }
+
   if (MCompiler_enabled_options[SYNTHESIZE] &&
-      MCompiler_enabled_options[PREDICT] &&
       (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
        MCompiler_mode == mode_COMPLEX)) {
     if (MCompiler_data_folder_path.empty()) {
