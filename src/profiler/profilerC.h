@@ -8,11 +8,8 @@ using namespace std;
 class ProfilerC {
 private:
   string data_folder_path;
-  set<string> files_to_link;
-  set<string> MCompiler_header_obj;
   set<string> *pluto_files_to_compile = new set<string>();
   string pluto_success_str            = "[Pluto] Output written";
-  set<string> *pluto_fail_hotspots    = new set<string>();
 
   void iccOptimize(bool asPlutoBackend);
   void gccOptimize();

@@ -27,6 +27,12 @@ void EnergyProfiler::gatherProfilingData(const string &binary_file,
     return;
   }
 
+  set<string> covered_hotspots;
+  if (baseline_compiler_str == compiler_str) {
+    /* Just in case for some reason its occupied */
+    hotspots_skipped_profiling.clear();
+  }
+
   string CL;
   for (vector<string>::iterator iterv = toolCL_collect.begin();
        iterv != toolCL_collect.end(); iterv++)
@@ -34,22 +40,42 @@ void EnergyProfiler::gatherProfilingData(const string &binary_file,
   CL += binary_file + space_str;
   CL += MCompiler_profiler_input;
 
-  cout << "Energy Profiler: " << compiler_str << endl;
-  string result;
-  result = executeCommand(CL);
+  for (int i = 0; i < MCompiler_energy_profiler_runs; i++) {
+    cout << "Energy Profiler: " << compiler_str << " -> Run " << (i + 1) << endl;
+    string result;
+    result = executeCommand(CL);
 
-  /* If runtime error occurs, abort execution */
-  if (result.find("error") != string::npos ||
-      result.find("Segmentation fault") != string::npos) {
-    cout << "Profiler: Binary couldn't execute: " << compiler_str << endl
-         << result;
+    /* If runtime error occurs, abort execution */
+    if (result.find("error") != string::npos ||
+        result.find("Segmentation fault") != string::npos) {
+      cout << "Profiler: Binary couldn't execute: " << compiler_str << endl
+           << result;
+    }
+
+    sanitizeProfileData(result, curr_compiler, i, covered_hotspots);
+  }
+  // Link left over obj files that had hotspot not being executed during
+  // profiling
+  if (baseline_compiler_str == compiler_str) {
+    set<string>::iterator iters;
+    for (iters = MCompiler_files_to_link.begin(); iters != MCompiler_files_to_link.end(); iters++) {
+      if (!isEndingWith(*iters, compiler_str + dot_o_str)) continue;
+      if (covered_hotspots.find(*iters) == covered_hotspots.end()) {
+        // Skip MCompiler header obj and base files for synthesizer
+        if (MCompiler_header_obj.find(*iters) == MCompiler_header_obj.end() &&
+            (*iters).find(base_str) == string::npos)
+          hotspots_skipped_profiling.insert(*iters);
+      }
+    }
   }
 
-  sanitizeProfileData(result, compiler_str);
 }
 
 void EnergyProfiler::sanitizeProfileData(const string &result,
-                                        const string &compiler_str) {
+                                        compiler_type curr_compiler,
+                                        int run_id,
+                                        set<string> &covered_hotspots) {
+  string compiler_str = compiler_keyword[curr_compiler];
   // CSV file open for storing profiler data
   bool is_reading_file = false;
   CSV csv_file(MCompiler_curr_dir_path + MCompiler_energy_profile_data_csv,
@@ -85,25 +111,78 @@ void EnergyProfiler::sanitizeProfileData(const string &result,
       while (hotspot_name.find("X_X") != string::npos) {
         hotspot_name.replace(hotspot_name.find("X_X"), 3, "-");
       }
+      /* For hotspots that are Pluto couldn't optimize and used ICC's instead */
+      if (curr_compiler == compiler_Pluto &&
+          pluto_fail_hotspots->find(hotspot_name) != pluto_fail_hotspots->end())
+        continue;
+
+      // Check if that loop's profile object file is present
+      string obj_file_path_profile = getDataFolderPath() + hotspot_name +
+                                     MCompiler_profile_file_tag + compiler_str +
+                                     dot_o_str;
+      // This is the file with no profiling code, hence to be finally linked by
+      // the synthesizer
+      string obj_file_path =
+          getDataFolderPath() + hotspot_name + compiler_str + dot_o_str;
+
+      set<string>::iterator iter = MCompiler_files_to_link.find(obj_file_path_profile);
+
+      if (iter == MCompiler_files_to_link.end()) {
+        /* Loop name might be in MCompiler.h from previous step compilations */
+        cerr << "Profiler: Loop's object file not found: "
+             << obj_file_path_profile << endl;
+        continue;
+      }
+
+      // There's no point of adding it for each run
+      if (run_id == 0 && baseline_compiler_str == compiler_str)
+        covered_hotspots.insert(*iter);
+
+      pair<string, string> data_key = make_pair(hotspot_name, compiler_str);
+      // If such hotspot timing vector doesn't exist, create entry and add empty
+      // vector
+      if (profiler_hotspot_data.find(data_key) == profiler_hotspot_data.end()) {
+        vector<double> *temp_vec = new vector<double>();
+        hotspot_name_set.insert(hotspot_name);
+        // Add edp vector for each hotspot and its location( for the no
+        // profile code version ) into corresponding maps
+        profiler_hotspot_data.insert(
+            pair<pair<string, string>, vector<double> *>(data_key, temp_vec));
+        profiler_hotspot_obj_path.insert(
+            pair<pair<string, string>, string>(data_key, obj_file_path));
+      }
+    
+      double hotspot_energy, hotspot_time = -1;
+
       csv_file << hotspot_name << compiler_str;
       // To parse the region stats
       while (getline(line_stream, cell)) {
         cell.pop_back(); // remove the comma at the end
-        if (cell.find(keyword_runtime) != string::npos)
-          csv_file << cell.substr(keyword_runtime.length() + 1);
-        else if (cell.find(keyword_CPI) != string::npos)
+        if (cell.find(keyword_runtime) != string::npos) {
+          hotspot_time = stod(cell.substr(keyword_runtime.length() + 1));
+          csv_file << to_string(hotspot_time);
+        } else if (cell.find(keyword_CPI) != string::npos) {
           csv_file << cell.substr(keyword_CPI.length() + 1);
-        else if (cell.find(keyword_energy) != string::npos)
-          csv_file << cell.substr(keyword_energy.length() + 1);
-        else if (cell.find(keyword_power) != string::npos)
+        } else if (cell.find(keyword_energy) != string::npos) {
+          hotspot_energy = stod(cell.substr(keyword_energy.length() + 1));
+          csv_file << to_string(hotspot_energy);
+        } else if (cell.find(keyword_power) != string::npos) {
           csv_file << cell.substr(keyword_power.length() + 1);
-        else if (cell.find(keyword_energy_dram) != string::npos)
+        } else if (cell.find(keyword_energy_dram) != string::npos) {
           csv_file << cell.substr(keyword_energy_dram.length() + 1);
-        else if (cell.find(keyword_power_dram) != string::npos) {
+        } else if (cell.find(keyword_power_dram) != string::npos) {
           csv_file << cell.substr(keyword_power_dram.length() + 1);
           break; // This is the last stat for a region
         }
       } // while
+      // Add EDP as Energy Efficient metrics
+      double hotspot_edp = hotspot_energy * hotspot_time;
+
+      map<pair<string, string>, vector<double> *>::iterator mIter =
+          profiler_hotspot_data.find(data_key);
+      (mIter->second)->push_back(hotspot_edp);
+
+      csv_file << to_string(hotspot_edp);
       csv_file << endrow;
     } // if
   }   // while
@@ -112,7 +191,7 @@ void EnergyProfiler::sanitizeProfileData(const string &result,
 void EnergyProfiler::EnergyProfile(
     const map<compiler_type, bool>::iterator &curr_candidate) {
   if (curr_candidate->second == true) {
-    string out_file = getDataFolderPath() + MCompiler_binary_name + "_" +
+    string out_file = getDataFolderPath() + MCompiler_binary_name + 
                       compiler_keyword[curr_candidate->first];
     gatherProfilingData(out_file, curr_candidate->first);
   }

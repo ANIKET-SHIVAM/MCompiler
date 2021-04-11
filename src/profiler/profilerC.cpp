@@ -31,7 +31,6 @@ void ProfilerC::getHotspotFiles() {
 
 // TODO: Check if compilation command failed in optimize functions
 void ProfilerC::iccOptimize(bool asPlutoBackend) {
-  files_to_link.clear();
   vector<string> CL_flags = optimization_flags[compiler_ICC];
   vector<string>::iterator iterv;
   string CL;
@@ -72,14 +71,7 @@ void ProfilerC::iccOptimize(bool asPlutoBackend) {
     }
     executeCommand(CL + *iters + space_str + minus_o_str + space_str +
                    out_file);
-    /* We only want to link profile code files (and MCompiler file with
-     * printTimingVar function), but compile no profile code files too */
-    if (out_file.find(MCompiler_profile_file_tag) != string::npos)
-      files_to_link.insert(out_file);
-    // Add MCompiler header obj for linking but collect name so as to be skipped
-    // by synthesizer
     if ((*iters).find(MCompiler_header_code_name) != string::npos) {
-      files_to_link.insert(out_file);
       MCompiler_header_obj.insert(out_file);
     }
     // Store base obj file for synthesizer
@@ -98,7 +90,6 @@ void ProfilerC::iccOptimize(bool asPlutoBackend) {
 }
 
 void ProfilerC::gccOptimize() {
-  files_to_link.clear();
   vector<string> CL_flags = optimization_flags[compiler_GCC];
   vector<string>::iterator iterv;
   string CL;
@@ -116,10 +107,7 @@ void ProfilerC::gccOptimize() {
                       compiler_keyword[compiler_GCC] + dot_o_str;
     executeCommand(CL + *iters + space_str + minus_o_str + space_str +
                    out_file);
-    if (out_file.find(MCompiler_profile_file_tag) != string::npos)
-      files_to_link.insert(out_file);
     if ((*iters).find(MCompiler_header_code_name) != string::npos) {
-      files_to_link.insert(out_file);
       MCompiler_header_obj.insert(out_file);
     }
     // Store base obj file for synthesizer
@@ -139,8 +127,6 @@ void ProfilerC::gccOptimize() {
 }
 
 void ProfilerC::llvmOptimize(bool withPollyPlugin) {
-  files_to_link.clear();
-
   string compiler_str;
   compiler_type compiler_in_action;
   /* If using Polly as optimizer+vectorizer */
@@ -169,10 +155,7 @@ void ProfilerC::llvmOptimize(bool withPollyPlugin) {
                       compiler_str + dot_o_str;
     executeCommand(CL + *iters + space_str + minus_o_str + space_str +
                    out_file);
-    if (out_file.find(MCompiler_profile_file_tag) != string::npos)
-      files_to_link.insert(out_file);
     if ((*iters).find(MCompiler_header_code_name) != string::npos) {
-      files_to_link.insert(out_file);
       MCompiler_header_obj.insert(out_file);
     }
     // Store base obj file for synthesizer
@@ -193,7 +176,6 @@ void ProfilerC::llvmOptimize(bool withPollyPlugin) {
 #if 0
 Disable PGI now - end of product
 void ProfilerC::pgiOptimize() {
-  files_to_link.clear();
   vector<string> CL_flags = optimization_flags[compiler_PGI];
   vector<string>::iterator iterv;
   string CL;
@@ -211,10 +193,7 @@ void ProfilerC::pgiOptimize() {
                       compiler_keyword[compiler_PGI] + dot_o_str;
     executeCommand(CL + *iters + space_str + minus_o_str + space_str +
                    out_file);
-    if (out_file.find(MCompiler_profile_file_tag) != string::npos)
-      files_to_link.insert(out_file);
     if ((*iters).find(MCompiler_header_code_name) != string::npos) {
-      files_to_link.insert(out_file);
       MCompiler_header_obj.insert(out_file);
     }
     // Store base obj file for synthesizer
@@ -322,8 +301,6 @@ void ProfilerC::Optimize(compiler_type curr_candidate, bool curr_cand_status) {
 void ProfilerC::getObjectFiles(const string &compiler_str) {
   DIR *dir;
   struct dirent *ent;
-  /* If in Complex mode, then also fetch from dir */
-  files_to_link.clear();
 
   set<string> filename_keyword;
   for (auto const &str : MCompiler_object_file) {
@@ -355,19 +332,21 @@ void ProfilerC::getObjectFiles(const string &compiler_str) {
       }
       if (!valid_file_link)
         continue;
+      /* We only want to link profile code files (and MCompiler file with
+       * printTimingVar function), but compile no profile code files too */
       if (filename.at(0) != '.' &&
-          filename.find(compiler_str) != string::npos &&
           filename.find(MCompiler_profile_file_tag) != string::npos &&
-          isEndingWith(filename, dot_o_str)) {
-        files_to_link.insert(getDataFolderPath() + ent->d_name);
+          isEndingWith(filename, compiler_str + dot_o_str)) {
+        MCompiler_files_to_link.insert(getDataFolderPath() + ent->d_name);
         if (MCompiler_enabled_options[MC_INFO])
           cout << "Adding files for Linking: " << ent->d_name << endl;
       }
+      /* Add MCompiler header obj for linking but collect name so as to be skipped
+       * by synthesizer */
       if (filename.at(0) != '.' &&
-          filename.find(compiler_str) != string::npos &&
           filename.find(MCompiler_header_str) != string::npos &&
-          isEndingWith(filename, dot_o_str)) {
-        files_to_link.insert(getDataFolderPath() + ent->d_name);
+          isEndingWith(filename, compiler_str + dot_o_str)) {
+        MCompiler_files_to_link.insert(getDataFolderPath() + ent->d_name);
         if (MCompiler_enabled_options[MC_INFO])
           cout << "Adding files for Linking: " << ent->d_name << endl;
       }
@@ -462,9 +441,9 @@ void ProfilerC::gatherProfilingData(const string &binary_file,
       string obj_file_path =
           getDataFolderPath() + hotspot_name + compiler_str + dot_o_str;
 
-      set<string>::iterator iter = files_to_link.find(obj_file_path_profile);
+      set<string>::iterator iter = MCompiler_files_to_link.find(obj_file_path_profile);
 
-      if (iter == files_to_link.end()) {
+      if (iter == MCompiler_files_to_link.end()) {
         /* Loop name might be in MCompiler.h from previous step compilations */
         cerr << "Profiler: Loop's object file not found: "
              << obj_file_path_profile << endl;
@@ -482,7 +461,7 @@ void ProfilerC::gatherProfilingData(const string &binary_file,
         vector<double> *temp_vec = new vector<double>();
         hotspot_name_set.insert(hotspot_name);
         // Add timing vector for each hotspot and its location( for the no
-        // profile code version ) into correspoing maps
+        // profile code version ) into corresponding maps
         profiler_hotspot_data.insert(
             pair<pair<string, string>, vector<double> *>(data_key, temp_vec));
         profiler_hotspot_obj_path.insert(
@@ -502,13 +481,14 @@ void ProfilerC::gatherProfilingData(const string &binary_file,
   // Link left over obj files that had hotspot not being executed during
   // profiling
   if (baseline_compiler_str == compiler_str) {
-    set<string>::iterator iter;
-    for (iter = files_to_link.begin(); iter != files_to_link.end(); iter++) {
-      if (covered_hotspots.find(*iter) == covered_hotspots.end()) {
+    set<string>::iterator iters;
+    for (iters = MCompiler_files_to_link.begin(); iters != MCompiler_files_to_link.end(); iters++) {
+      if (!isEndingWith(*iters, compiler_str + dot_o_str)) continue;
+      if (covered_hotspots.find(*iters) == covered_hotspots.end()) {
         // Skip MCompiler header obj and base files for synthesizer
-        if (MCompiler_header_obj.find(*iter) == MCompiler_header_obj.end() &&
-            (*iter).find(base_str) == string::npos)
-          hotspots_skipped_profiling.insert(*iter);
+        if (MCompiler_header_obj.find(*iters) == MCompiler_header_obj.end() &&
+            (*iters).find(base_str) == string::npos)
+          hotspots_skipped_profiling.insert(*iters);
       }
     }
   }
@@ -524,21 +504,20 @@ void ProfilerC::iccProfile(bool asPlutoBackend) {
     CL += *iterv + space_str;
   }
 
-  string compiler_str;
-  compiler_type curr_compiler;
+  compiler_type compiler_in_action;
   if (!asPlutoBackend) {
-    compiler_str  = icc_str;
-    curr_compiler = compiler_ICC;
+    compiler_in_action = compiler_ICC;
   } else {
-    compiler_str  = pluto_str;
-    curr_compiler = compiler_Pluto;
+    compiler_in_action = compiler_Pluto;
   }
+  string compiler_str = compiler_keyword[compiler_in_action];
 
   /* For gathering object files */
   set<string>::iterator iters;
   string object_files;
   string out_file = getDataFolderPath() + MCompiler_binary_name + compiler_str;
-  for (iters = files_to_link.begin(); iters != files_to_link.end(); iters++) {
+  for (iters = MCompiler_files_to_link.begin(); iters != MCompiler_files_to_link.end(); iters++) {
+    if (!isEndingWith(*iters, compiler_str + dot_o_str)) continue;
     if (asPlutoBackend && (*iters).find(XplutoX_str) != string::npos) {
       string hotspot_name = *iters;
       hotspot_name.erase(0, getDataFolderPath().length());
@@ -562,7 +541,7 @@ void ProfilerC::iccProfile(bool asPlutoBackend) {
   executeCommand(CL);
 
   /* Send binary for profiling and storing profiling data */
-  gatherProfilingData(out_file, curr_compiler);
+  gatherProfilingData(out_file, compiler_in_action);
 }
 
 void ProfilerC::gccProfile() {
@@ -574,10 +553,13 @@ void ProfilerC::gccProfile() {
     CL += *iterv + space_str;
   }
 
+  string compiler_str = compiler_keyword[compiler_GCC];
+
   set<string>::iterator iters;
   string object_files;
-  string out_file = getDataFolderPath() + MCompiler_binary_name + gcc_str;
-  for (iters = files_to_link.begin(); iters != files_to_link.end(); iters++) {
+  string out_file = getDataFolderPath() + MCompiler_binary_name + compiler_str;
+  for (iters = MCompiler_files_to_link.begin(); iters != MCompiler_files_to_link.end(); iters++) {
+    if (!isEndingWith(*iters, compiler_str + dot_o_str)) continue;
     object_files += *iters + space_str;
   }
 
@@ -597,16 +579,14 @@ void ProfilerC::gccProfile() {
 
 void ProfilerC::llvmProfile(bool withPollyPlugin) {
 
-  string compiler_str;
   compiler_type compiler_in_action;
   /* If using Polly as optimizer+vectorizer */
   if (!withPollyPlugin) {
     compiler_in_action = compiler_LLVM;
-    compiler_str       = llvm_str;
   } else {
     compiler_in_action = compiler_Polly;
-    compiler_str       = polly_str;
   }
+  string compiler_str = compiler_keyword[compiler_in_action];
 
   /* Since Linker flags for Polly are same as LLVM */
   string CL;
@@ -619,7 +599,8 @@ void ProfilerC::llvmProfile(bool withPollyPlugin) {
   set<string>::iterator iters;
   string object_files;
   string out_file = getDataFolderPath() + MCompiler_binary_name + compiler_str;
-  for (iters = files_to_link.begin(); iters != files_to_link.end(); iters++) {
+  for (iters = MCompiler_files_to_link.begin(); iters != MCompiler_files_to_link.end(); iters++) {
+    if (!isEndingWith(*iters, compiler_str + dot_o_str)) continue;
     object_files += *iters + space_str;
   }
 
@@ -650,7 +631,8 @@ void ProfilerC::pgiProfile() {
   set<string>::iterator iters;
   string object_files;
   string out_file = getDataFolderPath() + MCompiler_binary_name + pgi_str;
-  for (iters = files_to_link.begin(); iters != files_to_link.end(); iters++) {
+  for (iters = MCompiler_files_to_link.begin(); iters != MCompiler_files_to_link.end(); iters++) {
+    if (!isEndingWith(filename, compiler_str + dot_o_str)) continue;
     object_files += *iters + space_str;
   }
 

@@ -64,7 +64,11 @@ void SynthesizerC::analyzeHotspotProfileData() {
    */
   for (iters = hotspots_skipped_profiling.begin();
        iters != hotspots_skipped_profiling.end(); iters++) {
-    best_objs_to_link.insert(*iters);
+    string str = *iters;
+    size_t pos = str.find(MCompiler_profile_file_tag);
+    if (pos != string::npos)
+      str.erase(pos, MCompiler_profile_file_tag.length());
+    best_objs_to_link.insert(str);
   }
 
   /*

@@ -152,6 +152,10 @@ extern vector<string> MCompiler_object_file;
 extern set<string> files_to_compile;
 /* Extractor passes to Profiler to skip Pluto */
 extern set<string> files_skip_pluto;
+/* Profiler to Energy Profiler */
+extern set<string> MCompiler_header_obj;
+extern set<string> MCompiler_files_to_link;
+extern set<string> *pluto_fail_hotspots;
 /* Synthesizer to Advanced Profiler */
 extern map<string, string> hotspot_best_compiler_map;
 /* Extractor to Predictor */

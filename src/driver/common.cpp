@@ -28,7 +28,7 @@ string llvm_str            = "_llvm";
 //string pgi_str             = "_pgi";
 string pluto_str           = "_pluto";
 /* Case where PLuTo doesn't recognize the SCoP, so source fed to ICC as it is */
-string XplutoX_str                   = "_XplutoX";
+string XplutoX_str                   = "_Xpluto";
 string polly_str                     = "_polly";
 string test_str                      = "_test";
 string MCompiler_skiplooppragma_str  = "skiploop";
@@ -110,6 +110,10 @@ string MCompiler_binary_name =
 /* Extractor passes to Profiler */
 set<string> files_to_compile;
 set<string> files_skip_pluto;
+/* Profiler to Energy Profiler */
+set<string> MCompiler_header_obj;
+set<string> MCompiler_files_to_link;
+set<string> *pluto_fail_hotspots = new set<string>();
 /* Synthesizer to Advanced Profiler */
 map<string, string> hotspot_best_compiler_map;
 /* Extractor to Predictor */
