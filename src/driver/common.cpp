@@ -48,18 +48,24 @@ string baseline_compiler_str;
 
 // string pgi_lib_path;
 
+// clang-format off
 #define XSTR(s) STR(s)
 #define STR(s) #s
 
 #ifndef VTUNE_PATH
 #define VTUNE_PATH /opt/intel/vtune_profiler/bin64/
 #endif
+// clang-format on
+
 string vtune_path                = XSTR(VTUNE_PATH);
 string MCompiler_advprofiler_str = vtune_path + forward_slash_str + "vtune";
 
+// clang-format off
 #ifndef LIKWID_PATH
 #define LIKWID_PATH /usr/bin/
 #endif
+// clang-format on
+
 string likwid_path                  = XSTR(LIKWID_PATH);
 string MCompiler_energyprofiler_str = likwid_path + forward_slash_str + "bin" +
                                       forward_slash_str + "likwid-perfctr";
@@ -272,9 +278,10 @@ void addOptimizationFlags() {
   flag_vec.push_back("-O3");
   flag_vec.push_back("-mllvm -polly");
   if (!MCompiler_enabled_options[NOVEC])
-    flag_vec.push_back("-mllvm -polly-vectorizer=stripmine");
+    flag_vec.push_back("-mllvm -polly-vectorizer=polly");
   else
     flag_vec.push_back("-mllvm -polly-vectorizer=none");
+  flag_vec.push_back("-mllvm --polly-tiling");
   if (MCompiler_enabled_options[KNL])
     flag_vec.push_back("-march=knl");
   else
