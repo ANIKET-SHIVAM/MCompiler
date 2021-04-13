@@ -338,7 +338,7 @@ void LoopInfo::getVarsInScope() {
         } else {
           scope_vars_str_vec.push_back(
               var_type_str + "* " + var->get_name().getString() + "_primitive");
-          //cout << "Primitive var: " << var->get_name() << endl;
+          // cout << "Primitive var: " << var->get_name() << endl;
         }
       } else if (extr.getSrcType() == src_lang_CPP) {
         scope_vars_str_vec.push_back(var_type_str + "& " +
@@ -673,9 +673,9 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
   loop       = *(extr.consecutiveLoops.begin());
   loop_scope = (loop->get_loop_body())->get_scope();
 
-  stringReplaceAll(kernel_body_str,"{","\n{\n"); 
-  stringReplaceAll(kernel_body_str,"}","\n}\n"); 
-  stringReplaceAll(kernel_body_str,";",";\n"); 
+  stringReplaceAll(kernel_body_str, "{", "\n{\n");
+  stringReplaceAll(kernel_body_str, "}", "\n}\n");
+  stringReplaceAll(kernel_body_str, ";", ";\n");
 
   loop_file_buf << kernel_body_str << endl;
 
@@ -1143,7 +1143,7 @@ Extractor::evaluateInheritedAttribute(SgNode *astNode,
         main_scope      = dynamic_cast<SgScopeStatement *>(
             (declFunc->get_definition())->get_body());
         addProfileInfoStartProbe();
-    
+
         if ((declFunc->get_orig_return_type())->variantT() == V_SgTypeVoid)
           addProfileInfoEndProbe();
         else
@@ -1429,8 +1429,8 @@ void Extractor::addProfileInfoStartProbe() {
     if (main_scope != NULL) {
       SgFunctionCallExp *call_expr = SageBuilder::buildFunctionCallExp(
           likwidInitAPI, SageBuilder::buildVoidType(), NULL, main_scope);
-      SageInterface::prependStatement(SageBuilder::buildExprStatement(call_expr),
-                                     main_scope);
+      SageInterface::prependStatement(
+          SageBuilder::buildExprStatement(call_expr), main_scope);
     }
   }
 }
@@ -1441,16 +1441,18 @@ void Extractor::addProfileInfoEndProbe(SgStatement *returnStmt /*= nullptr*/) {
       /* For main thats not void return type */
       if (main_scope != NULL) {
         SgFunctionCallExp *call_expr = SageBuilder::buildFunctionCallExp(
-            printTimingVarFuncName, SageBuilder::buildVoidType(), NULL, main_scope);
+            printTimingVarFuncName, SageBuilder::buildVoidType(), NULL,
+            main_scope);
         SageInterface::insertStatementBefore(
             returnStmt, SageBuilder::buildExprStatement(call_expr));
       }
     } else {
       SgFunctionCallExp *call_expr = SageBuilder::buildFunctionCallExp(
-          printTimingVarFuncName, SageBuilder::buildVoidType(), NULL, main_scope);
+          printTimingVarFuncName, SageBuilder::buildVoidType(), NULL,
+          main_scope);
       SageInterface::appendStatement(SageBuilder::buildExprStatement(call_expr),
                                      main_scope);
-    } 
+    }
   } else {
     /* Add LIKWID CLOSE API */
     if (returnStmt) {
@@ -1517,7 +1519,7 @@ void Extractor::modifyExtractedFileText(const string &base_file,
 
 void Extractor::inlineFunctions(const vector<string> &argv) {
   bool frontendConstantFolding = true;
-  SgProject *project = new SgProject(argv);
+  SgProject *project           = new SgProject(argv);
   ConstantFolding::constantFoldingOptimization(project);
   AstTests::runAllTests(project);
   bool modifiedAST = true;
@@ -1553,7 +1555,7 @@ void Extractor::inlineFunctions(const vector<string> &argv) {
   checkTransformedFlagsVisitor(project);
   // Call function to postprocess the AST and fixup symbol tables
   cout << "AST check 2" << endl;
-  //FixSgProject(*project);
+  // FixSgProject(*project);
   // Rename each variable declaration
   cout << "AST check 3" << endl;
   renameVariables(project);

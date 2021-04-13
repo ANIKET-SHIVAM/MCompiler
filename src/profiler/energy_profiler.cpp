@@ -16,7 +16,7 @@ void EnergyProfiler::addProfileToolOptions() {
 }
 
 void EnergyProfiler::gatherProfilingData(const string &binary_file,
-                                        compiler_type curr_compiler) {
+                                         compiler_type curr_compiler) {
   string compiler_str = compiler_keyword[curr_compiler];
 
   /* Check if binary file is present at all */
@@ -41,7 +41,8 @@ void EnergyProfiler::gatherProfilingData(const string &binary_file,
   CL += MCompiler_profiler_input;
 
   for (int i = 0; i < MCompiler_energy_profiler_runs; i++) {
-    cout << "Energy Profiler: " << compiler_str << " -> Run " << (i + 1) << endl;
+    cout << "Energy Profiler: " << compiler_str << " -> Run " << (i + 1)
+         << endl;
     string result;
     result = executeCommand(CL);
 
@@ -58,8 +59,10 @@ void EnergyProfiler::gatherProfilingData(const string &binary_file,
   // profiling
   if (baseline_compiler_str == compiler_str) {
     set<string>::iterator iters;
-    for (iters = MCompiler_files_to_link.begin(); iters != MCompiler_files_to_link.end(); iters++) {
-      if (!isEndingWith(*iters, compiler_str + dot_o_str)) continue;
+    for (iters = MCompiler_files_to_link.begin();
+         iters != MCompiler_files_to_link.end(); iters++) {
+      if (!isEndingWith(*iters, compiler_str + dot_o_str))
+        continue;
       if (covered_hotspots.find(*iters) == covered_hotspots.end()) {
         // Skip MCompiler header obj and base files for synthesizer
         if (MCompiler_header_obj.find(*iters) == MCompiler_header_obj.end() &&
@@ -68,13 +71,12 @@ void EnergyProfiler::gatherProfilingData(const string &binary_file,
       }
     }
   }
-
 }
 
 void EnergyProfiler::sanitizeProfileData(const string &result,
-                                        compiler_type curr_compiler,
-                                        int run_id,
-                                        set<string> &covered_hotspots) {
+                                         compiler_type curr_compiler,
+                                         int run_id,
+                                         set<string> &covered_hotspots) {
   string compiler_str = compiler_keyword[curr_compiler];
   // CSV file open for storing profiler data
   bool is_reading_file = false;
@@ -125,7 +127,8 @@ void EnergyProfiler::sanitizeProfileData(const string &result,
       string obj_file_path =
           getDataFolderPath() + hotspot_name + compiler_str + dot_o_str;
 
-      set<string>::iterator iter = MCompiler_files_to_link.find(obj_file_path_profile);
+      set<string>::iterator iter =
+          MCompiler_files_to_link.find(obj_file_path_profile);
 
       if (iter == MCompiler_files_to_link.end()) {
         /* Loop name might be in MCompiler.h from previous step compilations */
@@ -151,7 +154,7 @@ void EnergyProfiler::sanitizeProfileData(const string &result,
         profiler_hotspot_obj_path.insert(
             pair<pair<string, string>, string>(data_key, obj_file_path));
       }
-    
+
       double hotspot_energy, hotspot_time = -1;
 
       csv_file << hotspot_name << compiler_str;
@@ -191,7 +194,7 @@ void EnergyProfiler::sanitizeProfileData(const string &result,
 void EnergyProfiler::EnergyProfile(
     const map<compiler_type, bool>::iterator &curr_candidate) {
   if (curr_candidate->second == true) {
-    string out_file = getDataFolderPath() + MCompiler_binary_name + 
+    string out_file = getDataFolderPath() + MCompiler_binary_name +
                       compiler_keyword[curr_candidate->first];
     gatherProfilingData(out_file, curr_candidate->first);
   }

@@ -9,15 +9,15 @@
 #include <ctime>
 #include <dirent.h>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <map>
+#include <numeric>
 #include <regex>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
-#include <numeric>
-#include <functional>
 
 // For Extractor especially
 // clang-format off
@@ -100,7 +100,7 @@ extern string base_str;
 extern string icc_str;
 extern string gcc_str;
 extern string llvm_str;
-//extern string pgi_str;
+// extern string pgi_str;
 extern string pluto_str;
 extern string XplutoX_str;
 extern string polly_str;
@@ -129,7 +129,7 @@ extern string MCompiler_binary_name;
 extern string MCompiler_data_folder;
 extern string MCompiler_data_folder_path;
 extern string MCompiler_curr_dir_path;
-//extern string pgi_lib_path;
+// extern string pgi_lib_path;
 extern string vtune_path;
 extern string likwid_path;
 extern string MCompiler_trained_model_path;
@@ -210,6 +210,6 @@ double getVectorMean(vector<double> *dataVec);
 double getVectorStdev(vector<double> *dataVec);
 double getVectorMedian(vector<double> *dataVec);
 void genRandomStr(string &str, const int len);
-void stringReplaceAll(string& str, const string& from, const string& to);
+void stringReplaceAll(string &str, const string &from, const string &to);
 string getAbsolutePath(string const &fullString);
 #endif

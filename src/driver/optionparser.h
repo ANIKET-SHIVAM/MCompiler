@@ -2074,16 +2074,17 @@ struct PrintUsageImplementation {
     int col;         //!< Index of current column.
     int len;       //!< Length of the current part (that ptr points at) in BYTES
     int screenlen; //!< Length of the current part in screen columns (taking
-                   //!narrow/wide chars into account).
+                   //! narrow/wide chars into account).
     int max_line_in_block; //!< Greatest index of a line within the block. This
-                           //!is the number of \\v within the cell with the most
+                           //! is the number of \\v within the cell with the
+                           //! most
                            //!\\vs.
     int line_in_block; //!< Line index within the current cell of the current
-                       //!part.
+                       //! part.
     int target_line_in_block; //!< Line index of the parts we should return to
-                              //!the user on this iteration.
+                              //! the user on this iteration.
     bool hit_target_line;     //!< Flag whether we encountered a part with line
-                              //!index target_line_in_block in the current cell.
+                          //! index target_line_in_block in the current cell.
 
     /**
      * @brief Determines the byte and character lengths of the part at @ref ptr
@@ -2369,7 +2370,7 @@ struct PrintUsageImplementation {
     int width;
     int head; //!< @brief index for next write
     int tail; //!< @brief index for next read - 1 (i.e. increment tail BEFORE
-              //!read)
+              //! read)
 
     /**
      * @brief Multiple methods of LineWrapper may decide to flush part of the
@@ -2600,7 +2601,7 @@ struct PrintUsageImplementation {
       int overlong_column_threshold = 10000;
       do {
         lastcolumn = 0;
-        for (int i     = 0; i < maxcolumns; ++i)
+        for (int i = 0; i < maxcolumns; ++i)
           col_width[i] = 0;
 
         part.restartTable();
@@ -2650,7 +2651,7 @@ struct PrintUsageImplementation {
 
       int tabstop[maxcolumns];
       tabstop[0] = 0;
-      for (int i   = 1; i < maxcolumns; ++i)
+      for (int i = 1; i < maxcolumns; ++i)
         tabstop[i] = tabstop[i - 1] + col_width[i - 1];
 
       int rightwidth                     = width - tabstop[lastcolumn];
@@ -3019,7 +3020,7 @@ void printUsage(Function *prn, Stream *stream, const Descriptor usage[],
                                        last_column_min_percent,
                                        last_column_own_line_max_percent);
 }
-}
+} // namespace option
 // namespace option
 
 #endif /* OPTIONPARSER_H_ */

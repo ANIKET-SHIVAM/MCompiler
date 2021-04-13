@@ -42,7 +42,7 @@ Ptr<RTrees> rfmodel;
 #define REGRESSIONACCURACY 0 // N/A here
 #define ACTIVEVARCOUNT                                                         \
   20 // number of variables randomly selected at node and used to find the best
-    // split(s).
+     // split(s).
 #define CALCULATEVARIMPORTANCE true // calculate variable importance
 #define TERMCRITERIA                                                           \
   (CV_TERMCRIT_ITER | CV_TERMCRIT_EPS) // termination criteria

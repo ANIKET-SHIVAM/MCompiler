@@ -163,7 +163,7 @@ void SynthesizerC::generateFinalBinary() {
   /* NOT NEEDED WITH PGI-LLVM BACKEND (USING KMPC RUNTIME) UNLESS there is a
    * math library function inside hotspot
    * link libraries for PGI compilers objects with OpenMP to be linked. */
-  //if (compiler_candidate[compiler_PGI] == true)
+  // if (compiler_candidate[compiler_PGI] == true)
   //  CL += "-L" + pgi_lib_path + space_str + " -lpgatm -lomp -lpgmath -lpgc";
 
   executeCommand(CL);

@@ -77,7 +77,8 @@ void Driver::checkCompilerCandidates() {
   }
 
   if (MCompiler_enabled_options[ENERGY])
-    MCompiler_macro_defs += "-I" + likwid_path + forward_slash_str + "include" + space_str + "-DLIKWID_PERFMON";
+    MCompiler_macro_defs += "-I" + likwid_path + forward_slash_str + "include" +
+                            space_str + "-DLIKWID_PERFMON";
 
   /* In common.h */
   addOptimizationFlags();
@@ -231,8 +232,8 @@ void Driver::generateMCompilerHeaderFile() {
   vector<string>::iterator iter;
   for (iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end();
        iter++) {
-    header_file_buf << "extern double " << getLoopTimingVarSuffix() + *iter << ";"
-                    << endl;
+    header_file_buf << "extern double " << getLoopTimingVarSuffix() + *iter
+                    << ";" << endl;
   }
 
   header_file_buf << temp_str << endl;
@@ -249,9 +250,9 @@ void Driver::generateMCompilerHeaderFile() {
     vector<string>::iterator iter;
     for (iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end();
          iter++) {
-      executeCommand("sed -i 's/" + timingFuncDef + "/" + 
-                     "double " + getLoopTimingVarSuffix() + *iter + ";" + "\\n" + timingFuncDef +
-                     "/g' " + getDataFolderPath() +
+      executeCommand("sed -i 's/" + timingFuncDef + "/" + "double " +
+                     getLoopTimingVarSuffix() + *iter + ";" + "\\n" +
+                     timingFuncDef + "/g' " + getDataFolderPath() +
                      MCompiler_header_code_name);
     }
 
@@ -279,8 +280,8 @@ void Driver::generateMCompilerHeaderFile() {
     vector<string>::iterator iter;
     for (iter = loop_funcName_vec->begin(); iter != loop_funcName_vec->end();
          iter++) {
-      header_code_file_buf << "double " << getLoopTimingVarSuffix() + *iter << ";"
-                      << endl;
+      header_code_file_buf << "double " << getLoopTimingVarSuffix() + *iter
+                           << ";" << endl;
     }
 
     header_code_file_buf << timingFuncDef << endl;
@@ -421,7 +422,7 @@ int main(int argc, char *argv[]) {
   if (MCompiler_enabled_options[ADV_PROFILE]) {
     if (!driver->checkAdvProfileCandidate()) {
       MCompiler_enabled_options[ADV_PROFILE] = false;
-      MCompiler_enabled_options[PREDICT] = false;
+      MCompiler_enabled_options[PREDICT]     = false;
     }
   }
 
@@ -430,7 +431,8 @@ int main(int argc, char *argv[]) {
       MCompiler_enabled_options[ENERGY] = false;
     } else {
       MCompiler_energy_profiler_runs = MCompiler_profiler_runs;
-      /* If energy profiling is on, then loops are only instrumented with Likwid APIs */
+      /* If energy profiling is on, then loops are only instrumented with Likwid
+       * APIs */
       MCompiler_profiler_runs = 0;
     }
   }
@@ -473,7 +475,7 @@ int main(int argc, char *argv[]) {
 
   if (MCompiler_enabled_options[ENERGY] &&
       (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
-      MCompiler_mode == mode_COMPLEX)) {
+       MCompiler_mode == mode_COMPLEX)) {
     driver->initiateEnergyProfiler();
   }
 

@@ -14,14 +14,14 @@ private:
   void iccOptimize(bool asPlutoBackend);
   void gccOptimize();
   void llvmOptimize(bool withPollyPlugin);
-  //void pgiOptimize();
+  // void pgiOptimize();
   void plutoOptimize();
   void pollyOptimize();
 
   void iccProfile(bool asPlutoBackend);
   void gccProfile();
   void llvmProfile(bool withPollyPlugin);
-  //void pgiProfile();
+  // void pgiProfile();
   void plutoProfile();
   void pollyProfile();
 

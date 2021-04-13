@@ -11,7 +11,7 @@ private:
   vector<string> compilerCL;
   vector<string> toolCL_collect;
   vector<string> toolCL_report;
-  string prof_binary              = "";
+  string prof_binary = "";
 
   void setProfBinary(const string &str) { prof_binary = str; };
   string getProfBinary() { return prof_binary; };
@@ -21,10 +21,8 @@ private:
   void EnergyProfile(const map<compiler_type, bool>::iterator &curr_candidate);
   void gatherProfilingData(const string &binary_file,
                            compiler_type curr_compiler);
-  void sanitizeProfileData(const string &result,
-                           compiler_type curr_compiler,
-                           int run_id,
-                           set<string> &covered_hotspots);
+  void sanitizeProfileData(const string &result, compiler_type curr_compiler,
+                           int run_id, set<string> &covered_hotspots);
 
 public:
   EnergyProfiler();

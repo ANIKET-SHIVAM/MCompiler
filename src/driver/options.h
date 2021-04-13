@@ -157,7 +157,7 @@ void set_MCompiler_options(int argc, char *argv[]) {
       MCompiler_enabled_options[ADV_PROFILE] = true;
       break;
     case ENERGY:
-      MCompiler_enabled_options[ENERGY]      = true;
+      MCompiler_enabled_options[ENERGY] = true;
       break;
     case TEST:
       MCompiler_enabled_options[TEST] = true;

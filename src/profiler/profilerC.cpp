@@ -27,7 +27,8 @@ void ProfilerC::getHotspotFiles() {
   }
 }
 
-//TODO: Change Optimize and Profile functions to C++ templates. Improve code quality.
+// TODO: Change Optimize and Profile functions to C++ templates. Improve code
+// quality.
 
 // TODO: Check if compilation command failed in optimize functions
 void ProfilerC::iccOptimize(bool asPlutoBackend) {
@@ -279,7 +280,7 @@ void ProfilerC::Optimize(compiler_type curr_candidate, bool curr_cand_status) {
     case compiler_LLVM:
       llvmOptimize(withPollyPlugin);
       break;
-    //case compiler_PGI:
+    // case compiler_PGI:
     //  pgiOptimize();
     //  break;
     case compiler_Pluto:
@@ -341,8 +342,8 @@ void ProfilerC::getObjectFiles(const string &compiler_str) {
         if (MCompiler_enabled_options[MC_INFO])
           cout << "Adding files for Linking: " << ent->d_name << endl;
       }
-      /* Add MCompiler header obj for linking but collect name so as to be skipped
-       * by synthesizer */
+      /* Add MCompiler header obj for linking but collect name so as to be
+       * skipped by synthesizer */
       if (filename.at(0) != '.' &&
           filename.find(MCompiler_header_str) != string::npos &&
           isEndingWith(filename, compiler_str + dot_o_str)) {
@@ -441,7 +442,8 @@ void ProfilerC::gatherProfilingData(const string &binary_file,
       string obj_file_path =
           getDataFolderPath() + hotspot_name + compiler_str + dot_o_str;
 
-      set<string>::iterator iter = MCompiler_files_to_link.find(obj_file_path_profile);
+      set<string>::iterator iter =
+          MCompiler_files_to_link.find(obj_file_path_profile);
 
       if (iter == MCompiler_files_to_link.end()) {
         /* Loop name might be in MCompiler.h from previous step compilations */
@@ -482,8 +484,10 @@ void ProfilerC::gatherProfilingData(const string &binary_file,
   // profiling
   if (baseline_compiler_str == compiler_str) {
     set<string>::iterator iters;
-    for (iters = MCompiler_files_to_link.begin(); iters != MCompiler_files_to_link.end(); iters++) {
-      if (!isEndingWith(*iters, compiler_str + dot_o_str)) continue;
+    for (iters = MCompiler_files_to_link.begin();
+         iters != MCompiler_files_to_link.end(); iters++) {
+      if (!isEndingWith(*iters, compiler_str + dot_o_str))
+        continue;
       if (covered_hotspots.find(*iters) == covered_hotspots.end()) {
         // Skip MCompiler header obj and base files for synthesizer
         if (MCompiler_header_obj.find(*iters) == MCompiler_header_obj.end() &&
@@ -516,8 +520,10 @@ void ProfilerC::iccProfile(bool asPlutoBackend) {
   set<string>::iterator iters;
   string object_files;
   string out_file = getDataFolderPath() + MCompiler_binary_name + compiler_str;
-  for (iters = MCompiler_files_to_link.begin(); iters != MCompiler_files_to_link.end(); iters++) {
-    if (!isEndingWith(*iters, compiler_str + dot_o_str)) continue;
+  for (iters = MCompiler_files_to_link.begin();
+       iters != MCompiler_files_to_link.end(); iters++) {
+    if (!isEndingWith(*iters, compiler_str + dot_o_str))
+      continue;
     if (asPlutoBackend && (*iters).find(XplutoX_str) != string::npos) {
       string hotspot_name = *iters;
       hotspot_name.erase(0, getDataFolderPath().length());
@@ -558,8 +564,10 @@ void ProfilerC::gccProfile() {
   set<string>::iterator iters;
   string object_files;
   string out_file = getDataFolderPath() + MCompiler_binary_name + compiler_str;
-  for (iters = MCompiler_files_to_link.begin(); iters != MCompiler_files_to_link.end(); iters++) {
-    if (!isEndingWith(*iters, compiler_str + dot_o_str)) continue;
+  for (iters = MCompiler_files_to_link.begin();
+       iters != MCompiler_files_to_link.end(); iters++) {
+    if (!isEndingWith(*iters, compiler_str + dot_o_str))
+      continue;
     object_files += *iters + space_str;
   }
 
@@ -599,8 +607,10 @@ void ProfilerC::llvmProfile(bool withPollyPlugin) {
   set<string>::iterator iters;
   string object_files;
   string out_file = getDataFolderPath() + MCompiler_binary_name + compiler_str;
-  for (iters = MCompiler_files_to_link.begin(); iters != MCompiler_files_to_link.end(); iters++) {
-    if (!isEndingWith(*iters, compiler_str + dot_o_str)) continue;
+  for (iters = MCompiler_files_to_link.begin();
+       iters != MCompiler_files_to_link.end(); iters++) {
+    if (!isEndingWith(*iters, compiler_str + dot_o_str))
+      continue;
     object_files += *iters + space_str;
   }
 
@@ -680,9 +690,9 @@ void ProfilerC::Profile(
     case compiler_LLVM:
       llvmProfile(withPollyPlugin);
       break;
-//    case compiler_PGI:
-//      pgiProfile();
-//      break;
+      //    case compiler_PGI:
+      //      pgiProfile();
+      //      break;
     case compiler_Pluto:
       plutoProfile();
       break;
