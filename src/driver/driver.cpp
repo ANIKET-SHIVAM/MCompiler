@@ -76,7 +76,7 @@ void Driver::checkCompilerCandidates() {
     exit(EXIT_FAILURE);
   }
 
-  if (MCompiler_enabled_options[ENERGY_PROFILE])
+  if (MCompiler_enabled_options[ENERGY])
     MCompiler_macro_defs += "-I" + likwid_path + forward_slash_str + "include" + space_str + "-DLIKWID_PERFMON";
 
   /* In common.h */
@@ -425,9 +425,8 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (MCompiler_enabled_options[ENERGY_PROFILE]) {
+  if (MCompiler_enabled_options[ENERGY]) {
     if (!driver->checkEnergyProfileCandidate()) {
-      MCompiler_enabled_options[ENERGY_PROFILE] = false;
       MCompiler_enabled_options[ENERGY] = false;
     } else {
       MCompiler_energy_profiler_runs = MCompiler_profiler_runs;
@@ -472,7 +471,9 @@ int main(int argc, char *argv[]) {
     driver->initiatePredictor();
   }
 
-  if (MCompiler_enabled_options[ENERGY_PROFILE]) {
+  if (MCompiler_enabled_options[ENERGY] &&
+      (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
+      MCompiler_mode == mode_COMPLEX)) {
     driver->initiateEnergyProfiler();
   }
 

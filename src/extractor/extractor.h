@@ -95,8 +95,8 @@ public:
   void printGlobalsAsExtern(ofstream &loop_file_buf);
   void addExternDefs(SgFunctionDeclaration *func);
   void addPostTraversalDefs();
-  void addTimingFuncCallVoidMain();
-  void addTimingFuncCallNonVoidMain(SgStatement *returnStmt);
+  void addProfileInfoStartProbe();
+  void addProfileInfoEndProbe(SgStatement *returnStmt = nullptr);
   void modifyExtractedFileText(const string &base_file,
                                const string &base_file_profile);
   void collectAdjoiningLoops(SgStatement *loop);

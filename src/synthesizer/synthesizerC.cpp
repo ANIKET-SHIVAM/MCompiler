@@ -35,12 +35,17 @@ void SynthesizerC::selectOptimalOptimizedCandidate(string hotspot_name) {
            pair<string, string>(hotspot_name, best_compiler_option)))
           ->second;
   best_objs_to_link.insert(best_option_path);
-  if ((hotspot_timing_set.begin())->second != 0)
+  if ((hotspot_timing_set.begin())->second != 0) {
     cout << "MCompiler chose: " << hotspot_name << " + " << best_compiler_option
-         << " (" << (hotspot_timing_set.begin())->second << "s)" << endl;
-  else
+         << " ( " << (hotspot_timing_set.begin())->second;
+    if (MCompiler_enabled_options[ENERGY])
+      cout << " Js )" << endl;
+    else
+      cout << " s )" << endl;
+  } else {
     cout << "MCompiler chose: " << hotspot_name << " + "
          << "baseline (lacks profile info)" << endl;
+  }
 }
 
 void SynthesizerC::analyzeHotspotProfileData() {

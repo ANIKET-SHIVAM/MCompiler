@@ -83,7 +83,6 @@ void set_MCompiler_options(int argc, char *argv[]) {
       {SYNTHESIZE, true},
       {ADV_PROFILE, false},
       {PREDICT, false},
-      {ENERGY_PROFILE, false},
       {ENERGY, false},
       {TEST, false},
       {PARALLEL, false},
@@ -159,7 +158,6 @@ void set_MCompiler_options(int argc, char *argv[]) {
       break;
     case ENERGY:
       MCompiler_enabled_options[ENERGY]      = true;
-      MCompiler_enabled_options[ENERGY_PROFILE] = true;
       break;
     case TEST:
       MCompiler_enabled_options[TEST] = true;

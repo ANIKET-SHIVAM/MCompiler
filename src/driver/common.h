@@ -58,7 +58,6 @@ typedef enum {
   SYNTHESIZE,
   ADV_PROFILE,
   PREDICT,
-  ENERGY_PROFILE,
   ENERGY,
   TEST,
   REPORT,
@@ -119,6 +118,8 @@ extern string MCompiler_timing_keyword;
 extern string MCompiler_unique_str;
 
 extern string printTimingVarFuncName;
+extern string likwidInitAPI;
+extern string likwidCloseAPI;
 extern string loopTimingVarSuffix;
 extern string MCompiler_profile_file_tag;
 extern string MCompiler_header_name;

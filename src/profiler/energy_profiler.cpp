@@ -199,14 +199,11 @@ void EnergyProfiler::EnergyProfile(
 
 EnergyProfiler::EnergyProfiler() {
   cout << "Energy Profiling" << endl;
-  if (MCompiler_mode == mode_FULL_PASS || MCompiler_mode == mode_FROM_OBJECT ||
-      MCompiler_mode == mode_COMPLEX) {
-    addProfileToolOptions();
-    /* Rotate through compiler candidates for profile */
-    map<compiler_type, bool>::iterator iter;
-    for (iter = compiler_candidate.begin(); iter != compiler_candidate.end();
-         iter++) {
-      EnergyProfile(iter);
-    }
-  } // if
+  addProfileToolOptions();
+  /* Rotate through compiler candidates for profile */
+  map<compiler_type, bool>::iterator iter;
+  for (iter = compiler_candidate.begin(); iter != compiler_candidate.end();
+       iter++) {
+    EnergyProfile(iter);
+  }
 } // Constructor

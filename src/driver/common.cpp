@@ -90,6 +90,8 @@ string MCompiler_timing_keyword = "_MCompilerInfo:";
 string MCompiler_unique_str = "";
 
 string printTimingVarFuncName     = "printAccumulatedTimes";
+string likwidInitAPI              = "likwid_markerInit";
+string likwidCloseAPI             = "likwid_markerClose";
 string loopTimingVarSuffix        = "accumulatorTime_";
 string MCompiler_profile_file_tag = "_MCProfile_";
 string MCompiler_header_name      = "MCompiler.h";
@@ -362,7 +364,7 @@ void addPostLinkerFlags() {
   flag_vec.push_back("-lm");
   flag_vec.push_back(MCompiler_libraries);
   flag_vec.push_back(MCompiler_extraPostSrcFlags);
-  if (MCompiler_enabled_options[ENERGY_PROFILE]) {
+  if (MCompiler_enabled_options[ENERGY]) {
     flag_vec.push_back("-L" + likwid_path + forward_slash_str + "lib" + space_str + "-llikwid");
   }
   post_linker_flags[compiler_ICC]  = flag_vec;
