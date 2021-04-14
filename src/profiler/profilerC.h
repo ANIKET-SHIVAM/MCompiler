@@ -2,7 +2,7 @@
 #define PROFILERC_H_
 
 #include "driver/common.h"
-#include <thread>
+
 using namespace std;
 
 class ProfilerC {

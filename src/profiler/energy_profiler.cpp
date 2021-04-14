@@ -5,8 +5,12 @@ Performs following task:
 */
 
 void EnergyProfiler::addProfileToolOptions() {
+  const auto last_core_num = thread::hardware_concurrency() - 1;
   toolCL_collect.push_back(MCompiler_energyprofiler_str + space_str);
-  toolCL_collect.push_back("-C 0" + space_str); // Pin process to core 0
+  if (MCompiler_enabled_options[PARALLEL])
+    toolCL_collect.push_back("-C 0-" + to_string(last_core_num) + space_str); // Pin process to core 0
+  else
+    toolCL_collect.push_back("-C " + to_string(last_core_num) + space_str); // Pin process to core 0
   toolCL_collect.push_back("-g ENERGY" +
                            space_str); // Measure energy using MSR registers
   toolCL_collect.push_back(
