@@ -375,6 +375,9 @@ void ProfilerC::getObjectFiles(const string &compiler_str) {
 
 void ProfilerC::gatherProfilingData(const string &binary_file,
                                     compiler_type curr_compiler) {
+  /* Energy Pass will not need regular profiler runs */
+  if(MCompiler_profiler_runs == 0) return;
+
   // CSV file open for storing profiler data
   bool is_reading_file = false;
   CSV csv_file(MCompiler_curr_dir_path + MCompiler_profile_data_csv,
