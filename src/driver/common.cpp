@@ -156,10 +156,12 @@ void addOptimizationFlags() {
   flag_vec.clear();
   flag_vec.push_back("icc");
   if (!MCompiler_enabled_options[MC_DEBUG]) {
-    flag_vec.push_back("-Ofast -g");
+    flag_vec.push_back("-Ofast");
   } else {
     flag_vec.push_back("-O0 -g");
   }
+  if (MCompiler_enabled_options[MAXVEC])
+    flag_vec.push_back("-qopt-zmm-usage=high");
   flag_vec.push_back("-xHost");
   if (MCompiler_enabled_options[PARALLEL])
     flag_vec.push_back("-qopenmp");
@@ -173,7 +175,7 @@ void addOptimizationFlags() {
   if (MCompiler_enabled_options[AUTO_PARALLEL])
     flag_vec.push_back("-parallel");
   if (MCompiler_enabled_options[NOVEC])
-    flag_vec.push_back("-no-vec");
+    flag_vec.push_back("-no-vec -no-simd");
   flag_vec.push_back(MCompiler_include_path);
   flag_vec.push_back(MCompiler_macro_defs);
   flag_vec.push_back(MCompiler_extraPreSrcFlags);
@@ -184,6 +186,8 @@ void addOptimizationFlags() {
   flag_vec.clear();
   flag_vec.push_back("gcc");
   flag_vec.push_back("-Ofast");
+  if (MCompiler_enabled_options[MAXVEC])
+    flag_vec.push_back("-mprefer-vector-width=512");
   flag_vec.push_back("-march=native");
   if (MCompiler_enabled_options[PARALLEL])
     flag_vec.push_back("-fopenmp");
@@ -208,6 +212,8 @@ void addOptimizationFlags() {
   flag_vec.clear();
   flag_vec.push_back("clang");
   flag_vec.push_back("-O3");
+  if (MCompiler_enabled_options[MAXVEC])
+    flag_vec.push_back("-mprefer-vector-width=512");
   if (MCompiler_enabled_options[KNL])
     flag_vec.push_back("-march=knl");
   else
@@ -265,9 +271,9 @@ void addOptimizationFlags() {
   flag_vec.clear();
   /* Tiling and parallel code option are off by default */
   flag_vec.push_back("polycc");
-  flag_vec.push_back("--tile");
+  flag_vec.push_back("--tile --l2tile");
   if (MCompiler_enabled_options[AUTO_PARALLEL])
-    flag_vec.push_back("--parallel");
+    flag_vec.push_back("--parallel --partlbtile");
   if (MCompiler_enabled_options[NOVEC])
     flag_vec.push_back("--noprevector ");
   optimization_flags[compiler_Pluto] = flag_vec;
@@ -275,7 +281,7 @@ void addOptimizationFlags() {
   /* Polly */
   flag_vec.clear();
   flag_vec.push_back("clang");
-  flag_vec.push_back("-O3");
+  flag_vec.push_back("-O3 -mprefer-vector-width=512");
   flag_vec.push_back("-mllvm -polly");
   if (!MCompiler_enabled_options[NOVEC])
     flag_vec.push_back("-mllvm -polly-vectorizer=polly");

@@ -68,6 +68,9 @@ typedef enum {
   RESTRICT,
   STATICANALYSIS,
   PREFETCH,
+  NOVEC,
+  MAXVEC,
+  NOPOLYHEDRAL,
   COMPILE_TO_OBJECT,
   PROFILE_COUNT,
   INPUT_PROFILE,
@@ -85,8 +88,6 @@ typedef enum {
   MACRO_DEFS,
   MC_DEBUG,
   MC_INFO,
-  NOVEC,
-  NOPOLYHEDRAL,
   HELP,
   UNKNOWN
 } MCompiler_options;

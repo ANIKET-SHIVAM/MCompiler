@@ -36,7 +36,7 @@ struct Arg : public option::Arg {
 };
 // clang-format off
 const option::Descriptor usage[] = {
-  {UNKNOWN            , 0, ""  , ""              ,Arg::None     , "Usage:  MCompiler <input_files> [options] [-o output]\nOptions:" },
+  {UNKNOWN            , 0, ""  , ""              ,Arg::None     , "Usage:  MCompiler [options] file1 [file2 ...]\nOptions:" },
   {HELP               , 0, "h" , "help"          ,Arg::None     , "    -h,--help                Print usage" },
   {EXTRACT            , 0, ""  , "noextract"     ,Arg::None     , "    --[no]extract            Extract hotspots" },
   {PROFILE            , 0, ""  , "noprofile"     ,Arg::None     , "    --[no]profile            Profile extracted hotspots" },
@@ -49,10 +49,13 @@ const option::Descriptor usage[] = {
   {PARALLEL           , 0, ""  , "parallel"      ,Arg::None     , "    --parallel               Generate multi-threaded code based on OpenMP directives\n"
                                                                   "                             Default: Serial code generation (with vectorization)" },
   {AUTO_PARALLEL      , 0, ""  , "auto-parallel" ,Arg::None     , "    --auto-parallel          Auto-parallelize the hotspots" },
-  {EXTRACTKERNEL      , 0, ""  , "extractkernel" ,Arg::None     , "    --extractkernel          Extract consecutive loop nests, if possible." },
+  {EXTRACTKERNEL      , 0, ""  , "extract-kernel",Arg::None     , "    --extract-kernel         Extract consecutive loop nests, if possible." },
   {RESTRICT           , 0, ""  , "restrict"      ,Arg::None     , "    --restrict               Add restrict keyword." },
   {STATICANALYSIS     , 0, ""  , "static"        ,Arg::None     , "    --static                 Perform static analysis to determine read-only values." },
   {PREFETCH           , 0, ""  , "prefetch"      ,Arg::None     , "    --prefetch               Enable software data prefetching" },
+  {NOVEC              , 0, ""  , "no-vec"        ,Arg::None     , "    --no-vec                 Disable vectorization" },
+  {MAXVEC              , 0, ""  ,"max-vec"       ,Arg::None     , "    --max-vec                Generate code for maximum vector length" },
+  {NOPOLYHEDRAL       , 0, ""  , "disable-polyhedral",Arg::None , "    --disable-polyhedral     Disable Polyhedral Model based loop optimizers" },
   {PROFILE_COUNT      , 0, ""  , "profile-runs"  ,Arg::Numeric  , "    --profile-runs=<num>     Number of time profiler should run the program to"
                                                                                                 " collect data. Default: 3" },
   {INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>           Input to the program"
@@ -71,8 +74,6 @@ const option::Descriptor usage[] = {
   {MACRO_DEFS         , 0, "D" , "DEFS"          ,Arg::Required , "    -D[<arg>]                Macro definition" },
   {MC_DEBUG           , 0, ""  , "debug"         ,Arg::None     , "    --debug                  Output MCompiler workflow" },
   {MC_INFO            , 0, ""  , "info"          ,Arg::None     , "    --info                   Print information for MCompiler workflow" },
-  {NOVEC              , 0, ""  , "novec"         ,Arg::None     , "    --novec                  Disable vectorizer" },
-  {NOPOLYHEDRAL       , 0, ""  , "disable-polyhedral"  ,Arg::None     , "    --disable-polyhedral     Disable Polyhedral Model based loop optimizers" },
   {0, 0, 0, 0, 0, 0}
 };
 // clang-format on
@@ -91,6 +92,9 @@ void set_MCompiler_options(int argc, char *argv[]) {
       {RESTRICT, false},
       {STATICANALYSIS, false},
       {PREFETCH, false},
+      {NOVEC, false},
+      {MAXVEC, false},
+      {NOPOLYHEDRAL, false},
       {HASWELL, false},
       {KNL, false},
       {SKYLAKE, true},
@@ -99,8 +103,6 @@ void set_MCompiler_options(int argc, char *argv[]) {
       {COMPILE_TO_OBJECT, false},
       {MC_DEBUG, false},
       {MC_INFO, false},
-      {NOVEC, false},
-      {NOPOLYHEDRAL, false},
   };
   argc -= (argc > 0);
   argv += (argc > 0); // skip program name argv[0] if present
@@ -181,6 +183,15 @@ void set_MCompiler_options(int argc, char *argv[]) {
     case PREFETCH:
       MCompiler_enabled_options[PREFETCH] = true;
       break;
+    case NOVEC:
+      MCompiler_enabled_options[NOVEC] = true;
+      break;
+    case MAXVEC:
+      MCompiler_enabled_options[MAXVEC] = true;
+      break;
+    case NOPOLYHEDRAL:
+      MCompiler_enabled_options[NOPOLYHEDRAL] = true;
+      break;
     case COMPILE_TO_OBJECT:
       MCompiler_enabled_options[COMPILE_TO_OBJECT] = true;
       break;
@@ -235,12 +246,6 @@ void set_MCompiler_options(int argc, char *argv[]) {
       break;
     case MC_INFO:
       MCompiler_enabled_options[MC_INFO] = true;
-      break;
-    case NOVEC:
-      MCompiler_enabled_options[NOVEC] = true;
-      break;
-    case NOPOLYHEDRAL:
-      MCompiler_enabled_options[NOPOLYHEDRAL] = true;
       break;
     }
   }
