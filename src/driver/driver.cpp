@@ -43,7 +43,7 @@ void Driver::checkCompilerCandidates() {
 #endif
   result_compiler_found = executeCommand("polycc");
   if (result_compiler_found.find("not found") == string::npos &&
-      !MCompiler_enabled_options[NOPOLYHEDRAL]) {
+      !(MCompiler_enabled_options[NOPOLYHEDRAL] || MCompiler_enabled_options[NOS2S]) ) {
     compiler_candidate[compiler_Pluto] = true;
     cout << "Found in PATH: polycc (Pluto)" << endl;
   } else {

@@ -56,6 +56,7 @@ const option::Descriptor usage[] = {
   {NOVEC              , 0, ""  , "no-vec"        ,Arg::None     , "    --no-vec                 Disable vectorization" },
   {MAXVEC              , 0, ""  ,"max-vec"       ,Arg::None     , "    --max-vec                Generate code for maximum vector length" },
   {NOPOLYHEDRAL       , 0, ""  , "disable-polyhedral",Arg::None , "    --disable-polyhedral     Disable Polyhedral Model based loop optimizers" },
+  {NOS2S              , 0, ""  , "disable-s2s"   ,Arg::None     , "    --disable-s2s            Disable Source-to-Source loop optimizers" },
   {PROFILE_COUNT      , 0, ""  , "profile-runs"  ,Arg::Numeric  , "    --profile-runs=<num>     Number of time profiler should run the program to"
                                                                                                 " collect data. Default: 3" },
   {INPUT_PROFILE      , 0, ""  , "input"         ,Arg::Required , "    --input=<args>           Input to the program"
@@ -95,6 +96,7 @@ void set_MCompiler_options(int argc, char *argv[]) {
       {NOVEC, false},
       {MAXVEC, false},
       {NOPOLYHEDRAL, false},
+      {NOS2S, false},
       {HASWELL, false},
       {KNL, false},
       {SKYLAKE, true},
@@ -191,6 +193,9 @@ void set_MCompiler_options(int argc, char *argv[]) {
       break;
     case NOPOLYHEDRAL:
       MCompiler_enabled_options[NOPOLYHEDRAL] = true;
+      break;
+    case NOS2S:
+      MCompiler_enabled_options[NOS2S] = true;
       break;
     case COMPILE_TO_OBJECT:
       MCompiler_enabled_options[COMPILE_TO_OBJECT] = true;

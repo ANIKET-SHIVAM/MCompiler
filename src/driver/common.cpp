@@ -271,9 +271,9 @@ void addOptimizationFlags() {
   flag_vec.clear();
   /* Tiling and parallel code option are off by default */
   flag_vec.push_back("polycc");
-  flag_vec.push_back("--tile --l2tile");
+  flag_vec.push_back("--tile"); // --l2tile
   if (MCompiler_enabled_options[AUTO_PARALLEL])
-    flag_vec.push_back("--parallel --partlbtile");
+    flag_vec.push_back("--parallel"); // --partlbtile
   if (MCompiler_enabled_options[NOVEC])
     flag_vec.push_back("--noprevector ");
   optimization_flags[compiler_Pluto] = flag_vec;
@@ -281,7 +281,9 @@ void addOptimizationFlags() {
   /* Polly */
   flag_vec.clear();
   flag_vec.push_back("clang");
-  flag_vec.push_back("-O3 -mprefer-vector-width=512");
+  flag_vec.push_back("-O3");
+  if (MCompiler_enabled_options[MAXVEC])
+    flag_vec.push_back("-mprefer-vector-width=512");
   flag_vec.push_back("-mllvm -polly");
   if (!MCompiler_enabled_options[NOVEC])
     flag_vec.push_back("-mllvm -polly-vectorizer=polly");
