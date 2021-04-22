@@ -458,7 +458,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* Perform counter profiling after Synthesis, if not making prediction */
-  if (MCompiler_enabled_options[ADV_PROFILE]) {
+  if (MCompiler_enabled_options[PREDICT]) {
     driver->initiateAdvProfiler();
   }
 
@@ -487,6 +487,12 @@ int main(int argc, char *argv[]) {
       exit(EXIT_FAILURE);
     }
     driver->initiateSynthesizer();
+  }
+
+  /* Perform counter profiling after Synthesis, if not making prediction */
+  if (MCompiler_enabled_options[ADV_PROFILE] &&
+      !MCompiler_enabled_options[PREDICT]) {
+    driver->initiateAdvProfiler();
   }
 
   if (MCompiler_enabled_options[TEST] &&
