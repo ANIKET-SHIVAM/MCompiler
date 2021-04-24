@@ -286,10 +286,12 @@ void addOptimizationFlags() {
     flag_vec.push_back("-mprefer-vector-width=512");
   flag_vec.push_back("-mllvm -polly");
   if (!MCompiler_enabled_options[NOVEC])
-    flag_vec.push_back("-mllvm -polly-vectorizer=polly");
+    flag_vec.push_back("-mllvm --polly-vectorizer=polly");
   else
-    flag_vec.push_back("-mllvm -polly-vectorizer=none");
+    flag_vec.push_back("-mllvm --polly-vectorizer=none");
   flag_vec.push_back("-mllvm --polly-tiling");
+  if (MCompiler_enabled_options[AUTO_PARALLEL])
+    flag_vec.push_back("-mllvm --polly-parallel");
   if (MCompiler_enabled_options[KNL])
     flag_vec.push_back("-march=knl");
   else
@@ -300,8 +302,6 @@ void addOptimizationFlags() {
     flag_vec.push_back("-std=c99");
   else
     flag_vec.push_back("-std=c11");
-  if (MCompiler_enabled_options[AUTO_PARALLEL])
-    flag_vec.push_back("-mllvm -polly-parallel");
   flag_vec.push_back("-w");
   if (MCompiler_enabled_options[NOVEC])
     flag_vec.push_back("-fno-vectorize");
