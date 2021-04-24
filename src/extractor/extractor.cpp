@@ -332,6 +332,11 @@ void LoopInfo::getVarsInScope() {
                                          "_primitive");
             scope_struct_str_vec.push_back(var->get_name().getString());
           } else {
+            if (var_type_str.find("{") != string::npos) {
+              var_type_str.erase(var_type_str.find_first_of("{"),
+                                 var_type_str.find_last_of("}") -
+                                     var_type_str.find_first_of("{") + 1);
+            }
             scope_vars_str_vec.push_back(var_type_str + space_str +
                                          var->get_name().getString());
           }
@@ -676,6 +681,26 @@ void LoopInfo::printLoopFunc(ofstream &loop_file_buf, bool isProfileFile) {
   stringReplaceAll(kernel_body_str, "{", "\n{\n");
   stringReplaceAll(kernel_body_str, "}", "\n}\n");
   stringReplaceAll(kernel_body_str, ";", ";\n");
+
+  /* Fix OMP pragmas inside loop body */
+  Rose_STL_Container<SgNode *> pragmaList =
+      NodeQuery::querySubTree(loop_scope, V_SgPragmaDeclaration);
+  Rose_STL_Container<SgNode *>::iterator pragmaIter = pragmaList.begin();
+
+  for (; pragmaIter != pragmaList.end(); pragmaIter++) {
+    SgPragmaDeclaration *pragmaDecl =
+        dynamic_cast<SgPragmaDeclaration *>(*pragmaIter);
+    // if (SageInterface::extractPragmaKeyword(pragmaDecl) == "omp")
+    SgPragma *pragmaNode = pragmaDecl->get_pragma();
+    string pragmaString  = pragmaNode->get_pragma();
+    stringReplaceAll(pragmaString, " (", "(");
+    stringReplaceAll(kernel_body_str, pragmaString, pragmaString + "\n");
+  }
+  //    stringReplaceAll(kernel_body_str, "omp parallel for", "omp parallel
+  //    for\n"); stringReplaceAll(kernel_body_str, "omp for", "omp for\n");
+  //    stringReplaceAll(kernel_body_str, "omp critical", "omp critical\n");
+  //    stringReplaceAll(kernel_body_str, "omp atomic", "omp atomic\n");
+  //    stringReplaceAll(kernel_body_str, "omp single", "omp single\n");
 
   loop_file_buf << kernel_body_str << endl;
 
