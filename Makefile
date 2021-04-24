@@ -17,9 +17,8 @@ else
 	CC = g++
 	FLAGS = -std=c++11 -g
 
-	ROSE_PATH = /usr/rose
-	#BOOST_PATH = ${CURDIR}/tools/boost_build
-	ROSE_INCLUDE = -I${ROSE_PATH}/include/rose #-I${BOOST_PATH}/include/
+	ROSE_PATH = ${CURDIR}/tools/rose_install
+	ROSE_INCLUDE = -I${ROSE_PATH}/include/rose
 	ROSE_LIB = -lrose
 	OPENCV_PATH = ${CURDIR}/tools/opencv_install
 	OPENCV_VERSION = 4
@@ -50,8 +49,6 @@ EXTRACTOR_COMPILE_FLAGS = -I${CURDIR}/src $(ROSE_INCLUDE)
 EXTRACTOR_LD_FLAGS = -L${ROSE_PATH}/lib \
                      $(ROSE_LIB) \
                      -lboost_system  -lboost_chrono -lquadmath
-                     #-L${BOOST_PATH}/lib \
-                     #-lboost_iostreams -lboost_system
 
 OBJ_EXTRACTOR = $(OBJS)/extractor.o
 SRC_EXTRACTOR  = $(EXTRACTOR_PATH)/extractor.cpp 
