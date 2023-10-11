@@ -5,7 +5,7 @@ by the best optimizer available for it. The MCompiler identifies loop nests in C
 optimizes the loop nests using different code optimizers, times each optimized code version
 in execution of its complete application, and links the best performing code to generate
 the complete application binary. This is referred to as the Exploratory Search method
-of the MCompiler. The MCompiler can work with code optimizers such as GNU GCC and LLVM Clang. 
+of the MCompiler. The MCompiler can work with code optimizers such as GNU GCC, LLVM Clang, etc. 
 In addition to these, two Polyhedral Model based
 loop optimizers, Polly and Pluto are used, if applicable. The best loop
 nest code selection allows the MCompiler to produce higher-performing code than the best of
@@ -31,7 +31,7 @@ nests with a function call in the original source files. This allows for separat
 to focus on just the loop nests and also allows the framework to insert the best performing
 code, i.e., linking object files to generate the executable.
 
-The MCompiler also incorporates Machine Learning models that learn inherent characteristics and predict the most suited code optimizer for a given loop nest.
+The MCompiler also incorporates Machine Learning models that learn inherent characteristics using the hardware performance counter and predict the most suited code optimizer for a given loop nest.
 Using predictions provide a substitute for the
 expensive Exploratory Search step of the framework. The hardware performance counters
 are collected from a single profile of the applications, i.e., the applications are compiled with
