@@ -70,10 +70,10 @@ string likwid_path                  = XSTR(LIKWID_PATH);
 string MCompiler_energyprofiler_str = likwid_path + forward_slash_str + "bin" +
                                       forward_slash_str + "likwid-perfctr";
 
-string MCompiler_trained_model_path = "MC_trained_model.yml";
+string MCompiler_trained_model_path = "MC_trained_models/MC_trained_model.yml";
 string MCompiler_trained_model_features_path =
     MCompiler_trained_model_path + "_features.txt";
-string MCompiler_trained_autopar_model_path = "MC_trained_autopar_model.yml";
+string MCompiler_trained_autopar_model_path = "MC_trained_models/MC_trained_autopar_model.yml";
 string MCompiler_trained_autopar_model_features_path =
     MCompiler_trained_autopar_model_path + "_features.txt";
 string MCompiler_hotspotlist_file = "MC_hotspot_list.txt";
